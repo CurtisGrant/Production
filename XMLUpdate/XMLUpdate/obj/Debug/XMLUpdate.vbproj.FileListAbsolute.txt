@@ -1,0 +1,10 @@
+C:\Projects\DEMO\XMLUpdate\XMLUpdate\bin\Debug\XMLUpdate.exe.config
+C:\Projects\DEMO\XMLUpdate\XMLUpdate\bin\Debug\XMLUpdate.exe
+C:\Projects\DEMO\XMLUpdate\XMLUpdate\bin\Debug\XMLUpdate.pdb
+C:\Projects\DEMO\XMLUpdate\XMLUpdate\bin\Debug\XMLUpdate.xml
+C:\Projects\DEMO\XMLUpdate\XMLUpdate\obj\Debug\XMLUpdate.Resources.resources
+C:\Projects\DEMO\XMLUpdate\XMLUpdate\obj\Debug\XMLUpdate.vbproj.GenerateResource.Cache
+C:\Projects\DEMO\XMLUpdate\XMLUpdate\obj\Debug\XMLUpdate.exe
+C:\Projects\DEMO\XMLUpdate\XMLUpdate\obj\Debug\XMLUpdate.xml
+C:\Projects\DEMO\XMLUpdate\XMLUpdate\obj\Debug\XMLUpdate.pdb
+C:\Projects\DEMO\XMLUpdate\XMLUpdate\obj\Debug\XMLUpdate.vbprojResolveAssemblyReference.cache

@@ -1,0 +1,10 @@
+C:\Projects\RetailClarity\CounterpointXMLExtract\CounterpointXMLExtract\bin\Debug\CounterpointXMLExtract.exe.config
+C:\Projects\DEMO\CounterpointXMLExtract\CounterpointXMLExtract\bin\Debug\CounterpointXMLExtract.exe.config
+C:\Projects\DEMO\CounterpointXMLExtract\CounterpointXMLExtract\obj\Debug\CounterpointXMLExtract.Resources.resources
+C:\Projects\DEMO\CounterpointXMLExtract\CounterpointXMLExtract\obj\Debug\CounterpointXMLExtract.vbproj.GenerateResource.Cache
+C:\Projects\DEMO\CounterpointXMLExtract\CounterpointXMLExtract\bin\Debug\CounterpointXMLExtract.exe
+C:\Projects\DEMO\CounterpointXMLExtract\CounterpointXMLExtract\bin\Debug\CounterpointXMLExtract.pdb
+C:\Projects\DEMO\CounterpointXMLExtract\CounterpointXMLExtract\bin\Debug\CounterpointXMLExtract.xml
+C:\Projects\DEMO\CounterpointXMLExtract\CounterpointXMLExtract\obj\Debug\CounterpointXMLExtract.exe
+C:\Projects\DEMO\CounterpointXMLExtract\CounterpointXMLExtract\obj\Debug\CounterpointXMLExtract.xml
+C:\Projects\DEMO\CounterpointXMLExtract\CounterpointXMLExtract\obj\Debug\CounterpointXMLExtract.pdb

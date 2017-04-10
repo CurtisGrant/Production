@@ -1,0 +1,13 @@
+C:\Projects\RetailClarity\GetCounterpointSales\ConsoleApplication1\bin\Debug\GetCounterpointSales.exe.config
+C:\Projects\RetailClarity\GetCounterpointSales\ConsoleApplication1\bin\Debug\GetCounterpointSales.exe
+C:\Projects\RetailClarity\GetCounterpointSales\ConsoleApplication1\bin\Debug\GetCounterpointSales.pdb
+C:\Projects\RetailClarity\GetCounterpointSales\ConsoleApplication1\bin\Debug\GetCounterpointSales.xml
+C:\Projects\RetailClarity\GetCounterpointSales\ConsoleApplication1\obj\Debug\GetCounterpointSales.Resources.resources
+C:\Projects\RetailClarity\GetCounterpointSales\ConsoleApplication1\obj\Debug\GetCounterpointSales.vbproj.GenerateResource.Cache
+C:\Projects\RetailClarity\GetCounterpointSales\ConsoleApplication1\obj\Debug\GetCounterpointSales.exe
+C:\Projects\RetailClarity\GetCounterpointSales\ConsoleApplication1\obj\Debug\GetCounterpointSales.xml
+C:\Projects\RetailClarity\GetCounterpointSales\ConsoleApplication1\obj\Debug\GetCounterpointSales.pdb
+C:\Projects\DEMO\GetCounterpointSales\ConsoleApplication1\bin\Debug\GetCounterpointSales.exe.config
+C:\Projects\DEMO\GetCounterpointSales\ConsoleApplication1\obj\Debug\GetCounterpointSales.exe
+C:\Projects\DEMO\GetCounterpointSales\ConsoleApplication1\obj\Debug\GetCounterpointSales.xml
+C:\Projects\DEMO\GetCounterpointSales\ConsoleApplication1\obj\Debug\GetCounterpointSales.pdb
