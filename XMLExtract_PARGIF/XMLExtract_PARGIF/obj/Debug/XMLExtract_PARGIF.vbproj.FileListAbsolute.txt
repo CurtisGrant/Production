@@ -1,0 +1,9 @@
+C:\Projects\DEMO\XMLExtract_PARGIF\XMLExtract_PARGIF\bin\Debug\XMLExtract_PARGIF.exe.config
+C:\Projects\DEMO\XMLExtract_PARGIF\XMLExtract_PARGIF\bin\Debug\XMLExtract_PARGIF.exe
+C:\Projects\DEMO\XMLExtract_PARGIF\XMLExtract_PARGIF\bin\Debug\XMLExtract_PARGIF.pdb
+C:\Projects\DEMO\XMLExtract_PARGIF\XMLExtract_PARGIF\bin\Debug\XMLExtract_PARGIF.xml
+C:\Projects\DEMO\XMLExtract_PARGIF\XMLExtract_PARGIF\obj\Debug\XMLExtract_PARGIF.Resources.resources
+C:\Projects\DEMO\XMLExtract_PARGIF\XMLExtract_PARGIF\obj\Debug\XMLExtract_PARGIF.vbproj.GenerateResource.Cache
+C:\Projects\DEMO\XMLExtract_PARGIF\XMLExtract_PARGIF\obj\Debug\XMLExtract_PARGIF.exe
+C:\Projects\DEMO\XMLExtract_PARGIF\XMLExtract_PARGIF\obj\Debug\XMLExtract_PARGIF.xml
+C:\Projects\DEMO\XMLExtract_PARGIF\XMLExtract_PARGIF\obj\Debug\XMLExtract_PARGIF.pdb

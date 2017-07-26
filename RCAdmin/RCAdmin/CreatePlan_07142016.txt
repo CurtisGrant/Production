@@ -1,0 +1,644 @@
+Imports System.Data.SqlClient
+Imports System.Text
+Public Class CreatePlan
+    Public Shared planName As String = Nothing
+    Public Shared conString, conString2, server, database, sql As String
+    Public Shared con, con2, con3, con4, con5, con6 As SqlConnection
+    Public Shared cmd As SqlCommand
+    Public Shared rdr, rdr2, rdr3, rdr4, rdr5 As SqlDataReader
+    Public Shared tblPeriod As DataTable
+    Public Shared oTest As Object
+    Public Shared thisDept, thisPlan, thisStore, thisUser As String
+    Public Shared lastYear, thisYear, thisPeriod, thisWeek, rnd, yrwk As Integer
+    Public Shared loDate, hiDate, thisEdate, lyBeginDate, lyEndDate As Date
+    Public Shared today As Date = Date.Today
+    Public Shared formLoad As Boolean = False
+    Private Sub CreateParams_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        Try
+            serverLabel.Text = MainMenu.serverLabel.Text
+            conString = MainMenu.conString
+            conString2 = MainMenu.conString
+            con = PlanMaintenance.con
+            con2 = New SqlConnection(conString)
+            con3 = New SqlConnection(conString)
+            con4 = New SqlConnection(conString)
+            con5 = New SqlConnection(conString)
+            con6 = New SqlConnection(conString)
+            For Each item In PlanMaintenance.cboStore.Items
+                Me.cboStore.Items.Add(item)
+            Next
+            con.Open()
+            sql = "SELECT DISTINCT Year_Id FROM Calendar ORDER BY Year_Id"
+            cmd = New SqlCommand(sql, con)
+            rdr = cmd.ExecuteReader
+            While rdr.Read
+                cboYear.Items.Add(rdr(0))
+            End While
+            con.Close()
+
+            con.Open()
+            sql = "SELECT Str_Id FROM Stores WHERE Status = 'Active'"
+            cmd = New SqlCommand(sql, con)
+            rdr = cmd.ExecuteReader
+            While rdr.Read
+                cboStore.Items.Add(rdr("Str_Id"))
+            End While
+            con.Close()
+
+
+
+
+            cboStore.SelectedIndex = 0
+            Dim year As Integer = Date.Today.Year
+            cboYear.SelectedIndex = cboYear.FindString(year)
+            thisUser = Environment.UserName
+            thisPlan = Nothing
+            cboRnd.Items.Add(1)
+            cboRnd.Items.Add(10)
+            cboRnd.Items.Add(50)
+            cboRnd.Items.Add(100)
+            cboRnd.Items.Add(500)
+            cboRnd.Items.Add(1000)
+            cboRnd.SelectedIndex = 3
+            rnd = CDbl(cboRnd.SelectedItem)
+
+        Catch ex As Exception
+            If con.State = ConnectionState.Open Then con.Close()
+            MessageBox.Show(ex.Message, "CREATE NEW PLAN")
+        End Try
+
+    End Sub
+
+    Private Sub cboStore_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cboStore.SelectedIndexChanged
+        thisStore = cboStore.SelectedItem.ToString
+        ''If formLoad Then Call Create_New_Plan(planName)
+    End Sub
+
+    Private Sub cboYear_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cboYear.SelectedIndexChanged
+        thisYear = cboYear.SelectedItem
+        ''If formLoad Then Call Create_New_Plan(planName)
+    End Sub
+
+    Private Sub btnCreate_Click(sender As Object, e As EventArgs) Handles btnCreate.Click
+        Try
+            lblProcessing.Visible = True
+            Me.Refresh()
+            Dim itExists As Boolean = False
+            Dim cDte, dDte As Date
+            con.Open()
+            sql = "DECLARE @maxDataDate AS Date, @maxCalendarDate AS Date, @planDataStartDate AS Date " & _
+                "SET @maxDataDate = (SELECT MAX(eDate) FROM Weekly_Summary WHERE ISNULL(Act_Sales,0) <> 0 AND Year_Id = " & thisYear - 1 & ") " & _
+                "SET @maxCalendarDate = (SELECT MAX(eDate) FROM Calendar WHERE Year_Id = " & thisYear - 1 & ") " & _
+                "SET @planDataStartDate = (SELECT MIN(sDate) FROM Calendar WHERE Year_Id = " & thisYear - 1 & " AND Prd_Id = 0) " & _
+                "SELECT @planDataStartDate AS planDataStartDate, @maxDataDate AS dataDate, @maxCalendarDate AS calendarDate"
+            cmd = New SqlCommand(sql, con)
+            rdr = cmd.ExecuteReader
+            While rdr.Read
+                dDte = rdr("dataDate")
+                cDte = rdr("calendarDate")
+                lyBeginDate = rdr("planDataStartDate")
+            End While
+            con.Close()
+            If cDte <> dDte Then
+                con.Open()
+                sql = "DECLARE @period AS integer, @planDataEndDate AS Date " & _
+                    "SET @period = (SELECT MAX(YrPrd) FROM Weekly_Summary WHERE ISNULL(Act_Sales,0) <> 0 AND Prd_Id > 0) " & _
+                    "SELECT MAX(eDate) AS eDate FROM Calendar WHERE YrPrd < @period AND Prd_Id > 0"
+                cmd = New SqlCommand(sql, con)
+                rdr = cmd.ExecuteReader
+                While rdr.Read
+                    hiDate = rdr("eDate")
+                    lyEndDate = rdr("eDate")
+                End While
+                con.Close()
+            Else
+                hiDate = cDte
+                lyEndDate = cDte
+            End If
+
+
+            con.Open()
+            sql = "SELECT Year_Id, Prd_Id, PrdWk, YrWk FROM Calendar WHERE eDate = '" & hiDate & "'"
+            cmd = New SqlCommand(sql, con)
+            rdr = cmd.ExecuteReader
+            While rdr.Read
+                yrwk = rdr("YrWk")
+                thisPeriod = rdr("Prd_Id")
+            End While
+            con.Close()
+
+            con.Open()
+            sql = "SELECT eDate FROM Calendar WHERE Year_Id = " & thisYear & " AND Prd_Id = " & thisPeriod & " AND Week_Id = 0"
+            cmd = New SqlCommand(sql, con)
+            rdr = cmd.ExecuteReader
+            While rdr.Read
+                lyEndDate = rdr("eDate")
+            End While
+            con.Close()
+
+            con.Open()
+            sql = "SELECT MIN(eDate) AS eDate FROM Calendar WHERE Year_Id = " & thisYear - 1 & " "
+            cmd = New SqlCommand(sql, con)
+            rdr = cmd.ExecuteReader
+            While rdr.Read
+                loDate = rdr("eDate")
+            End While
+            con.Close()
+
+
+
+            con.Open()
+            sql = "SELECT DISTINCT Plan_Id, Year_Id FROM Sales_Plan WHERE Year_Id = " & thisYear & " AND Status = 'Active' " & _
+                "AND Str_Id = '" & thisStore & "'"
+            cmd = New SqlCommand(sql, con)
+            rdr = cmd.ExecuteReader
+            itExists = False
+            While rdr.Read
+                If Not IsNothing("Plan_Id") Then itExists = True
+                planName = rdr("Plan_Id")
+            End While
+            con.Close()
+            If itExists Then
+                '' MsgBox("AN ACTIVE PLAN ALREADYS EXISTS!")
+                MessageBox.Show("AN ACTIVE PLAN ALREADY EXISTS!", "CREATE NEW PLAN")
+                Exit Sub
+            End If
+            Call Create_New_Plan(planName)
+            PlanMaintenance.cboPlan.Items.Add(thisPlan)
+            Dim idx As Integer = PlanMaintenance.cboPlan.FindString(thisPlan)
+            PlanMaintenance.cboPlan.SelectedIndex = idx
+            lblProcessing.Visible = False
+            Me.Refresh()
+            PlanMaintenance.Show()
+            Me.Close()
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "ERROR CREATING NEW PLAN")
+        End Try
+    End Sub
+
+    Private Sub Create_New_Plan(ByVal planName)
+        Try
+            con.Close()
+            Dim start As Integer
+            Dim numbr As Integer = 0
+            Dim test As String
+            con.Open()
+            sql = "SELECT MAX(Plan_Id) FROM Sales_Plan WHERE Plan_Id LIKE '" & thisYear & "_Plan%'"
+            cmd = New SqlCommand(sql, con)
+            rdr = cmd.ExecuteReader
+            While rdr.Read
+                If Not IsDBNull(rdr(0)) And Not IsNothing(rdr(0)) Then
+                    test = rdr(0)
+                    start = InStr(test, "Plan")
+                    Dim final As String = Mid(test, start)
+                    oTest = getNumeric(final)
+                    If IsNumeric(oTest) Then numbr = CInt(oTest)
+                End If
+            End While
+            con.Close()
+
+            numbr += 1
+            thisPlan = thisYear.ToString & "_Plan" & numbr.ToString
+            Dim tblDept As DataTable = New DataTable
+            tblPeriod = New DataTable
+            tblDept.Columns.Add("Dept")
+            tblPeriod.Columns.Add("Period")
+            Dim row As DataRow
+            con.Open()
+            sql = "SELECT ID FROM Departments WHERE Status = 'Active'"
+            cmd = New SqlCommand(sql, con)
+            rdr = cmd.ExecuteReader
+            While rdr.Read
+                row = tblDept.NewRow
+                row(0) = rdr(0)
+                tblDept.Rows.Add(row)
+            End While
+            con.Close()
+
+            con.Open()
+            sql = "SELECT DISTINCT Prd_Id FROM Calendar WHERE Prd_Id > 0 AND Year_Id = " & thisYear & " " & _
+                 "ORDER BY Prd_Id"
+            cmd = New SqlCommand(sql, con)
+            rdr = cmd.ExecuteReader
+            While rdr.Read
+                row = tblPeriod.NewRow
+                row("Period") = rdr("Prd_Id")
+                tblPeriod.Rows.Add(row)
+            End While
+            con.Close()
+
+
+
+            lblSaving.Visible = True
+            pb1.Visible = True
+            pb1.Step = 1
+            pb1.Value = 1
+            pb1.Minimum = 1
+            pb1.Maximum = 13
+            thisUser = "Initial Build"
+            For Each dRow In tblDept.Rows
+                thisDept = dRow(0)
+
+
+                Call Create_Other_Tables()                         ' Update Buyer, Class and Day of the Week PCT tables
+
+
+                For Each pRow In tblPeriod.Rows
+                    thisPeriod = pRow(0)
+                    con.Open()
+                    sql = "SELECT eDate, PrdWK FROM Calendar WHERE Year_Id = " & thisYear & " AND Prd_Id = " & pRow(0) & " "
+                    cmd = New SqlCommand(sql, con)
+                    rdr = cmd.ExecuteReader
+                    While rdr.Read
+                        thisEdate = rdr("eDate")
+                        thisWeek = rdr("PrdWk")
+                        lastYear = thisYear - 1
+                        ''con2.Open()
+                        ''thisStore = cboStore.SelectedItem
+                        ''sql = "If NOT EXISTS (SELECT * FROM Sales_Plan WHERE Plan_Id = '" & thisPlan & "' AND Str_Id = '" &
+                        ''        thisStore & "' AND Year_Id = " & thisYear & " AND Prd_Id = " &
+                        ''            thisPeriod & " AND Week_Id = " & thisWeek & " AND Dept = '" & thisDept & "') " & _
+                        ''        "INSERT INTO Sales_Plan (Plan_Id, Str_Id, Dept, Year_Id, Prd_Id, Week_Id, Status, Last_Update, Last_User) " & _
+                        ''        "SELECT '" & thisPlan & "', '" & thisStore & "', '" & thisDept & "', " & thisYear & ", " &
+                        ''            thisPeriod & ", " & thisWeek & ", 'Active','" & today & "','Initial Build'"
+                        ''cmd = New SqlCommand(sql, con2)
+                        ''cmd.ExecuteNonQuery()
+                        ''con2.Close()
+                        If thisEdate <= lyEndDate Then
+                            Call Save_This_Week()                          ' skip computing actuals for current week and forward
+                        End If
+                    End While
+                    con.Close()
+                Next
+                pb1.PerformStep()
+                Call Save_This_Department()
+            Next
+            pb1.Visible = False
+            formLoad = True
+            '' lblSaving.Visible = False
+            '' MsgBox(planName & " Created.")
+            MessageBox.Show(planName & " CREATED", "CREATE NEW PLAN")
+        Catch ex As Exception
+            MsgBox(ex.Message)
+            If con.State = ConnectionState.Open Then con.Close()
+            If con2.State = ConnectionState.Open Then con2.Close()
+        End Try
+    End Sub
+
+    Private Sub Create_Other_Tables()
+        Try
+            Dim dateTbl As New DataTable
+            Dim column As New DataColumn()
+            column.DataType = System.Type.GetType("System.DateTime")
+            column.ColumnName = "eDate"
+            dateTbl.Columns.Add(column)
+            Dim primaryKey(1) As DataColumn
+            primaryKey(0) = dateTbl.Columns("eDate")
+            dateTbl.PrimaryKey = primaryKey
+            dateTbl.Columns.Add("Year", GetType(System.Int16))
+            dateTbl.Columns.Add("Period", GetType(System.Int16))
+            Dim buyerTbl As New DataTable
+            buyerTbl.Columns.Add("Buyer")
+            Dim row As DataRow
+            lastYear = thisYear - 1
+            '' Dim ly As Date = DateAdd(DateInterval.Year, -1, today)
+            Dim buyer As String
+            Dim selectDate As Date
+            Dim wks As Integer
+            '
+            '                                   Get eDates for last year's periods
+            '
+            con.Open()
+            sql = "SELECT eDate, Year_Id, Prd_Id  FROM Calendar WHERE Week_Id = 0 AND Prd_Id > 0 " & _
+                "AND Year_Id = " & lastYear & " "
+            cmd = New SqlCommand(sql, con)
+            rdr = cmd.ExecuteReader
+            While rdr.Read
+                row = dateTbl.NewRow
+                row("eDate") = rdr("eDate")
+                row("Year") = rdr("Year_Id")
+                row("Period") = rdr("Prd_Id")
+                dateTbl.Rows.Add(row)
+            End While
+            con.Close()
+
+            If dateTbl.Rows.Count < 1 Then
+                MessageBox.Show("Could not determine dates for past year. Update Calendar and try again.", "ERROR")
+                Exit Sub
+            End If
+
+            con.Open()
+            sql = "SELECT Buyer FROM Buyers WHERE Status = 'Active'"
+            cmd = New SqlCommand(sql, con)
+            rdr = cmd.ExecuteReader
+            While rdr.Read
+                row = buyerTbl.NewRow
+                row("Buyer") = rdr("Buyer")
+                buyerTbl.Rows.Add(row)
+            End While
+            con.Close()
+
+            con.Open()
+            sql = "DELETE FROM Buyer_Pct WHERE Year_Id = " & thisYear & " AND Dept = '" & thisDept & "'"
+            cmd = New SqlCommand(sql, con)
+            cmd.ExecuteNonQuery()
+            sql = "DELETE FROM Class_Pct WHERE Year_Id = " & thisYear & " "
+            cmd = New SqlCommand(sql, con)
+            cmd.ExecuteNonQuery()
+            con.Close()
+            '
+            '                           Determine each buyer's percentage of total sales
+            '
+            con.Open()
+            sql = "CREATE TABLE #t1 (Str_Id varchar(10) NOT NULL, Prd_Id integer, Dept varchar(20), Buyer varchar(20), " & _
+                "Sales decimal(18,4), WksOH int) " & _
+                "INSERT INTO #t1 (Str_Id, Prd_Id, Dept, Buyer, Sales, WksOH) " & _
+                "SELECT Str_Id, Prd_Id, Dept, CASE WHEN b.ID IS NULL THEN 'OTHER' ELSE w.Buyer END As Buyer, " & _
+                    "ISNULL(SUM(Act_Sales),0) AS Sales, 0 " & _
+                    "FROM Weekly_Summary w LEFT JOIN Buyers b ON b.ID = w.Buyer " & _
+                    "WHERE Str_Id = '" & thisStore & "' AND eDate BETWEEN '" & lyBeginDate & "' AND '" & lyEndDate & "' AND Act_Sales <> 0 " & _
+                    "AND b.Status = 'Active' and dept = '" & thisDept & "' " & _
+                    "GROUP BY Str_Id, Prd_Id, Dept, w.Buyer, ID"
+            cmd = New SqlCommand(sql, con)
+            cmd.ExecuteNonQuery()
+            sql = "CREATE TABLE #t2 (Str_Id varchar(10) NOT NULL, Prd_Id integer, Dept varchar(20), sales decimal(20)) " & _
+                "INSERT INTO #t2 (Str_Id, Prd_Id, Dept, sales) " & _
+                "SELECT Str_Id, Prd_Id, Dept, ISNULL(SUM(Sales),0) AS Sales FROM #t1 " & _
+                "GROUP BY Str_Id, Prd_Id, Dept"
+            cmd = New SqlCommand(sql, con)
+            cmd.ExecuteNonQuery()
+            sql = "INSERT INTO Buyer_Pct (Plan_Year, Str_Id, Prd_Id, Dept, Buyer, Pct) " & _
+                "SELECT '" & thisYear & "', #t1.Str_Id, #t1.Prd_Id, #t1.Dept, #t1.Buyer, #t1.Sales / " & _
+                "(SELECT #t2.Sales FROM #t2 WHERE #t2.Str_Id = #t1.Str_Id AND #t2.Prd_Id = #t1.Prd_Id AND #t2.Dept = #t1.Dept) " & _
+                "FROM #t1"
+            cmd = New SqlCommand(sql, con)
+            cmd.ExecuteNonQuery()
+            con.Close()
+            '
+            '                           Compute inventory actual weeks on hand last year and save it as Plan_Sales for this year
+            '
+            con2.Open()
+            Dim thisBuyer As String
+            Dim onHand As Decimal
+            Dim totl As Decimal
+            Dim cnt As Integer
+            For Each row In dateTbl.Rows
+                selectDate = row("eDate")
+                thisPeriod = row("Period")
+                For Each brow In buyerTbl.Rows
+                    thisBuyer = brow("Buyer")
+                    selectDate = row("eDate")
+                    onHand = 0
+                    totl = 0
+                    cnt = 0
+                    con.Open()
+                    sql = "SELECT ISNULL(SUM(End_OH * Retail),0) As Inv FROM Item_Inv i " & _
+                        "JOIN Item_Master m ON m.Item_No = i.Item_No " & _
+                        "WHERE eDate = '" & selectDate & "' " & _
+                        "AND Str_Id = '" & thisStore & "' AND Dept = '" & thisDept & "' AND Buyer = '" & thisBuyer & "'"
+                    cmd = New SqlCommand(sql, con)
+                    rdr = cmd.ExecuteReader
+                    While rdr.Read
+                        onHand = rdr("Inv")
+                    End While
+                    con.Close()
+
+                    con.Open()
+                    sql = "SELECT eDate, ISNULL(SUM(Sales_Retail),0) As Sales FROM Item_Detail d " & _
+                       "JOIN Item_Master m ON m.Item_No = d.Item_No " & _
+                       "WHERE Str_Id = '1' AND Dept = '" & thisDept & "' AND Buyer = '" & thisBuyer & "' " & _
+                       "AND eDate >= '" & selectDate & "' " & _
+                       "GROUP BY eDate ORDER By eDate"
+                    cmd = New SqlCommand(sql, con)
+                    rdr = cmd.ExecuteReader
+                    While rdr.Read
+                        cnt += 1
+                        totl += rdr("Sales")
+                        If totl >= onHand Then
+                            wks = cnt
+                            Exit While
+                        End If
+                    End While
+                    con.Close()
+                    '
+                    '                    Update or create a new record for last year's actual weeks on hand
+                    '
+                    If totl > onHand Then
+                        con.Open()              ' Update or create a new records for last year's actual weeks on hand
+                        sql = "IF NOT EXISTS (SELECT * FROM Buyer_PCT WHERE Str_Id = '" & thisStore & "' AND Dept = '" & thisDept & "' " & _
+                            "AND Buyer = '" & thisBuyer & "' AND Plan_Year = " & lastYear & " AND Prd_Id = " & thisPeriod & ") " & _
+                            "INSERT INTO Buyer_PCT (Plan_Year, Str_Id, Prd_Id, Dept, Buyer, Act_WksOH) " & _
+                            "SELECT " & lastYear & ",'" & thisStore & "'," & thisPeriod & ",'" & thisDept & "','" & thisBuyer & "'," & wks & " " & _
+                            "ELSE " & _
+                            "UPDATE Buyer_Pct SET Act_WksOH = " & wks & " WHERE Plan_Year= " & lastYear & " " & _
+                            "AND Str_Id = '" & thisStore & "' AND Prd_Id = " & thisPeriod & " AND Dept = '" & thisDept & "' " & _
+                            "AND Buyer = '" & thisBuyer & "'"
+                        cmd = New SqlCommand(sql, con)
+                        cmd.ExecuteNonQuery()
+                        con.Close()
+                        '
+                        '               Update or create a new record for this year's plan weeks on hand
+                        con.Open()
+                        sql = "IF NOT EXISTS (SELECT * FROM Buyer_PCT WHERE Str_Id = '" & thisStore & "' AND Dept = '" & thisDept & "' " & _
+                            "AND Buyer = '" & thisBuyer & "' AND Plan_Year = " & thisYear & " AND Prd_Id = " & thisPeriod & ") " & _
+                            "INSERT INTO Buyer_PCT (Plan_Year, Str_Id, Prd_Id, Dept, Buyer, Plan_WksOH) " & _
+                            "SELECT " & thisYear & ",'" & thisStore & "'," & thisPeriod & ",'" & thisDept & "','" & thisBuyer & "'," & wks & " " & _
+                            "ELSE " & _
+                            "UPDATE Buyer_Pct SET Plan_WksOH = " & wks & " WHERE Plan_Year= " & thisYear & " " & _
+                            "AND Str_Id = '" & thisStore & "' AND Prd_Id = " & thisPeriod & " AND Dept = '" & thisDept & "' " & _
+                            "AND Buyer = '" & thisBuyer & "'"
+                        cmd = New SqlCommand(sql, con)
+                        cmd.ExecuteNonQuery()
+                        con.Close()
+                    End If
+                Next
+            Next
+            con2.Close()
+
+            con.Open()
+            sql = "CREATE TABLE #t1a (Str_Id varchar(10) NOT NULL, Prd_Id integer, Dept varchar(20), Buyer varchar(20), " & _
+                "Class varchar(20), Sales decimal(18,4)) INSERT INTO #t1a (Str_Id, Prd_Id, Dept, Buyer, Class, Sales) " & _
+                "SELECT Str_Id, Prd_Id, Dept, CASE WHEN Buyer IS NULL OR Buyer = '' THEN 'NA' ELSE Buyer END AS Buyer, " & _
+                    "Class, ISNULL(SUM(Act_Sales),0) AS Sales FROM Weekly_Summary " & _
+                "WHERE Str_Id = '" & thisStore & "' AND eDate BETWEEN '" & lyBeginDate & "' AND '" & lyEndDate & "' AND Act_Sales <> 0 " & _
+                "GROUP BY Str_Id, Prd_Id, Dept, Buyer, Class"
+            cmd = New SqlCommand(sql, con)
+            cmd.ExecuteNonQuery()
+            sql = "CREATE TABLE #t1 (Str_Id varchar(10) NOT NULL, Prd_Id integer, Dept varchar(20), Buyer varchar(20), " & _
+                "Class varchar(20), Sales decimal(18,4)) " & _
+                "INSERT INTO #t1 (Str_Id, Prd_Id, Dept, Buyer, Class, Sales) " & _
+                "SELECT Str_Id, Prd_Id, Dept, Buyer, Class, SUM(Sales) As Sales " & _
+                    "FROM #t1a WHERE Sales <> 0 GROUP BY Str_Id, Prd_Id, Dept, Buyer, Class"
+            cmd = New SqlCommand(sql, con)
+            cmd.ExecuteNonQuery()
+            sql = "INSERT INTO Class_PCT (Plan_Year, Str_Id, Prd_Id, Dept, Buyer, Class, Pct) " & _
+                    "SELECT '" & thisYear & "', Str_Id, Prd_Id, Dept, Buyer, Class, Sales / NULLIF(" & _
+                    "(SELECT SUM(t1.Sales) FROM #t1 t1 WHERE t1.Str_Id = t2.Str_Id AND t1.Prd_Id = t2.Prd_Id AND t1.Dept = t2.Dept " & _
+                        "AND t1.Buyer = t2.Buyer),0) FROM #t1 t2"
+            cmd = New SqlCommand(sql, con)
+            cmd.ExecuteNonQuery()
+            con.Close()
+
+            con.Open()
+            sql = "DELETE FROM DayOfWeekPct WHERE Year_Id = " & thisYear & " "
+            cmd = New SqlCommand(sql, con)
+            cmd.ExecuteNonQuery()
+            con.Close()
+
+            con.Open()
+            sql = "CREATE TABLE #t1 (Prd_Id integer NOT NULL, Day integer, Sales decimal(18,4)) " & _
+               "INSERT INTO #t1 (Prd_Id, Day, Sales) " & _
+               "SELECT Prd_Id, DATEPART(dw,TRANS_DATE) AS Day, ISNULL(SUM(QTY * RETAIL),0) AS Sales " & _
+                   "FROM Daily_Transaction_Log l " & _
+                   "JOIN Calendar c ON TRANS_DATE BETWEEN sDate AND eDate AND PrdWk > 0 " & _
+                   "WHERE QTY <> 0 AND RETAIL > 0 AND LOCATION = '" & thisStore & "' " & _
+                   "AND TYPE = 'Sold' AND DATEPART(dw,TRANS_DATE) > 1 " & _
+                   "AND TRANS_DATE BETWEEN '" & lyBeginDate & "' AND '" & lyEndDate & "' " & _
+                   "GROUP BY Prd_Id, DATEPART(dw,TRANS_DATE)"
+            cmd = New SqlCommand(sql, con)
+            cmd.CommandTimeout = 120
+            cmd.ExecuteNonQuery()
+            sql = "CREATE TABLE #t2 (Prd_Id integer NOT NULL, Sales decimal(18,4)) " & _
+                "INSERT INTO #t2 (Prd_Id, Sales) " & _
+                "SELECT Prd_Id, SUM(Sales) AS Sales FROM #t1 GROUP BY Prd_Id " & _
+                "CREATE TABLE #t3 (Prd_Id integer NOT NULL, Day integer, Pct decimal(18,2)) " & _
+                "INSERT INTO #t3 (Prd_Id, Day, Pct) " & _
+                "SELECT #t2.Prd_Id, Day, FORMAT(#t1.Sales / #t2.Sales,'N2') AS Pct " & _
+                "FROM #t1 JOIN #t2 ON #t2.Prd_Id = #t1.Prd_Id ORDER BY #t1.Prd_Id, Day " & _
+                "UPDATE a SET a.Pct = 1 - (SELECT SUM(Pct) FROM #t3 b WHERE b.Prd_Id = a.Prd_Id AND Day < 7) " & _
+                "FROM #t3 a WHERE a.Day = 7 " & _
+                "INSERT INTO DayOfWeekPct (Year_Id, Str_Id, Prd_Id, Day, Pct) " & _
+                "SELECT " & thisYear & ", '" & thisStore & "', #t3.Prd_Id, #t3.Day, #t3.Pct FROM #t3"
+            cmd = New SqlCommand(sql, con)
+            cmd.CommandTimeout = 120
+            cmd.ExecuteNonQuery()
+            con.Close()
+        Catch ex As Exception
+            ''MsgBox(ex.Message)
+            MessageBox.Show(ex.Message, "ERROR CREATING OTHER TABLES" & sql)
+            If con.State = ConnectionState.Open Then con.Close()
+        End Try
+    End Sub
+
+    Private Sub Save_This_Week()
+        Try
+            lastYear = thisYear - 1
+            con2.Open()
+            sql = "DECLARE @pct decimal (18,4), @sales decimal(18,4), @allsales decimal(18,4), @plan bigint,@amt decimal " & _
+                "DECLARE @rnd AS integer, @mpct decimal (18,4), @msales decimal(18,4), @mallsales decimal (18,4), @mamt decimal " & _
+                "SELECT @rnd = " & rnd & " " & _
+            "SET @sales = (SELECT ISNULL(SUM(Act_Sales),0) FROM Weekly_Summary " & _
+                "WHERE Str_Id = '" & thisStore & "' AND Dept = '" & thisDept & "' AND Year_Id = " & lastYear & " " & _
+                "AND Prd_Id = " & thisPeriod & " AND Week_Id = " & thisWeek & ") " & _
+            "SET @allsales = (SELECT ISNULL(SUM(Act_Sales),0) FROM Weekly_Summary " & _
+                "WHERE Str_Id = '" & thisStore & "' AND Dept = '" & thisDept & "' AND Year_Id = " & lastYear & " " & _
+                "AND Prd_Id = " & thisPeriod & ") " & _
+            "SELECT @pct = COALESCE(@sales / NULLIF(@allsales,0),0) WHERE @sales <> 0 " & _
+            "SET @amt = CONVERT(int,(@pct * @allsales)) " & _
+            "SET @msales = (SELECT ISNULL(SUM(Act_Mkdn),0) FROM Weekly_Summary " & _
+                "WHERE Str_Id = '" & thisStore & "' AND Dept = '" & thisDept & "' AND Year_Id = " & lastYear & " " & _
+                "AND Prd_Id = " & thisPeriod & " AND Week_Id = " & thisWeek & ") " & _
+            "SET @mallsales = (SELECT ISNULL(SUM(Act_Mkdn),0) FROM Weekly_Summary " & _
+                "WHERE Str_Id = '" & thisStore & "' AND Dept = '" & thisDept & "' AND Year_Id = " & lastYear & " " & _
+                "AND Prd_Id = " & thisPeriod & ") " & _
+            "SET @mpct = (SELECT COALESCE(@msales / NULLIF((@sales + @msales),0),0) WHERE @msales <> 0) " & _
+            "IF NOT EXISTS (SELECT * FROM Sales_Plan WHERE Plan_Id = '" & thisPlan & "' AND Str_Id = '" & thisStore & "' " & _
+            "AND Dept = '" & thisDept & "' AND Prd_Id = " & thisPeriod & " AND Week_Id = " & thisWeek & ") " & _
+            "INSERT INTO Sales_Plan (Plan_Id, Str_Id, Dept, Year_Id, Prd_Id, Week_Id, Amt, Pct, Last_Update, Last_User, Status, " & _
+            "Mkdn_Pct) " & _
+            "SELECT '" & thisPlan & "','" & thisStore & "','" & thisDept & "'," & thisYear & "," & thisPeriod & "," & _
+                thisWeek & ",@amt,@pct,'" & today & "','" & thisUser & "','Active',@mpct " & _
+            "ELSE " & _
+            "UPDATE Sales_Plan SET Amt = ROUND(@amt / @rnd,0) * @rnd, Pct = @pct, Last_Update = '" & today & "', " & _
+                "Mkdn_Pct = @mpct, Last_User = '" & thisUser & "' " & _
+                "WHERE Str_Id = '" & thisStore & "' AND Dept = '" & thisDept & "' " & _
+                "AND Year_Id = " & thisYear & " " & _
+                "AND Prd_Id = " & thisPeriod & " AND Week_Id = " & thisWeek & " AND Plan_id = '" & thisPlan & "'"
+            cmd = New SqlCommand(sql, con2)
+            cmd.ExecuteNonQuery()
+            con2.Close()
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "ERROR SAVING WEEK " & sql)
+            If con2.State = ConnectionState.Open Then con2.Close()
+        End Try
+    End Sub
+
+    Private Sub Save_This_Period(ByVal prd)
+        Try
+            con.Open()
+            sql = "DECLARE @pct decimal(18,4), @sales decimal(18,4), @allsales decimal(18,4) " & _
+                "DECLARE @mpct decimal (18,4), @msales decimal(18,4), @mallsales decimal (18,4) " & _
+                "SELECT @sales = (SELECT ISNULL(SUM(Amt),0) FROM Sales_Plan " & _
+                    "WHERE Str_Id = '" & thisStore & "' AND Dept = '" & thisDept & "' AND Plan_Id = '" &
+                        thisPlan & "' AND Prd_Id = " & prd & ") " & _
+                "SELECT @allsales = (SELECT ISNULL(SUM(Amt),0) FROM Sales_Plan " & _
+                    "WHERE Str_Id = '" & thisStore & "' AND Plan_Id = '" & thisPlan & "' AND Prd_Id = " & prd & ") " & _
+                "SELECT @pct = COALESCE(@sales / NULLIF(@allsales,0),0) WHERE @sales <> 0 " & _
+                "SELECT @msales = (SELECT ISNULL(SUM(Act_Mkdn),0) FROM Weekly_Summary " & _
+                    "WHERE Str_Id = '" & thisStore & "' AND Dept = '" & thisDept & "' AND Year_Id = " &
+                        lastYear & " AND Prd_Id = " & prd & ") " & _
+                "SELECT @mallsales = (SELECT ISNULL(SUM(Act_Mkdn),0) FROM Weekly_Summary " & _
+                    "WHERE Str_Id = '" & thisStore & "' AND Year_Id = " & lastYear & " AND Dept = '" & thisDept & "') " & _
+                "SELECT @mpct = COALESCE(@msales / (NULLIF(@sales,0) + NULLIF(@msales,0)),0) WHERE @msales <> 0 " & _
+                "IF NOT EXISTS (SELECT * FROM Sales_Plan WHERE Plan_Id = '" & thisPlan & "' " & _
+                    "AND Year_Id = " & thisYear & " AND Prd_Id = " & prd & " AND Week_Id = 0 " & _
+                    "AND Dept = '" & thisDept & "' AND Str_Id = '" & thisStore & "') " & _
+                "INSERT INTO Sales_Plan (Plan_Id, Year_Id, Str_Id, Dept, Prd_Id, Week_Id, Amt, Pct, Mkdn_Pct, Last_Update, Last_User, Status) " & _
+                "SELECT '" & thisPlan & "'," & thisYear & ",'" & thisStore & "','" & thisDept & "'," & prd & ",0,@sales," & _
+                    "@pct,@mpct,'" & today & "', '" & thisUser & "','Active' " & _
+                "ELSE " & _
+                "UPDATE Sales_Plan Set Amt = @sales, Pct = @pct, Mkdn_Pct = @mpct, Last_Update = '" & today & "', " & _
+                    "Last_User = '" & thisUser & "' " & _
+                    "WHERE Year_Id = " & thisYear & " AND Prd_Id = " & prd & " AND Week_Id = 0 " & _
+                "AND Dept = '" & thisDept & "' AND Str_Id = '" & thisStore & "' AND Plan_id = '" & thisPlan & "' "
+            cmd = New SqlCommand(sql, con)
+            cmd.ExecuteNonQuery()
+            con.Close()
+        Catch ex As Exception
+            '' MsgBox(ex.Message)
+            MessageBox.Show(ex.Message, "ERROR SAVING PERIOD")
+            If con.State = ConnectionState.Open Then con.Close()
+        End Try
+    End Sub
+
+    Private Sub Save_This_Department()
+        Try
+            con.Open()                                               ' Update dept as pct of store
+            sql = "DECLARE @pct decimal (18,4), @sales decimal(18,4), @allsales decimal(18,4), @plan bigint, @amt bigint " & _
+                "SELECT @sales = (SELECT ISNULL(SUM(Act_Sales),0) FROM Weekly_Summary WHERE Str_Id = '1' AND Dept = 'AC' " & _
+                    "AND Year_Id = " & thisYear & ") " & _
+                "SELECT @allsales = (SELECT ISNULL(SUM(Act_Sales),0) FROM Weekly_Summary WHERE Str_Id = '1' AND Year_Id = " & thisYear & ") " & _
+                "SELECT @pct = COALESCE(@sales / NULLIF(@allsales,0),0) WHERE @sales <> 0 " & _
+                "IF NOT EXISTS (SELECT * FROM Sales_Plan WHERE Plan_Id = '" & thisPlan & "' " & _
+                        "AND Year_Id = " & thisYear & " AND Prd_Id = 0 AND Week_Id = 0 " & _
+                        "AND Dept = '" & thisDept & "' AND Str_Id = '" & thisStore & "') " & _
+                     "INSERT INTO Sales_Plan (Plan_Id, Year_Id, Str_Id, Dept, Prd_Id, Week_Id, Amt, Pct, Last_Update, Last_User, Status) " & _
+                        "SELECT '" & thisPlan & "'," & thisYear & ",'" & thisStore & "','" & thisDept & "',0,0,@sales,@pct,'" &
+                            today & "', '" & thisUser & "','Active' " & _
+                    "ELSE " & _
+                     "UPDATE Sales_Plan Set Amt = @sales, Pct = @pct, Last_Update = '" & today & "', Last_User = '" & thisUser & "' " & _
+                        "WHERE Year_Id = " & thisYear & " AND Prd_Id = 0 AND Week_Id = 0 " & _
+                        "AND Dept = '" & thisDept & "' AND Str_Id = '" & thisStore & "' AND Plan_id = '" & thisPlan & "'"
+            cmd = New SqlCommand(sql, con)
+            cmd.ExecuteNonQuery()
+            con.Close()
+            For Each prdrow In tblPeriod.Rows                              ' Save Period Records
+                thisPeriod = prdrow("Period")
+                Call Save_This_Period(thisPeriod)
+            Next
+        Catch ex As Exception
+            '' MsgBox(ex.Message)
+            MessageBox.Show(ex.Message, "ERROR SAVING DEPARTMENT")
+        End Try
+    End Sub
+
+    Public Function getNumeric(value As String) As String
+        Dim output As StringBuilder = New StringBuilder
+        For i = 0 To value.Length - 1
+            If IsNumeric(value(i)) Then
+                output.Append(value(i))
+            End If
+        Next
+        Return output.ToString()
+    End Function
+End Class

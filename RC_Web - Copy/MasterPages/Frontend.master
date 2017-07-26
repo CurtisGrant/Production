@@ -1,0 +1,40 @@
+﻿<%@ Master Language="VB" CodeFile="Frontend.master.vb" Inherits="MasterPages_FrontendMaster" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+    <asp:ContentPlaceHolder id="head" runat="server">
+        <%--<link href="~/App_Themes/Monochrome/Monochrome.css" rel="stylesheet" type="text/css" />--%>
+    </asp:ContentPlaceHolder>
+    <script src="/Scripts/modernizr-2.8.3.js"></script>
+</head>
+<body>
+    <form id="form1" runat="server">        
+    <div id="PageWrapper">
+       <asp:ScriptManager ID="ScriptManager1" runat="server" EnablePartialRendering="true">
+        </asp:ScriptManager>
+        <header><a href="/">Header goes here</a></header>
+        <nav>
+            <asp:Menu ID="Menu1" runat="server" DataSourceID="SiteMapDataSource1" Orientation="Horizontal" 
+                StaticEnableDefaultPopOutImage="False" CssClass="MainMenu"></asp:Menu>
+            <asp:SiteMapDataSource ID="SiteMapDataSource1" runat="server" ShowStartingNode="False" />
+        </nav>
+        <section id="MainContent">
+            <asp:SiteMapPath ID="SiteMapPath1" runat="server"></asp:SiteMapPath>
+            <asp:ContentPlaceHolder ID="cpMainContent" runat="server">
+            </asp:ContentPlaceHolder>
+        </section>
+        <footer>
+            <asp:LoginName ID="LoginName1" runat="server" FormatString="Logged in as {0}" />
+            <asp:LoginView ID="LoginView1" runat="server">
+                <LoggedInTemplate>
+                    (asp:LoginStatus ID="LoginStatus1" runat="server" />)
+                </LoggedInTemplate>
+            </asp:LoginView>
+        </footer>   
+    </div>
+    </form>
+</body>
+</html>

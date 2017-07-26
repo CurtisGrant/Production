@@ -1,0 +1,334 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{7EC90172-5A5E-463D-A397-CA2A87AE28D9}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <StartupObject>RCAdmin.My.MyApplication</StartupObject>
+    <RootNamespace>RCAdmin</RootNamespace>
+    <AssemblyName>RCAdmin</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <MyType>WindowsForms</MyType>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DocumentationFile>RCAdmin.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DocumentationFile>RCAdmin.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionExplicit>On</OptionExplicit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionCompare>Binary</OptionCompare>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionStrict>Off</OptionStrict>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Drawing" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Windows.Forms" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Xml.Linq" />
+    <Import Include="System.Threading.Tasks" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BuyerPCT.Designer.vb">
+      <DependentUpon>BuyerPCT.vb</DependentUpon>
+    </Compile>
+    <Compile Include="BuyerPCT.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Classes.Designer.vb">
+      <DependentUpon>Classes.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Classes.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ClassMaintenance.Designer.vb">
+      <DependentUpon>ClassMaintenance.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ClassMaintenance.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ClassPCT.Designer.vb">
+      <DependentUpon>ClassPCT.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ClassPCT.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ControlsAdmin.Designer.vb">
+      <DependentUpon>ControlsAdmin.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ControlsAdmin.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CreatePlan.Designer.vb">
+      <DependentUpon>CreatePlan.vb</DependentUpon>
+    </Compile>
+    <Compile Include="CreatePlan.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DayPCT.Designer.vb">
+      <DependentUpon>DayPCT.vb</DependentUpon>
+    </Compile>
+    <Compile Include="DayPCT.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DayPct2.Designer.vb">
+      <DependentUpon>DayPct2.vb</DependentUpon>
+    </Compile>
+    <Compile Include="DayPct2.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Days.Designer.vb">
+      <DependentUpon>Days.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Days.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Days2.Designer.vb">
+      <DependentUpon>Days2.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Days2.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Days3.Designer.vb">
+      <DependentUpon>Days3.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Days3.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Days4.Designer.vb">
+      <DependentUpon>Days4.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Days4.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditXML.Designer.vb">
+      <DependentUpon>EditXML.vb</DependentUpon>
+    </Compile>
+    <Compile Include="EditXML.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainMenu.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainMenu.Designer.vb">
+      <DependentUpon>MainMenu.vb</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MarkdownPlan.Designer.vb">
+      <DependentUpon>MarkdownPlan.vb</DependentUpon>
+    </Compile>
+    <Compile Include="MarkdownPlan.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MarkdownWeeks.Designer.vb">
+      <DependentUpon>MarkdownWeeks.vb</DependentUpon>
+    </Compile>
+    <Compile Include="MarkdownWeeks.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="PercentageMaintenance.Designer.vb">
+      <DependentUpon>PercentageMaintenance.vb</DependentUpon>
+    </Compile>
+    <Compile Include="PercentageMaintenance.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SalesPlan.Designer.vb">
+      <DependentUpon>SalesPlan.vb</DependentUpon>
+    </Compile>
+    <Compile Include="SalesPlan.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ScoringSetup.Designer.vb">
+      <DependentUpon>ScoringSetup.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ScoringSetup.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="StoreHours.Designer.vb">
+      <DependentUpon>StoreHours.vb</DependentUpon>
+    </Compile>
+    <Compile Include="StoreHours.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TableMaintenance.Designer.vb">
+      <DependentUpon>TableMaintenance.vb</DependentUpon>
+    </Compile>
+    <Compile Include="TableMaintenance.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Weeks.Designer.vb">
+      <DependentUpon>Weeks.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Weeks.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="WeeksOnHand.Designer.vb">
+      <DependentUpon>WeeksOnHand.vb</DependentUpon>
+    </Compile>
+    <Compile Include="WeeksOnHand.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="WeeksOnHand_OLD.Designer.vb">
+      <DependentUpon>WeeksOnHand_OLD.vb</DependentUpon>
+    </Compile>
+    <Compile Include="WeeksOnHand_OLD.vb">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="BuyerPCT.resx">
+      <DependentUpon>BuyerPCT.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Classes.resx">
+      <DependentUpon>Classes.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ClassMaintenance.resx">
+      <DependentUpon>ClassMaintenance.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ClassPCT.resx">
+      <DependentUpon>ClassPCT.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ControlsAdmin.resx">
+      <DependentUpon>ControlsAdmin.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CreatePlan.resx">
+      <DependentUpon>CreatePlan.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DayPCT.resx">
+      <DependentUpon>DayPCT.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DayPct2.resx">
+      <DependentUpon>DayPct2.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Days.resx">
+      <DependentUpon>Days.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Days2.resx">
+      <DependentUpon>Days2.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Days3.resx">
+      <DependentUpon>Days3.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Days4.resx">
+      <DependentUpon>Days4.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditXML.resx">
+      <DependentUpon>EditXML.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainMenu.resx">
+      <DependentUpon>MainMenu.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarkdownPlan.resx">
+      <DependentUpon>MarkdownPlan.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarkdownWeeks.resx">
+      <DependentUpon>MarkdownWeeks.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PercentageMaintenance.resx">
+      <DependentUpon>PercentageMaintenance.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SalesPlan.resx">
+      <DependentUpon>SalesPlan.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ScoringSetup.resx">
+      <DependentUpon>ScoringSetup.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StoreHours.resx">
+      <DependentUpon>StoreHours.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TableMaintenance.resx">
+      <DependentUpon>TableMaintenance.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Weeks.resx">
+      <DependentUpon>Weeks.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="WeeksOnHand.resx">
+      <DependentUpon>WeeksOnHand.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="WeeksOnHand_OLD.resx">
+      <DependentUpon>WeeksOnHand_OLD.vb</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="App.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

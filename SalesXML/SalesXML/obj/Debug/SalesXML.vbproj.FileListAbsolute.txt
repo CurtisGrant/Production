@@ -1,0 +1,9 @@
+C:\Projects\DEMO\SalesXML\SalesXML\bin\Debug\SalesXML.exe.config
+C:\Projects\DEMO\SalesXML\SalesXML\bin\Debug\SalesXML.exe
+C:\Projects\DEMO\SalesXML\SalesXML\bin\Debug\SalesXML.pdb
+C:\Projects\DEMO\SalesXML\SalesXML\bin\Debug\SalesXML.xml
+C:\Projects\DEMO\SalesXML\SalesXML\obj\Debug\SalesXML.Resources.resources
+C:\Projects\DEMO\SalesXML\SalesXML\obj\Debug\SalesXML.vbproj.GenerateResource.Cache
+C:\Projects\DEMO\SalesXML\SalesXML\obj\Debug\SalesXML.exe
+C:\Projects\DEMO\SalesXML\SalesXML\obj\Debug\SalesXML.xml
+C:\Projects\DEMO\SalesXML\SalesXML\obj\Debug\SalesXML.pdb

@@ -1,0 +1,9 @@
+C:\Projects\DEMO\DailySalesUpdate\DailySalesUpdate\bin\Debug\DailySalesUpdate.exe.config
+C:\Projects\DEMO\DailySalesUpdate\DailySalesUpdate\bin\Debug\DailySalesUpdate.exe
+C:\Projects\DEMO\DailySalesUpdate\DailySalesUpdate\bin\Debug\DailySalesUpdate.pdb
+C:\Projects\DEMO\DailySalesUpdate\DailySalesUpdate\bin\Debug\DailySalesUpdate.xml
+C:\Projects\DEMO\DailySalesUpdate\DailySalesUpdate\obj\Debug\DailySalesUpdate.Resources.resources
+C:\Projects\DEMO\DailySalesUpdate\DailySalesUpdate\obj\Debug\DailySalesUpdate.vbproj.GenerateResource.Cache
+C:\Projects\DEMO\DailySalesUpdate\DailySalesUpdate\obj\Debug\DailySalesUpdate.exe
+C:\Projects\DEMO\DailySalesUpdate\DailySalesUpdate\obj\Debug\DailySalesUpdate.xml
+C:\Projects\DEMO\DailySalesUpdate\DailySalesUpdate\obj\Debug\DailySalesUpdate.pdb

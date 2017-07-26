@@ -7,4 +7,3 @@ C:\Projects\DEMO\XMLUpdate\XMLUpdate\obj\Debug\XMLUpdate.vbproj.GenerateResource
 C:\Projects\DEMO\XMLUpdate\XMLUpdate\obj\Debug\XMLUpdate.exe
 C:\Projects\DEMO\XMLUpdate\XMLUpdate\obj\Debug\XMLUpdate.xml
 C:\Projects\DEMO\XMLUpdate\XMLUpdate\obj\Debug\XMLUpdate.pdb
-C:\Projects\DEMO\XMLUpdate\XMLUpdate\obj\Debug\XMLUpdate.vbprojResolveAssemblyReference.cache
