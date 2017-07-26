@@ -1635,17 +1635,18 @@ Module Module1
                     "FROM Item_Sales AS p " & _
                         "WHERE Str_Id = '" & store & "' AND Loc_Id = '" & location & "' AND Sku = '" & item & "' AND eDate = '" & thisEdate & "' "
             Else
-                sql = "IF NOT EXISTS (SELECT * FROM Item_Inv d WHERE Loc_Id = '" & Trim(location) & "' AND Sku = '" & Trim(item) & "' " & _
-                    "AND eDate = '" & thisEdate & "') " & _
-                    "INSERT INTO Item_Inv (Loc_Id, Sku, sDate, eDate, " & theField & ", Cost, Retail, YrWk, Item, DIM1, DIM2, DIM3) " & _
-                        "SELECT '" & Trim(location) & "', '" & Trim(item) & "', '" & thisSdate & "', '" & thisEdate & "', " & _
-                        qty & ", " & cost & ", " & retail & ", " & _
-                        "(SELECT YrWk FROM Calendar WHERE eDate = '" & thisEdate & "' AND Prd_Id > 0 AND Week_Id > 0), " & _
-                        "Item, DIM1, DIM2, DIM3 " & _
-                        "FROM Item_Master WHERE Sku = '" & Trim(item) & "' " & _
-                    "ELSE " & _
-                    "UPDATE d SET " & theField & " = ISNULL(" & theField & ",0) + " & qty & " " & _
-                    "FROM Item_Inv AS d " & _
+                sql = "IF NOT EXISTS (SELECT * FROM Item_Inv d WHERE Loc_Id = '" & Trim(location) & "' AND Sku = '" & Trim(item) & "' " &
+                    "AND eDate = '" & thisEdate & "') " &
+                    "INSERT INTO Item_Inv (Loc_Id, Sku, sDate, eDate, " & theField & ", Cost, Retail, YrWk, Item, DIM1, DIM2, DIM3, " &
+                    "Avail, Begin_OH, End_OH, Max_OH) " &
+                    "SELECT '" & Trim(location) & "', '" & Trim(item) & "', '" & thisSdate & "', '" & thisEdate & "', " &
+                        qty & ", " & cost & ", " & retail & ", " &
+                        "(SELECT YrWk FROM Calendar WHERE eDate = '" & thisEdate & "' AND Prd_Id > 0 AND Week_Id > 0), " &
+                        "Item, DIM1, DIM2, DIM3, 0, 0, " & qty & ", " & qty & " " &
+                        "FROM Item_Master WHERE Sku = '" & Trim(item) & "' " &
+                    "ELSE " &
+                    "UPDATE d SET " & theField & " = ISNULL(" & theField & ",0) + " & qty & " " &
+                    "FROM Item_Inv AS d " &
                         "WHERE Loc_Id = '" & Trim(location) & "' AND Sku = '" & Trim(item) & "' AND eDate = '" & thisEdate & "'"
             End If
             cmd = New SqlCommand(sql, con2)
