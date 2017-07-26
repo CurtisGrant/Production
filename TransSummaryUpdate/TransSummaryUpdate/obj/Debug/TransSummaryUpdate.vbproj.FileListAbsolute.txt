@@ -1,0 +1,9 @@
+C:\Projects\DEMO\TransSummaryUpdate\TransSummaryUpdate\bin\Debug\TransSummaryUpdate.exe.config
+C:\Projects\DEMO\TransSummaryUpdate\TransSummaryUpdate\obj\Debug\TransSummaryUpdate.Resources.resources
+C:\Projects\DEMO\TransSummaryUpdate\TransSummaryUpdate\obj\Debug\TransSummaryUpdate.vbproj.GenerateResource.Cache
+C:\Projects\DEMO\TransSummaryUpdate\TransSummaryUpdate\bin\Debug\TransSummaryUpdate.exe
+C:\Projects\DEMO\TransSummaryUpdate\TransSummaryUpdate\bin\Debug\TransSummaryUpdate.pdb
+C:\Projects\DEMO\TransSummaryUpdate\TransSummaryUpdate\bin\Debug\TransSummaryUpdate.xml
+C:\Projects\DEMO\TransSummaryUpdate\TransSummaryUpdate\obj\Debug\TransSummaryUpdate.exe
+C:\Projects\DEMO\TransSummaryUpdate\TransSummaryUpdate\obj\Debug\TransSummaryUpdate.xml
+C:\Projects\DEMO\TransSummaryUpdate\TransSummaryUpdate\obj\Debug\TransSummaryUpdate.pdb

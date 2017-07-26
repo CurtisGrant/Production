@@ -1,0 +1,27 @@
+﻿<%@ Master Language="VB" CodeFile="ItemManagement.master.vb" Inherits="MasterPages_ItemManagement" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+    <asp:ContentPlaceHolder id="head" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+<body>
+    <form id="form1" runat="server">
+    <div>
+        <nav style="width:200px; float:left;">
+            <u1>
+                <li><a href="~/ItemManagement/Default.aspx" runat="server"> ItemManagement Home</a></li>
+                <li><a href="~ItemManagement/Items.aspx" runat="server">Manage Items</a></li>
+                <li><a href="~ItemManagement/PurchaseRequests.aspx" runat="server">Manage Purchase Requests</a></li>
+            </u1>
+        </nav>
+        <section style="width: 750px; float: left;">
+             <asp:ContentPlaceHolder id="cpMainContent" runat="server"></asp:ContentPlaceHolder>
+        </section>
+    </div>
+    </form>
+</body>
+</html>

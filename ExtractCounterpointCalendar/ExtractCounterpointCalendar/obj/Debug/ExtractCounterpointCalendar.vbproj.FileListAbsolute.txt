@@ -1,0 +1,9 @@
+C:\Projects\DEMO\ExtractCounterpointCalendar\ExtractCounterpointCalendar\bin\Debug\ExtractCounterpointCalendar.exe.config
+C:\Projects\DEMO\ExtractCounterpointCalendar\ExtractCounterpointCalendar\obj\Debug\ExtractCounterpointCalendar.Resources.resources
+C:\Projects\DEMO\ExtractCounterpointCalendar\ExtractCounterpointCalendar\obj\Debug\ExtractCounterpointCalendar.vbproj.GenerateResource.Cache
+C:\Projects\DEMO\ExtractCounterpointCalendar\ExtractCounterpointCalendar\bin\Debug\ExtractCounterpointCalendar.exe
+C:\Projects\DEMO\ExtractCounterpointCalendar\ExtractCounterpointCalendar\bin\Debug\ExtractCounterpointCalendar.pdb
+C:\Projects\DEMO\ExtractCounterpointCalendar\ExtractCounterpointCalendar\bin\Debug\ExtractCounterpointCalendar.xml
+C:\Projects\DEMO\ExtractCounterpointCalendar\ExtractCounterpointCalendar\obj\Debug\ExtractCounterpointCalendar.exe
+C:\Projects\DEMO\ExtractCounterpointCalendar\ExtractCounterpointCalendar\obj\Debug\ExtractCounterpointCalendar.xml
+C:\Projects\DEMO\ExtractCounterpointCalendar\ExtractCounterpointCalendar\obj\Debug\ExtractCounterpointCalendar.pdb

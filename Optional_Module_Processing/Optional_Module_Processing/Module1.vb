@@ -1,9 +1,19 @@
 ﻿Imports System.Data.SqlClient
 Imports System.Xml
-
+'
+'
+'
+'
+'           Summary files need to by changed to Inv_Summary an Sales Summary
+'
+'
+'
+'
+'
 Module Module1
     Public errorLog, client, errorPath As String
-    Private con, con2, con3, con4, con5, mcon As SqlConnection
+    Public mcon As SqlConnection
+    Private con, con2, con3, con4, con5 As SqlConnection
     Private cmd As SqlCommand
     Private rdr, rdr2, rdr3, rdr4, rdr5 As SqlDataReader
     Private sql, store, dept, buyer, clss As String

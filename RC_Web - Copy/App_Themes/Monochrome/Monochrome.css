@@ -1,0 +1,129 @@
+* 
+{
+    font-family: Arial;
+
+}
+body 
+{
+/*background-color:#336699;*/
+}
+
+.button 
+{  
+   background-color: #336699;   
+   color: white;  
+}
+
+.button:hover 
+{   
+   background-color: White;
+   color :#336699 
+}
+
+header {
+    background-color: #C0C0C0;
+    width: 844px;
+    height: 50px;    
+}
+
+h1 {
+    font-size: 20px;
+    padding: 0;
+    margin: 0 0 10px 0;
+}
+.Introduction {
+          font-style: italic;
+          color: #003399;
+        }
+
+#PageWrapper {
+    width: 844px;
+    margin: auto;
+}
+
+nav {
+  width: 844px;
+  height: 36px;
+  padding-top: 7px;
+  padding-left: 17px;
+}
+
+section#MainContent {
+    width: 844px;
+    float: left;
+}
+
+aside {
+    background-color: gray;
+    width: 180px;
+    float: left;
+}
+
+footer {
+    background-color: #C0C0C0;
+    width: 844px;
+    clear: both;
+}
+/*#region MainContent*/
+section#MainContent a {
+    color: #acff00;
+    text-decoration: underline;
+}
+
+    section#MainContent a:visited {
+        color: #FF0000;
+        text-decoration: underline;
+    }
+
+    section#MainContent a:hover {
+        color: #FFA500;
+        text-decoration: underline;
+    }
+/*#endregion*/
+
+.MyButton
+{
+    color: white;
+}
+
+.myGridView
+{
+    font: small; 
+}
+u1.level1
+{
+    /* defines the apperance of the main menu items*/
+    font-size: 14px;
+    font-weight: bold;
+    height: 19px;
+    line-height: 19px;
+}
+u1.level1 .selected
+{
+    /* defines the apperance of selected menu items*/
+    background-color: #509EE7;
+}
+a.level1
+{
+    /* adds some white space to the left of the main menu item text.
+        !!!Important: is used to override the inline CSS that the menu creates*/
+    padding-left: 8px;
+}
+a.level2
+{
+    /* defines the apperance of the submenu items*/
+    padding-left: 8px;
+}
+a.level1:hover, a.level2:hover
+{
+    /* define the hover style for then main and submenu items*/
+    background-color: #509EE7;
+}
+.ErrorMessage
+{
+    color: red;
+}
+img
+{
+    border: 0;
+}

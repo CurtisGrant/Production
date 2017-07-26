@@ -4,13 +4,14 @@ Imports System.Globalization
 Module Module1
     Public client As String
     Public errorLog As String
+    Public rcCON As SqlConnection
     Private server, dbase, thePath, xmlPath, sqlUserId, sqlPassword, conString, rcConString, sql, msg, rcExePath As String
     Private Begin_Date, End_Date, todaysdate, thisdate, thisenddate, thisweek, finalweek, dte, xmlBeginDate, xmlEndDate As Date
     Private aYearAgo As Date
     Private thisDateTime As DateTime
     Private con, con2, con3, con4, con5, mcon As SqlConnection
     Private cmd As SqlCommand
-    Private store, dept, buyer, clss, dateStr As String
+    Private location, store, dept, buyer, clss, dateStr As String
     Private rdr, rdr2, rdr3, rdr4, rdr5 As SqlDataReader
     Private cnt, thisYear As Integer
     Private oTest As Object
@@ -67,7 +68,7 @@ Module Module1
         ''xmlPath = "c:\retailclarity\xmls\tcm"
         ''sqlUserId = "sa"
         ''sqlPassword = "PGadm01!"
-        ''dateStr = "3/18/2017"
+        ''dateStr = "6/24/2017"
         ''errorLog = "c:\retailclarity\errors"
 
 
@@ -75,11 +76,11 @@ Module Module1
 
 
             rcConString = "Server=" & rcServer & ";Initial Catalog=RCClient;Integrated Security=True"
-            con = New SqlConnection(rcConString)
-            con.Open()
+            rcCON = New SqlConnection(rcConString)
+            rcCON.Open()
             sql = "SELECT Server, [Database], SQLUserId, SQLPassword, XMLs, ErrorLog, SalesPlan FROM Client_Master " & _
                 "WHERE Client_ID = '" & client & "'"
-            cmd = New SqlCommand(sql, con)
+            cmd = New SqlCommand(sql, rcCON)
             rdr = cmd.ExecuteReader
             While rdr.Read
                 oTest = rdr("Server")
@@ -105,8 +106,8 @@ Module Module1
                     If oTest = "Y" Then Has_Sales_Plan = True
                 End If
             End While
-            con.Close()
-            con.Dispose()
+            rcCON.Close()
+            ''con.Dispose()
 
         Catch ex As Exception
             Console.WriteLine(ex.StackTrace)
@@ -187,8 +188,7 @@ Module Module1
                 Console.WriteLine("Updating On Order for " & client)
                 '
                 '
-                '                                                                  ' create Sales_Summary records where needed
-                Dim location, dept, buyer, clss As String
+                '                                                                  ' create Inv_Summary records where needed
                 Dim dte As Date
                 con.Open()
                 sql = "SELECT DISTINCT c.eDate, h.Loc_ID, m.Dept, m.Buyer, m.Class " & _
@@ -394,13 +394,14 @@ Module Module1
             End Try
             ''------------------------------------------------ Sales --------------------------------------------------------------------
 100:        Try
+                Dim location As String
                 stopWatch.Start()
                 Console.WriteLine("Updating sales for " & client)
 
                 '   Update Act_Sales
                 con.Open()
                 con2.Open()
-                sql = "SELECT DISTINCT eDate, Str_ID, Dept, Buyer, Class " & _
+                sql = "SELECT DISTINCT eDate, Str_ID, Loc_Id, Dept, Buyer, Class " & _
                     "FROM Item_Sales AS d " & _
                     "INNER JOIN Item_Master AS m ON m.Sku = d.Sku " & _
                     "WHERE Sold <> 0 AND eDate >= '" & End_Date & "'"
@@ -410,14 +411,15 @@ Module Module1
                 While rdr.Read
                     dte = rdr("eDate")
                     store = rdr("Str_Id")
+                    location = rdr("Loc_Id")
                     dept = rdr("Dept")
                     buyer = rdr("Buyer")
                     clss = rdr("Class")
-                    sql = "IF NOT EXISTS (SELECT eDate FROM Sales_Summary WHERE Str_Id = '" & store & "' AND Dept = '" & dept & "' " & _
-                        "AND Buyer = '" & buyer & "' AND Class = '" & clss & "' AND eDate = '" & dte & "')" & _
-                        "INSERT INTO Sales_Summary (Str_Id, Dept, Buyer, Class, Year_ID, Prd_Id, Week_Id, sDate, eDate, Week_Num) " & _
-                        "SELECT '" & store & "','" & dept & "','" & buyer & "','" & clss & "',Year_Id, Prd_Id, PrdWk, sDate, " &
-                       "eDate, Week_Id FROM Calendar WHERE PrdWk > 0 AND eDate = '" & dte & "'"
+                    sql = "IF NOT EXISTS (SELECT eDate FROM Sales_Summary WHERE Str_Id = '" & store & "' AND Loc_Id = '" & location & "' " & _
+                        "AND Dept = '" & dept & "' AND Buyer = '" & buyer & "' AND Class = '" & clss & "' AND eDate = '" & dte & "')" & _
+                        "INSERT INTO Sales_Summary (Str_Id, Loc_Id, Dept, Buyer, Class, Year_ID, Prd_Id, Week_Id, sDate, eDate, Week_Num) " & _
+                        "SELECT '" & store & "','" & location & "','" & dept & "','" & buyer & "','" & clss & "'," & _
+                        "Year_Id, Prd_Id, PrdWk, sDate, eDate, Week_Id FROM Calendar WHERE PrdWk > 0 AND eDate = '" & dte & "'"
                     cmd = New SqlCommand(sql, con2)
                     cmd.ExecuteNonQuery()
                 End While
@@ -426,11 +428,11 @@ Module Module1
 
                 con.Open()
                 con2.Open()
-                sql = "SELECT Str_Id, Dept, Buyer, Class, eDate, SUM(ISNULL(Sales_Retail,0)) As sales, " & _
+                sql = "SELECT Str_Id, Loc_Id, Dept, Buyer, Class, eDate, SUM(ISNULL(Sales_Retail,0)) As sales, " & _
                     "SUM(ISNULL(Sales_Cost,0)) AS cost, SUM(ISNULL(Markdown,0)) as mkdn " & _
                     "FROM Item_Sales d JOIN Item_Master m ON m.Sku = d.Sku " & _
                     "WHERE sDate >= '" & Begin_Date & "' AND eDate <= '" & End_Date & "' AND Sales_Retail <> 0 " & _
-                    "GROUP BY Str_Id, Dept, Buyer, Class, eDate"
+                    "GROUP BY Str_Id, Loc_Id, Dept, Buyer, Class, eDate"
                 cmd = New SqlCommand(sql, con)
                 cmd.CommandTimeout = 120
                 rdr = cmd.ExecuteReader
@@ -438,6 +440,7 @@ Module Module1
                 While rdr.Read
                     dte = rdr("eDate")
                     store = rdr("Str_Id")
+                    location = rdr("Loc_Id")
                     dept = rdr("Dept")
                     buyer = rdr("Buyer")
                     clss = rdr("Class")
@@ -445,8 +448,8 @@ Module Module1
                     cost = rdr("cost")
                     mkdn = rdr("mkdn")
                     sql = "UPDATE Sales_Summary SET Act_Sales = " & amt & ", Act_Sales_Cost = " & cost & ", Act_Mkdn = " & mkdn & " " & _
-                   "WHERE Str_Id='" & store & "' AND eDate = '" & dte & "' AND Dept = '" & dept & "' AND Buyer = '" & buyer & "' " & _
-                   "AND Class = '" & clss & "'"
+                   "WHERE Str_Id='" & store & "' AND Loc_Id = '" & location & "' AND eDate = '" & dte & "' AND Dept = '" & dept & "' " & _
+                   "AND Buyer = '" & buyer & "' AND Class = '" & clss & "'"
                     cmd = New SqlCommand(sql, con2)
                     cmd.ExecuteNonQuery()
                 End While
@@ -480,7 +483,7 @@ Module Module1
                     con.Open()
                     sql = "SELECT c.Plan_Year AS Year_Id, c.Str_Id, c.Prd_Id, s.Week_Id, cl.sDate, cl.eDate, cl.YrPrd, PrdWk, " & _
                         "c.Dept, c.Buyer, c.Class, ISNULL(s.AMT * c.Pct * b.Pct,0) AS PlanAmt, " & _
-                        "ISNULL(s.AMT * c.Pct * b.Pct,0) * ISNULL(s.Mkdn_Pct,0) AS PlanMkdn  FROM Class_Pct c " & _
+                        "ISNULL(s.AMT * c.Pct * b.Pct,0) * ISNULL(s.Mkdn_Pct,0) AS PlanMkdn FROM Class_Pct c " & _
                         "LEFT JOIN Buyer_Pct b ON b.Plan_Year = c.Plan_Year AND b.Str_Id = c.Str_Id AND b.Prd_Id = c.Prd_Id " & _
                             "AND b.Dept = c.Dept AND b.Buyer = c.Buyer " & _
                         "LEFT JOIN Sales_Plan s ON s.Year_Id = c.Plan_Year AND s.Str_Id = c.Str_id AND s.Dept = c.Dept " & _
@@ -614,27 +617,27 @@ Module Module1
                     Dim eDatex As Date
                     Dim oTest As Object
                     con.Open()
-                    sql = "Select Str_Id, Dept, Buyer, Class, eDate, Act_Inv_Retail FROM Inv_Summary " & _
+                    sql = "Select Loc_Id, Dept, Buyer, Class, eDate, Act_Inv_Retail FROM Inv_Summary " & _
                         "WHERE Act_Inv_Retail > 0 AND eDate >= '" & Begin_Date & "' AND eDate <= '" & End_Date & "' " & _
                         "ORDER BY eDate, Str_Id, Dept, Buyer, Class"
                     cmd = New SqlCommand(sql, con)
                     cmd.CommandTimeout = 120
                     rdr = cmd.ExecuteReader
                     While rdr.Read
-                        store = rdr("Str_Id")
+                        location = rdr("Loc_Id")
                         dept = rdr("Dept")
                         buyer = rdr("Buyer")
                         clss = rdr("Class")
                         eDatex = rdr("eDate")
                         oTest = rdr("Act_Inv_Retail")
                         If IsNumeric(oTest) Then actInv = oTest Else actInv = 0
-                        Console.WriteLine(eDatex & " " & store & " " & dept & " " & buyer & " " & clss & " " & oTest)
+                        Console.WriteLine(eDatex & " " & location & " " & dept & " " & buyer & " " & clss & " " & oTest)
                         planSales = 0
                         numWeeks = 0
                         con2.Open()
-                        sql = "SELECT ISNULL(Plan_Sales,0) + ISNULL(Plan_Mkdn,0) As Sales FROM Sales_Summary " & _
-                            "WHERE Str_Id = '" & store & "' AND Dept = '" & dept & "' AND Buyer = '" & buyer & "' AND " & _
-                            "Class = '" & clss & "' AND eDate > '" & eDatex & "' ORDER by eDate"
+                        sql = "SELECT SUM(ISNULL(Plan_Sales,0) + ISNULL(Plan_Mkdn,0)) As Sales FROM Sales_Summary " & _
+                            "WHERE Loc_Id = '" & location & "' AND Dept = '" & dept & "' AND Buyer = '" & buyer & "' AND " & _
+                            "Class = '" & clss & "' AND eDate > '" & eDatex & "' "
                         Dim cmd26 As New SqlCommand(sql, con2)
                         cmd26.CommandTimeout = 120
                         Dim rdr26 As SqlDataReader = cmd26.ExecuteReader
@@ -646,7 +649,7 @@ Module Module1
                             End If
                             If planSales >= actInv Then
                                 con3.Open()
-                                sql = "UPDATE Inv_Summary SET Projected_WksOH = " & numWeeks & " WHERE Str_Id = '" & store & "' " & _
+                                sql = "UPDATE Inv_Summary SET Projected_WksOH = " & numWeeks & " WHERE Loc_Id = '" & location & "' " & _
                                 "AND Dept = '" & dept & "' AND Buyer = '" & buyer & "' AND Class = '" & clss & "' AND eDate = '" & eDatex & "'"
                                 cmd = New SqlCommand(sql, con3)
                                 cmd.ExecuteNonQuery()
@@ -734,7 +737,6 @@ Module Module1
         stopWatch.Start()
         Dim theDate As Date
         Dim row, sRow As DataRow
-        Dim location, store As String
         con.Open()
         sql = "SELECT DISTINCT Str_Id FROM Inv_Summary ORDER BY Loc_Id"
         cmd = New SqlCommand(sql, con)
@@ -859,7 +861,7 @@ Module Module1
         stopWatch.Stop()
         Dim ts As TimeSpan = stopWatch.Elapsed
         Dim et As String = String.Format("{0:00}:{1:00}:{2:00}:{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10)
-        Dim pgm As String = "XMLUpdate"
+        Dim pgm As String = "Client_Weekly_Summary"
         con.Open()
         sql = "INSERT INTO Process_Log (Date, Program, Module, Process, Message, Status, Duration) " & _
             "SELECT '" & Date.Now & "','" & pgm & "','" & modul & "','" & process & "','" & m & "','" & stat & "','" & et & "'"

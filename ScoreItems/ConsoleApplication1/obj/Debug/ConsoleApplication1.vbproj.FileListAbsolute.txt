@@ -1,0 +1,9 @@
+C:\Projects\DEMO\ScoreItems\ConsoleApplication1\bin\Debug\ConsoleApplication1.exe.config
+C:\Projects\DEMO\ScoreItems\ConsoleApplication1\obj\Debug\ScoreItems.Resources.resources
+C:\Projects\DEMO\ScoreItems\ConsoleApplication1\obj\Debug\ConsoleApplication1.vbproj.GenerateResource.Cache
+C:\Projects\DEMO\ScoreItems\ConsoleApplication1\bin\Debug\ConsoleApplication1.exe
+C:\Projects\DEMO\ScoreItems\ConsoleApplication1\bin\Debug\ConsoleApplication1.pdb
+C:\Projects\DEMO\ScoreItems\ConsoleApplication1\bin\Debug\ConsoleApplication1.xml
+C:\Projects\DEMO\ScoreItems\ConsoleApplication1\obj\Debug\ConsoleApplication1.exe
+C:\Projects\DEMO\ScoreItems\ConsoleApplication1\obj\Debug\ConsoleApplication1.xml
+C:\Projects\DEMO\ScoreItems\ConsoleApplication1\obj\Debug\ConsoleApplication1.pdb

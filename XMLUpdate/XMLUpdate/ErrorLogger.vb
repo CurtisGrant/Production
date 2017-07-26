@@ -1,5 +1,6 @@
 ﻿Imports System.IO
 Imports System.Text
+Imports System.Data.SqlClient
 
 <CLSCompliant(True)> _
 Public Class ErrorLogger
@@ -9,15 +10,18 @@ Public Class ErrorLogger
     Public Sub WriteToErrorLog(ByVal msg As String, ByVal stkTrace As String, ByVal title As String)
         Dim errorPath As String = Module1.rcErrorPath
         Dim client As String = Module1.client
-
+        Dim rcCon As SqlConnection = Module1.rcCon
+        Dim cmd As SqlCommand
         If Not System.IO.Directory.Exists(rcErrorPath) Then
             System.IO.Directory.CreateDirectory(rcErrorPath)
         End If
 
-        ''Dim fs As FileStream = New FileStream(rcErrorPath & "\errlog.txt", FileMode.OpenOrCreate, FileAccess.ReadWrite)
-        ''Dim s As StreamWriter = New StreamWriter(fs)
-        ''s.Close()
-        ''fs.Close()
+        'rcCon.Open()
+        'sql = "INSERT INTO ErrorLog(Client_Id, Date, Error) " & _
+        '    "SELECT '" & client & "','" & Date.Now & "','" & msg & "'"
+        'cmd = New SqlCommand(sql, rcCon)
+        'cmd.ExecuteNonQuery()
+        'rcCon.Close()
 
         Dim fs1 As FileStream = New FileStream(rcErrorPath & "\errlog.txt", FileMode.Append, FileAccess.Write)
         Dim s1 As StreamWriter = New StreamWriter(fs1)

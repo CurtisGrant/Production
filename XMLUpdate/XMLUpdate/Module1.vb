@@ -7,12 +7,13 @@ Imports System.Text.RegularExpressions
 Module Module1
     Private eDateTBL As DataTable
     Private con, con2, con3 As SqlConnection
-    Private cmd As SqlCommand
-    Public rdr, rdr2 As SqlDataReader
-    Public client, sql, rcErrorPath, xmlPath, conString, conString2, constr As String
+    Public rcCon As SqlConnection
+    Private cmd, cmd2, cmd3 As SqlCommand
+    Private rdr, rdr2 As SqlDataReader
+    Public client, sql, rcErrorPath, xmlPath, conString, conString2, constr, rcConString As String
     Private oTest As Object
     Private stopWatch As Stopwatch
-    Private totlQty, totlCost, totlRetail, totlMarkdown As Decimal
+    Private totlQty, totlCost, totlRetail, totlMarkdown, diff As Decimal
     Private records As Integer
     Private msg As String
 
@@ -20,7 +21,7 @@ Module Module1
         ''Try
         Dim fileSZ As Integer = 0
         Dim xmlReader As XmlTextReader = New XmlTextReader("c:\RetailClarity\RCCLIENT.xml")
-        Dim rcServer, rcConString, rcExePath, rcPassword As String
+        Dim rcServer, rcExePath, rcPassword As String
         Dim fld As String = ""
         Dim valu As String = ""
         Dim cust As String = "N"
@@ -39,7 +40,8 @@ Module Module1
             If fld = "PD" Then rcPassword = valu
         End While
         ''rcConString = "Server=" & rcServer & ";Initial Catalog=RCClient;User Id=sa;Password=" & rcPassword & ""
-        rcConString = "Server=" & rcServer & ";Initial Catalog=RCClient;Integrated Security=True" & ""
+        rcConString = "Server=" & rcServer & ";Initial Catalog=RCClient;Integrated Security=True"
+        rcCon = New SqlConnection(rcConString)
         eDateTBL = New DataTable
         Dim column As New DataColumn
         column.DataType = System.Type.GetType("System.String")
@@ -69,18 +71,16 @@ Module Module1
         cust = txtArray(9)
         eDateTBL.Rows.Add(thisEdate)
         lastWeekseDate = DateAdd(DateInterval.Day, -7, thisEdate)
-        Console.WriteLine(dbase & " XMLUpdate")
-
 
 
         ''client = "TCM"
         '' ''server = "alrm6hn0ql.database.windows.net,1433"
         ''server = "LP-CURTIS"
-        ''dbase = "PARGIF"
-        ''xmlPath = "c:\RetailClarity\XMLs\TCM"
+        ''dbase = "TCM"
+        ''xmlPath = "c:\RetailClarity\XMLs\PARGIF"
         '' ''xmlPath = "\\LPS2-2\RetailClarity\PARGIF\XMLs\Build"
-        ''thisSdate = "4/2/2017"
-        ''thisEdate = "4/8/2017"
+        ''thisSdate = "7/23/2017"
+        ''thisEdate = "7/29/2017"
         ''lastWeekseDate = DateAdd(DateInterval.Day, -7, thisEdate)
         ''sqlUserId = "sa"
         ''sqlPassword = "PGadm01!"
@@ -88,11 +88,12 @@ Module Module1
         ''rcExePath = "c:\RetailClarity\EXEs"
         ''cust = "N"
         ' ''eDateTBL.Rows.Add("7/10/2016")
-        ''eDateTBL.Rows.Add("4/8/2017")
+        ''eDateTBL.Rows.Add("7/23/2017")
 
 
 
         conString = "server=" & server & ";Initial Catalog=" & dbase & ";Integrated Security=True" & ""
+        ''conString = "server=RC-RDP01;Initial Catalog=PARGIF;Integrated Security=True"
         con = New SqlConnection(conString)
         con2 = New SqlConnection(conString)
         con3 = New SqlConnection(conString)
@@ -104,16 +105,30 @@ Module Module1
         '' If cust = "Y" Then oktoprocessCustomers = True
         stopWatch = New Stopwatch
 
+        Console.WriteLine("Check_Log for existance of ErrorLog.xml")
+        thePath = xmlPath & "\ErrLog.txt"
+        If FileSize(thePath) > 0 Then
+            msg = "Error Log from Counterpoint found"
+            Dim el As New XMLUpdate.ErrorLogger
+            el.WriteToErrorLog(msg, "", "Look for Counterpoint Error Log")
+        End If
 
 
 
 
 
-        '' GoTo 100
+
+        ''        GoTo 100
 
 
 
 
+        Dim rCon As New SqlConnection(rcConString)
+        rCon.Open()
+        sql = "UPDATE Client_Master SET Last_XML_Update = NULL WHERE Client_ID = '" & client & "'"
+        cmd = New SqlCommand(sql, rCon)
+        cmd.ExecuteNonQuery()
+        rCon.Close()
 
         Console.WriteLine("Processing Calendar")
         thePath = xmlPath & "\Calendar.xml"
@@ -123,18 +138,15 @@ Module Module1
         thePath = xmlPath & "\Items.xml"
         If FileSize(thePath) > 0 Then Call Process_Items(thePath, con, con2, constr)
 
-        Dim rCon As New SqlConnection(rcConString)
-        rCon.Open()
-        sql = "UPDATE Client_Master SET Last_XML_Update = NULL WHERE Client_ID = '" & client & "'"
-        cmd = New SqlCommand(sql, rCon)
-        cmd.ExecuteNonQuery()
-        rCon.Close()
-
+        Console.WriteLine("Processing Barcodes")
+        thePath = xmlPath & "\Barcodes.xml"
+        If FileSize(thePath) > 0 Then Call Process_Barcodes(thePath, con, con2, constr)
+        
         Console.WriteLine(" Purchase Request Header")
         thePath = xmlPath & "\Purchase_Request_Header.xml"
         If FileSize(thePath) > 0 Then Call Process_PREQ_Header(thePath, con, con2)
 
-        Console.WriteLine(" Purchare Request Detail")
+        Console.WriteLine(" Purchase Request Detail")
         thePath = xmlPath & "\Purchase_Request_Detail.xml"
         If FileSize(thePath) > 0 Then Call Process_PREQ_Detail(thePath, con, con2)
 
@@ -166,27 +178,11 @@ Module Module1
         thePath = xmlPath & "\Return.xml"
         If FileSize(thePath) > 0 Then Call Process_Data(thePath, "RTV", con, con2)
 
-        ''Console.WriteLine("Process " & client & " Unposted Sales")
-        ''thePath = xmlPath & "\UnpostedSales.xml"
-        ''If FileSize(thePath) > 0 Then Call Process_Data(thePath, "UnpostedSales", con, con2)
-
-100:
         Console.WriteLine("Processing Sales for " & client)
-        '' Console.ReadLine()
-
         thePath = xmlPath & "\Sales.xml"
         If FileSize(thePath) > 0 Then Call Process_Data(thePath, "Sold", con, con2)
-
-
-
-
-
-        '' GoTo 200
-
-
-
-
         Call Merge_Tickets()
+
         Call Set_Max_OH(thisEdate)
         Call Update_Store_Table()
 
@@ -205,6 +201,9 @@ Module Module1
         Console.WriteLine("Processing " & client & " Coupon_Code records")
         thePath = xmlPath & "\Coupon_Codes.xml"
         If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Coupon_Codes", con, con2)
+
+        Console.WriteLine("Process " & client & " Coupons")
+        Call Process_Coupons()
 
         Console.WriteLine("Processing " & client & " Department records")
         thePath = xmlPath & "\Departments.xml"
@@ -230,66 +229,115 @@ Module Module1
         thePath = xmlPath & "\Vendors.xml"
         If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Vendors", con, con2)
 
-        Try
+100:    Try
             '    Create records for the next week when processing the last day of the week
             Dim nextSdate, nextEdate As Date
             Dim rdr2 As SqlDataReader
-            Dim location, item, sku As String
-            Dim onhand, committed, endoh As Int32
+            Dim location, item, sku, dim1, dim2, dim3 As String
+            Dim onhand, committed, endoh As Decimal
             Dim cost, retail As Decimal
             Dim dte As Date = Date.Today
             Dim newsku, newitem As String
 
-            ''If thisDate = thisEdate Then
             If DayOfWeek = 0 Then                                              ' create new inventory records on Sunday
                 Console.WriteLine("Adding Item_Inv records for next week.")
                 ''                                        thisSdate and thisEdate were set when this thing first started
                 con2.Open()
-                nextSdate = DateAdd(DateInterval.Day, 7, thisSdate)
-                nextEdate = DateAdd(DateInterval.Day, 7, thisEdate)
-                cnt = 0
-                sql = "UPDATE Item_Inv SET Sys_OH = End_OH WHERE eDate = '" & thisEdate & "'"
+                nextSdate = thisSdate                                           ' changed when job was scheduled to run at 2:00 AM
+                nextEdate = thisEdate
+
+                sql = "DECLARE @sDate date = '" & nextSdate & "' " & _
+                    "DECLARE @eDate date = '" & nextEdate & "' " & _
+                    "DECLARE @lasteDate date = '" & lastWeekseDate & "' " & _
+                    "IF OBJECT_ID('temp.dbo.#t1','U') IS NOT NULL DROP TABLE dbo.#t1; " & _
+                    "SELECT Loc_Id, Sku, @sDate sDate, @eDate eDate, Cost, Retail, c.YrWk, End_OH OnHand, End_OH Begin_OH, End_OH, " & _
+                    "Item, DIM1, DIM2, DIM3 INTO #t1 FROM Item_Inv i " & _
+                    "JOIN Calendar c ON c.eDate = @eDate AND c.week_Id > 0 " & _
+                    "WHERE i.eDate = @lasteDate AND End_OH <> 0 " & _
+                    "MERGE Item_Inv AS t USING #t1 AS s ON s.Loc_Id=t.Loc_Id AND s.Sku=t.Sku AND s.eDate=t.eDate " & _
+                    "WHEN NOT MATCHED BY Target THEN " & _
+                    "INSERT(Loc_Id, sku, sDate, eDate, cost, retail, YrWk, onhand, Begin_OH, End_OH, item, dim1, dim2, dim3) " & _
+                    "VALUES(s.Loc_Id, s.Sku, s.sDate, s.eDate, s.Cost, s.Retail, s.YrWk, s.OnHand, s.Begin_OH, s.End_OH, s.Item, s.DIM1, s.DIM2, s.DIM3);"
                 cmd = New SqlCommand(sql, con2)
-                cmd.CommandTimeout = 120
                 cmd.ExecuteNonQuery()
-
-                sql = "SELECT Loc_Id, Sku, ISNULL(End_OH,0) End_OH, ISNULL(OnHand,0) OnHand, ISNULL(Committed,0) Committed, " & _
-                    "ISNULL(Cost,0) AS Cost, ISNULL(Retail,0) AS Retail, Item FROM Item_Inv " & _
-                    "WHERE ISNULL(End_OH,0) > 0 AND eDate = '" & lastWeekseDate & "' " & _
-                    "ORDER BY Loc_ID, Sku"
-                cmd = New SqlCommand(sql, con2)
-
-                cmd.CommandTimeout = 120
-                rdr2 = cmd.ExecuteReader
-                While rdr2.Read
-                    location = rdr2("Loc_Id")
-                    sku = rdr2("Sku")
-                    newsku = Replace(sku, "'", "''")
-                    endoh = rdr2("End_OH")
-                    committed = rdr2("Committed")
-                    onhand = rdr2("onhand")
-                    cost = rdr2("Cost")
-                    retail = rdr2("Retail")
-                    item = rdr2("Item")
-                    newitem = Replace(item, "'", "''")
-                    cnt += 1
-                    If cnt Mod 1000 = 0 Then Console.WriteLine(cnt & "  " & item)
-
-                    con3.Open()
-                    sql = "IF NOT EXISTS (SELECT Sku FROM Item_Inv WHERE Loc_Id = '" & location & "' AND Sku = '" & item & "' AND eDate = '" & nextEdate & "') " & _
-                        "INSERT INTO Item_Inv (Loc_Id, Sku, sDate, eDate, Begin_OH, End_OH, OnHand, Committed, Max_OH, Cost, Retail, Item, YrWk) " & _
-                        "SELECT '" & Trim(location) & "','" & Trim(newsku) & "','" & nextSdate & "','" & nextEdate & "'," &
-                        onhand & "," & onhand & "," & onhand & "," & onhand & "," & committed & "," & cost & ", " & retail & ", '" & newitem & "', yrwk FROM Calendar " & _
-                        "WHERE eDate = '" & nextEdate & "' AND Week_Id > 0 " & _
-                        "ELSE " & _
-                        "UPDATE Item_Inv SET Begin_OH = " & onhand & ", End_OH = " & onhand & " " & _
-                        "WHERE Loc_Id = '" & location & "' AND Sku = '" & item & "' AND eDate = '" & nextEdate & "'"
-                    cmd = New SqlCommand(sql, con3)
-                    cmd.CommandTimeout = 120
-                    cmd.ExecuteNonQuery()
-                    con3.Close()
-                End While
                 con2.Close()
+
+                ''cnt = 0
+                ''Console.WriteLine("Setting Sys_OH = End_OH")
+                ''sql = "UPDATE Item_Inv SET Sys_OH = End_OH WHERE eDate = '" & thisEdate & "'"
+                ''cmd = New SqlCommand(sql, con2)
+                ''cmd.CommandTimeout = 480
+                ''cmd.ExecuteNonQuery()
+                ''con2.Close()
+
+                ''con2.Open()
+
+                ''con2.Open()
+                ''Console.WriteLine("Selecting records with End_OH <> 0")
+                ' ''sql = "SELECT Loc_Id, Sku, ISNULL(End_OH,0) End_OH, ISNULL(OnHand,0) OnHand, ISNULL(Committed,0) Committed, " & _
+                ' ''    "ISNULL(Cost,0) AS Cost, ISNULL(Retail,0) AS Retail, Item, Dim1, Dim2, Dim3 FROM Item_Inv " & _
+                ' ''    "WHERE ISNULL(End_OH,0) <> 0 AND eDate = '" & lastWeekseDate & "' " & _
+                ' ''    "ORDER BY Loc_ID, Sku"
+
+
+                ''sql = "SELECT Loc_Id, Sku, ISNULL(End_OH,0) End_OH, ISNULL(OnHand,0) OnHand, ISNULL(Committed,0) Committed, " & _
+                ''   "ISNULL(Cost,0) AS Cost, ISNULL(Retail,0) AS Retail, Item, Dim1, Dim2, Dim3 FROM Item_Inv " & _
+                ''   "WHERE ISNULL(End_OH,0) <> 0 AND eDate = '7/1/2017'  ORDER BY Loc_ID, Sku"
+
+
+
+                ''cmd = New SqlCommand(sql, con2)
+                ''cmd.CommandTimeout = 960
+                ''rdr2 = cmd.ExecuteReader
+                ''Console.WriteLine("Processing")
+                ''While rdr2.Read
+                ''    oTest = rdr2("Loc_Id")
+                ''    If Not IsDBNull(oTest) Then location = CStr(oTest) Else location = "UNKNOWN"
+                ''    oTest = rdr2("Sku")
+                ''    If Not IsDBNull(oTest) Then sku = CStr(oTest) Else sku = "UNKNOWN"
+                ''    newsku = Replace(sku, "'", "''")
+                ''    endoh = rdr2("End_OH")
+
+
+
+
+                ''    ''Console.WriteLine(location & "," & sku & "," & endoh)
+                ''    ''Console.ReadLine()
+
+
+
+
+                ''    committed = rdr2("Committed")
+                ''    onhand = rdr2("onhand")
+                ''    cost = rdr2("Cost")
+                ''    retail = rdr2("Retail")
+                ''    oTest = rdr2("Item")
+                ''    If Not IsDBNull(oTest) Then item = rdr2("Item") Else item = Nothing
+                ''    oTest = rdr2("DIM1")
+                ''    If Not IsDBNull(oTest) Then dim1 = CStr(oTest) Else dim1 = Nothing
+                ''    oTest = rdr2("DIM2")
+                ''    If Not IsDBNull(oTest) Then dim2 = CStr(oTest) Else dim2 = Nothing
+                ''    oTest = rdr2("DIM3")
+                ''    If Not IsDBNull(oTest) Then dim3 = CStr(oTest) Else dim3 = Nothing
+                ''    newitem = Replace(item, "'", "''")
+                ''    cnt += 1
+                ''    If cnt Mod 1000 = 0 Then Console.WriteLine(cnt & "  " & item)
+                ''    sql = "IF NOT EXISTS (SELECT Sku FROM Item_Inv WHERE Loc_Id = '" & location & "' AND Sku = '" & newsku & "' AND eDate = '" & nextEdate & "') " & _
+                ''        "INSERT INTO Item_Inv (Loc_Id, Sku, sDate, eDate, Begin_OH, End_OH, OnHand, Committed, Max_OH, Cost, Retail, " & _
+                ''        "Item, Dim1, Dim2, Dim3, YrWk) " & _
+                ''        "SELECT '" & Trim(location) & "','" & Trim(newsku) & "','" & nextSdate & "','" & nextEdate & "'," &
+                ''        onhand & "," & onhand & "," & onhand & "," & committed & "," & onhand & "," & cost & ", " & retail & ", '" &
+                ''        newitem & "','" & dim1 & "','" & dim2 & "','" & dim3 & "', yrwk FROM Calendar " & _
+                ''        "WHERE eDate = '" & nextEdate & "' AND Week_Id > 0 " & _
+                ''        "ELSE " & _
+                ''        "UPDATE Item_Inv SET Begin_OH = " & onhand & ", End_OH = " & onhand & " " & _
+                ''        "WHERE Loc_Id = '" & location & "' AND Sku = '" & item & "' AND eDate = '" & nextEdate & "'"
+                ''    cmd3 = New SqlCommand(sql, con3)
+                ''    cmd3.CommandTimeout = 960
+                ''    cmd3.ExecuteNonQuery()
+                ''End While
+                con2.Close()
+                con3.Close()
                 Dim m As String = "Created " & cnt & " Records"
                 Call Update_Process_Log("1", "Create Inventory Records for Next Week", m, "")
             End If
@@ -366,13 +414,21 @@ Module Module1
                 For Each row In ctbl.Rows
                     cnt += 1
                     year = CInt(row("Year_Id"))
+                    'Console.WriteLine(year)
                     period = CInt(row("Prd_Id"))
+                    ' Console.WriteLine(period)
                     week = CInt(row("Week_Id"))
+                    ' Console.WriteLine(week)
                     sdate = CDate(row("sDate"))
+                    ' Console.WriteLine(sdate)
                     edate = CDate(row("eDate"))
+                    ' Console.WriteLine(edate)
                     yrprd = CInt(row("YrPrd"))
+                    'Console.WriteLine(yrprd)
                     yrwks = CInt(row("YrWks"))
+                    ' Console.WriteLine(yrwks)
                     prdwk = CInt(period & week)
+                    ' Console.WriteLine(prdwk)
                     If (period = 0 And week = 0) Or (period > 0 And week > 0) Then
                         sql = "IF NOT EXISTS (SELECT * FROM Calendar WHERE sDate = '" & sdate & "' AND Prd_Id = " & period & " AND Week_Id = " & week & ") " & _
                             "INSERT INTO Calendar (Year_Id, Prd_Id, Week_Id, sDate, eDate, YrPrd, YrWks, PrdWk) " & _
@@ -399,12 +455,10 @@ Module Module1
             Dim cnt As Integer = 0
             Dim oTest As Object
             Dim isNumber As Boolean
-            Dim item, descr, vid, vendor, vitem, note, buyer, dept, clss, season, pline, uom,
-                sku, dim1, dim2, dim3, dim1_descr, dim2_descr, dim3_descr, status, sql, type, mktg As String
+            Dim item, descr, vid, vendor, vitem, note, buyer, dept, clss, custom1, custom2, custom3, custom4, custom5, uom,
+                sku, dim1, dim2, dim3, dim1_descr, dim2_descr, dim3_descr, status, sql, type As String
             Dim buyunit, sellunit As Int16
-            Dim dim1_seq, dim2_seq, dim3_seq As Integer
             Dim cost, retail As Decimal
-            Console.WriteLine("Cleaning XML import file")
             Dim ds As DataSet = New DataSet
             Dim dt As DataTable = New DataTable
             Dim dt2 As DataTable = New DataTable
@@ -418,9 +472,11 @@ Module Module1
             dt2.Columns.Add("Class")
             dt2.Columns.Add("Curr_Cost")
             dt2.Columns.Add("Curr_Retail")
-            dt2.Columns.Add("Season")
-            dt2.Columns.Add("PLine")
-            dt2.Columns.Add("Mktg")
+            dt2.Columns.Add("Custom1")
+            dt2.Columns.Add("Custom2")
+            dt2.Columns.Add("Custom3")
+            dt2.Columns.Add("Custom4")
+            dt2.Columns.Add("Custom5")
             dt2.Columns.Add("UOM")
             dt2.Columns.Add("BuyUnit")
             dt2.Columns.Add("SellUnit")
@@ -436,9 +492,6 @@ Module Module1
             dt2.Columns.Add("DIM1_DESCR")
             dt2.Columns.Add("DIM2_DESCR")
             dt2.Columns.Add("DIM3_DESCR")
-            dt2.Columns.Add("DIM1_SEQ_NO")
-            dt2.Columns.Add("DIM2_SEQ_NO")
-            dt2.Columns.Add("DIM3_SEQ_NO")
             Dim xmlFile As XmlReader
             Dim rw As DataRow
             xmlFile = Xml.XmlReader.Create(thePath, New XmlReaderSettings())
@@ -451,108 +504,102 @@ Module Module1
                         Console.WriteLine("Processed " & cnt & " records.")
                     End If
                     sku = Trim(Microsoft.VisualBasic.Left(row("SKU"), 90))
-                    If InStr(sku, "~") > 0 Then
-                        Dim parts() As String = sku.Split("~"c)
-                        item = parts(0)
-                        dim1 = parts(1)
-                        dim2 = parts(2)
-                        dim3 = parts(3)
-                    Else
-                        item = sku
-                        dim1 = Nothing
-                        dim2 = Nothing
-                        dim3 = Nothing
-                    End If
-                    dim1_descr = Trim(Microsoft.VisualBasic.Left(row("DIM1_DESCR"), 30))
-                    dim2_descr = Trim(Microsoft.VisualBasic.Left(row("DIM2_DESCR"), 30))
-                    dim3_descr = Trim(Microsoft.VisualBasic.Left(row("DIM3_DESCR"), 30))
-                    oTest = row("DIM_1_SEQ_NO")
-                    If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
-                        If oTest <> "" Then dim1_seq = CInt(oTest) Else dim1_seq = 1
-                    End If
-                    oTest = row("DIM_2_SEQ_NO")
-                    If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
-                        If oTest <> "" Then dim2_seq = CInt(oTest) Else dim2_seq = 1
-                    End If
-                    oTest = row("DIM_3_SEQ_NO")
-                    If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
-                        If oTest <> "" Then dim3_seq = CInt(oTest) Else dim3_seq = 1
-                    End If
-                    descr = Trim(Microsoft.VisualBasic.Left(row("DESCRIPTION"), 40))
-                    vid = Trim(Microsoft.VisualBasic.Left(row("VENDOR_ID"), 20))
-                    vendor = Trim(Microsoft.VisualBasic.Left(row("VENDOR"), 40))
-                    vitem = Trim(Microsoft.VisualBasic.Left(row("VEND_ITEM_NO"), 20))
-                    buyer = Trim(Microsoft.VisualBasic.Left(row("BUYER"), 10))
-                    If buyer = "" Then buyer = "NA"
-                    dept = Trim(Microsoft.VisualBasic.Left(row("DEPT"), 10))
-                    clss = Trim(Microsoft.VisualBasic.Left(row("CLASS"), 10))
-                    season = Trim(Microsoft.VisualBasic.Left(row("SEASON"), 20))
-                    pline = Trim(Microsoft.VisualBasic.Left(row("PLINE"), 20))
-                    mktg = Trim(Microsoft.VisualBasic.Left(row("MKTG"), 20))
-                    note = Trim(Microsoft.VisualBasic.Left(row("NOTE"), 20))
-                    uom = Trim(Microsoft.VisualBasic.Left(row("UOM"), 10))
-                    status = Trim(Microsoft.VisualBasic.Left(row("STATUS"), 10))
-                    type = Trim(Microsoft.VisualBasic.Left(row("TYPE"), 1))
-                    oTest = row("CURR_COST")
-                    isNumber = IsNumeric(oTest)
-                    If isNumber Then cost = CDec(oTest) Else cost = 0
-                    oTest = row("CURR_RTL")
-                    isNumber = IsNumeric(oTest)
-                    If isNumber Then retail = CDec(oTest) Else retail = 0
-                    uom = row("UOM")
-                    If uom <> "" Then
-                        oTest = row("BUYUNIT")
+                    If sku <> "TOTALS" Then
+                        If InStr(sku, "~") > 0 Then
+                            Dim parts() As String = sku.Split("~"c)
+                            item = parts(0)
+                            dim1 = parts(1)
+                            dim2 = parts(2)
+                            dim3 = parts(3)
+                        Else
+                            item = sku
+                            dim1 = Nothing
+                            dim2 = Nothing
+                            dim3 = Nothing
+                        End If
+                        dim1_descr = Trim(Microsoft.VisualBasic.Left(row("DIM1_DESCR"), 30))
+                        dim2_descr = Trim(Microsoft.VisualBasic.Left(row("DIM2_DESCR"), 30))
+                        dim3_descr = Trim(Microsoft.VisualBasic.Left(row("DIM3_DESCR"), 30))
+                        descr = Trim(Microsoft.VisualBasic.Left(row("DESCRIPTION"), 40))
+                        vid = Trim(Microsoft.VisualBasic.Left(row("VENDOR_ID"), 20))
+                        vendor = Trim(Microsoft.VisualBasic.Left(row("VENDOR"), 40))
+                        vitem = Trim(Microsoft.VisualBasic.Left(row("VEND_ITEM_NO"), 20))
+                        buyer = Trim(Microsoft.VisualBasic.Left(row("BUYER"), 10))
+                        If buyer = "" Then buyer = "UNKNOWN"
+                        dept = Trim(Microsoft.VisualBasic.Left(row("DEPT"), 10))
+                        If dept = "" Then dept = "UNKNOWN"
+                        clss = Trim(Microsoft.VisualBasic.Left(row("CLASS"), 10))
+                        If clss = "" Then clss = "UNKNOWN"
+                        custom1 = Trim(Microsoft.VisualBasic.Left(row("CUSTOM1"), 30))
+                        custom2 = Trim(Microsoft.VisualBasic.Left(row("CUSTOM2"), 30))
+                        custom3 = Trim(Microsoft.VisualBasic.Left(row("CUSTOM3"), 30))
+                        custom4 = Trim(Microsoft.VisualBasic.Left(row("CUSTOM4"), 30))
+                        custom5 = Trim(Microsoft.VisualBasic.Left(row("CUSTOM5"), 30))
+                        note = Trim(Microsoft.VisualBasic.Left(row("NOTE"), 20))
+                        uom = Trim(Microsoft.VisualBasic.Left(row("UOM"), 10))
+                        status = Trim(Microsoft.VisualBasic.Left(row("STATUS"), 10))
+                        oTest = Trim(Microsoft.VisualBasic.Left(row("TYPE"), 10))
+                        If Not IsDBNull(oTest) Then type = CStr(oTest) Else type = "N"
+                        oTest = row("CURR_COST")
                         isNumber = IsNumeric(oTest)
-                        If isNumber Then buyunit = oTest
-                        oTest = row("SELLUNIT")
+                        If isNumber Then cost = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero) Else cost = 0
+                        oTest = row("CURR_RTL")
                         isNumber = IsNumeric(oTest)
-                        If isNumber Then sellunit = oTest
-                    Else
-                        uom = "EA"
-                        buyunit = 1
-                        sellunit = 1
+                        If isNumber Then retail = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero) Else retail = 0
+                        uom = row("UOM")
+                        If uom <> "" Then
+                            oTest = row("BUYUNIT")
+                            isNumber = IsNumeric(oTest)
+                            If isNumber Then buyunit = oTest
+                            oTest = row("SELLUNIT")
+                            isNumber = IsNumeric(oTest)
+                            If isNumber Then sellunit = oTest
+                        Else
+                            uom = "EA"
+                            buyunit = 1
+                            sellunit = 1
+                        End If
+                        rw = dt2.NewRow
+                        oTest = sku
+                        rw("Sku") = sku
+                        rw("Description") = descr
+                        rw("Vendor_Id") = vid
+                        rw("Vendor") = vendor
+                        rw("Vend_Item_No") = vitem
+                        rw("Dept") = dept
+                        rw("Buyer") = buyer
+                        rw("Class") = clss
+                        rw("Curr_Cost") = cost
+                        rw("Curr_Retail") = retail
+                        rw("Custom1") = custom1
+                        rw("Custom2") = custom2
+                        rw("Custom3") = custom3
+                        rw("Custom4") = custom4
+                        rw("Custom5") = custom5
+                        rw("UOM") = uom
+                        rw("BuyUnit") = buyunit
+                        rw("SellUnit") = sellunit
+                        rw("Note") = note
+                        rw("Status") = status
+                        rw("Type") = type
+                        rw("Initial_Date") = Date.Today
+                        rw("Last_Change_Date") = Date.Today
+                        rw("Item") = item
+                        rw("DIM1") = dim1
+                        rw("DIM2") = dim2
+                        rw("DIM3") = dim3
+                        rw("DIM1_DESCR") = dim1_descr
+                        rw("DIM2_DESCR") = dim2_descr
+                        rw("DIM3_DESCR") = dim3_descr
+                        dt2.Rows.Add(rw)
                     End If
-                    rw = dt2.NewRow
-                    oTest = sku
-                    rw("Sku") = sku
-                    rw("Description") = descr
-                    rw("Vendor_Id") = vid
-                    rw("Vendor") = vendor
-                    rw("Vend_Item_No") = vitem
-                    rw("Dept") = dept
-                    rw("Buyer") = buyer
-                    rw("Class") = clss
-                    rw("Curr_Cost") = cost
-                    rw("Curr_Retail") = retail
-                    rw("Season") = season
-                    rw("PLine") = pline
-                    rw("Mktg") = mktg
-                    rw("UOM") = uom
-                    rw("BuyUnit") = buyunit
-                    rw("SellUnit") = sellunit
-                    rw("Note") = note
-                    rw("Status") = status
-                    rw("Type") = type
-                    rw("Initial_Date") = Date.Today
-                    rw("Last_Change_Date") = Date.Today
-                    rw("Item") = item
-                    rw("DIM1") = dim1
-                    rw("DIM2") = dim2
-                    rw("DIM3") = dim3
-                    rw("DIM1_DESCR") = dim1_descr
-                    rw("DIM2_DESCR") = dim2_descr
-                    rw("DIM3_DESCR") = dim3_descr
-                    ''rw("DIM1_SEQ_NO") = dim1_seq
-                    ''rw("DIM2_SEQ_NO") = dim2_seq
-                    ''rw("DIM3_SEQ_NO") = dim3_seq
-                    dt2.Rows.Add(rw)
                 Next
             End If
-
             Console.WriteLine("DELETE FROM ITEM_MASTER")
             con.Open()
             sql = "DELETE FROM Item_Master"
             cmd = New SqlCommand(sql, con)
+            cmd.CommandTimeout = 480
             cmd.ExecuteNonQuery()
             con.Close()
 
@@ -561,7 +608,7 @@ Module Module1
             Dim bulkCopy As SqlBulkCopy = New SqlBulkCopy(connection)
             connection.Open()
             bulkCopy.DestinationTableName = "dbo.Item_Master"
-            bulkCopy.BulkCopyTimeout = 120
+            bulkCopy.BulkCopyTimeout = 960
             bulkCopy.WriteToServer(dt2)
             connection.Close()
 
@@ -572,6 +619,85 @@ Module Module1
             If con.State = ConnectionState.Open Then con.Close()
             Dim el As New XMLUpdate.ErrorLogger
             el.WriteToErrorLog(ex.Message, ex.StackTrace, "Process Items")
+            MsgBox(ex.Message)
+        End Try
+    End Sub
+
+    Private Sub Process_Barcodes(ByVal thePath, con, con2, constr)
+        Try
+            stopWatch.Start()
+            Dim cnt As Integer = 0
+            Dim dte As Date
+            Dim barcode, type, sku, item, dim1, dim2, dim3 As String
+            Console.WriteLine("Loading Barcode XML file")
+
+            con.open()                                          ' Clear out Item_Barcodes
+            sql = "DELETE FROM Item_Barcodes"
+            cmd = New SqlCommand(sql, con)
+            cmd.CommandTimeout = 480
+            cmd.ExecuteNonQuery()
+            con.close()
+
+            Dim ds As DataSet = New DataSet
+            Dim dt As DataTable = New DataTable
+            dt.Columns.Add("Sku")
+            dt.Columns.Add("Item")
+            dt.Columns.Add("DIM1")
+            dt.Columns.Add("DIM2")
+            dt.Columns.Add("DIM3")
+            dt.Columns.Add("Type")
+            dt.Columns.Add("Barcode")
+            dt.Columns.Add("Date")
+            Dim xmlFile As XmlReader
+            Dim row As DataRow
+            xmlFile = Xml.XmlReader.Create(thePath, New XmlReaderSettings())
+            ds.ReadXml(xmlFile)
+            If ((ds.Tables.Count > 0) AndAlso ds.Tables(0).Rows.Count > 0) Then
+                ''con.open()
+                dt = ds.Tables(0)
+                ''For Each row In dt.Rows
+                ''    cnt += 1
+                ''    If cnt Mod 1000 = 0 Then
+                ''        Console.WriteLine("Processed " & cnt & " records.")
+                ''    End If
+                ''    sku = Trim(Microsoft.VisualBasic.Left(row("SKU"), 90))
+                ''    If InStr(sku, "~") > 0 Then
+                ''        Dim parts() As String = sku.Split("~"c)
+                ''        item = parts(0)
+                ''        dim1 = parts(1)
+                ''        dim2 = parts(2)
+                ''        dim3 = parts(3)
+                ''    Else
+                ''        item = sku
+                ''        dim1 = Nothing
+                ''        dim2 = Nothing
+                ''        dim3 = Nothing
+                ''    End If
+                ''    type = row("BARCOD_ID")
+                ''    barcode = row("BARCOD")
+                ''    dte = row("EXTRACT_DATE")
+                ''    sql = "IF NOT EXISTS (SELECT Barcode FROM Item_Barcodes WHERE Sku = '" & sku & "' AND Barcode = '" & barcode & "' AND Type = '" & type & "') " & _
+                ''        "INSERT INTO Item_Barcodes(Sku, Item, Dim1, Dim2, Dim3, Barcode, Type, Extract_Date) " & _
+                ''        "SELECT '" & sku & "','" & item & "','" & dim1 & "','" & dim2 & "','" & dim3 & "','" & barcode & "','" & type & "','" & dte & "'"
+                ''    cmd = New SqlCommand(sql, con)
+                ''    cmd.ExecuteNonQuery()
+                ''Next
+                ''con.close()
+                cnt = dt.Rows.Count
+                Dim connection As SqlConnection = New SqlConnection(constr)
+                Dim bulkCopy As SqlBulkCopy = New SqlBulkCopy(connection)
+                connection.Open()
+                bulkCopy.DestinationTableName = "dbo.Item_Barcodes"
+                bulkCopy.BulkCopyTimeout = 480
+                bulkCopy.WriteToServer(dt)
+                connection.Close()
+            End If
+            Dim m As String = "Created " & cnt & " Records"
+            Call Update_Process_Log("1", "Create Barcodes", m, "")
+        Catch ex As Exception
+            If con.State = ConnectionState.Open Then con.Close()
+            Dim el As New XMLUpdate.ErrorLogger
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Process Barcodes")
             MsgBox(ex.Message)
         End Try
     End Sub
@@ -589,9 +715,9 @@ Module Module1
                "[Sku] [varchar](90) NOT NULL," & _
                "[sDate] [date] NOT NULL," & _
                "[eDate] [date] NOT NULL," & _
-               "[OnHand] [decimal](18, 4) NULL," & _
-               "[Cost] [decimal](10, 2) NULL," & _
-               "[Retail] [decimal](10, 2) NULL," & _
+               "[Avail] [decimal](18, 4) NULL," & _
+               "[Cost] [decimal](18,4) NULL," & _
+               "[Retail] [decimal](18,4) NULL," & _
                "[YrWk] [int] NULL," & _
                "[Begin_OH] [decimal](18, 4) NULL," & _
                "[End_OH] [decimal](18, 4) NULL," & _
@@ -630,6 +756,7 @@ Module Module1
             con.close()
 
             con.Open()
+            cmd.CommandTimeout = 960
             Dim xmlFile As XmlReader
             xmlFile = Xml.XmlReader.Create(thePath, New XmlReaderSettings())
             ds.ReadXml(xmlFile)                                                                      '  bulk insert XML into dataset
@@ -655,15 +782,15 @@ Module Module1
 
                         loc = Trim(row("LOCATION"))
                         oTest = row("OnHand")
-                        If IsDBNull(oTest) Then onhand = 0 Else onhand = CDec(oTest)
+                        If IsDBNull(oTest) Then onhand = 0 Else onhand = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         oTest = row("COMMITTED")
-                        If IsDBNull(oTest) Then committed = 0 Else committed = CDec(oTest)
+                        If IsDBNull(oTest) Then committed = 0 Else committed = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         oTest = row("AVAIL")
-                        If IsDBNull(oTest) Then avail = 0 Else avail = CDec(oTest)
+                        If IsDBNull(oTest) Then avail = 0 Else avail = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         oTest = row("COST")
-                        If IsDBNull(oTest) Then cost = 0 Else cost = CDec(oTest)
+                        If IsDBNull(oTest) Then cost = 0 Else cost = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         oTest = row("RETAIL")
-                        If IsDBNull(oTest) Then retail = 0 Else retail = CDec(oTest)
+                        If IsDBNull(oTest) Then retail = 0 Else retail = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         totlQty += onhand
                         totlCost += (cost * onhand)
                         totlRetail += (retail * onhand)
@@ -675,39 +802,38 @@ Module Module1
                             End If
                         Else : dttime = DateAndTime.Now
                         End If
-                        sql = "INSERT INTO _t1 (Loc_Id, Sku, sDate, eDate, OnHand, End_OH, " & _
-                             "Committed, Cost, Retail, YrWk, " & _
-                             "Item, DIM1, DIM2, DIM3) " & _
+                        sql = "INSERT INTO _t1 (Loc_Id, Sku, sDate, eDate, Avail, End_OH, " & _
+                             "Committed, Cost, Retail, YrWk, Item, DIM1, DIM2, DIM3) " & _
                              "SELECT '" & loc & "','" & sku & "','" & thisSdate & "','" & thisEdate &
-                             "'," & onhand & "," & avail & "," & committed & "," & cost & "," &
+                             "'," & avail & "," & onhand & "," & committed & "," & cost & "," &
                              retail & ", YrWk ,'" & item & "','" & dim1 & "','" & dim2 & "','" &
-                             dim3 & "' FROM Calendar WHERE eDate = '" & thisEdate & "' AND Prd_Id > 0 " & _
-                             "AND Week_Id > 0"
+                             dim3 & "' FROM Calendar c JOIN Item_Master m ON m.Sku = '" & sku & "' WHERE eDate = '" & thisEdate & "' " & _
+                             "AND m.[Type] = 'I' AND Prd_Id > 0 AND Week_Id > 0"
                         cmd = New SqlCommand(sql, con)
-                        cmd.CommandTimeout = 120
+                        cmd.CommandTimeout = 960
                         cmd.ExecuteNonQuery()
 
                     Else
                         oTest = row("OnHand")
-                        If IsNumeric(oTest) Then onhand = CDec(row("OnHand"))
+                        If IsNumeric(oTest) Then onhand = Decimal.Round(CDec(row("OnHand")), 4, MidpointRounding.AwayFromZero)
                         oTest = row("AVAIL")
-                        If IsNumeric(oTest) Then avail = CDec(oTest)
+                        If IsNumeric(oTest) Then avail = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         oTest = row("COST")
-                        If IsNumeric(oTest) Then cost = CDec(row("COST"))
+                        If IsNumeric(oTest) Then cost = Decimal.Round(CDec(row("COST")), 4, MidpointRounding.AwayFromZero)
                         oTest = row("RETAIL")
-                        If IsNumeric(oTest) Then retail = CDec(row("RETAIL"))
+                        If IsNumeric(oTest) Then retail = Decimal.Round(CDec(row("RETAIL")), 4, MidpointRounding.AwayFromZero)
                         If onhand <> totlQty Then
                             msg = "Expected " & Format(avail, "###,###,##0.0000") & " Received " & Format(tqty, "###,###,##0.0000")
                             Dim el As New XMLUpdate.ErrorLogger
                             el.WriteToErrorLog(msg, "Quantity Mismatch " & conString, "Process Inventory")
                         End If
                         If cost <> totlCost Then
-                            msg = "Expected " & Format(cost, "$###,###,##0.00") & " Received " & Format(tcost, "$###,###,##0.00")
+                            msg = "Expected " & Format(cost, "$###,###,##0.0000") & " Received " & Format(tcost, "$###,###,##0.0000")
                             Dim el As New XMLUpdate.ErrorLogger
                             el.WriteToErrorLog(msg, "Cost Mismatch", "Process Inventory")
                         End If
                         If retail <> totlRetail Then
-                            msg = "Expected " & Format(retail, "$###,###,##0.00") & " Received " & Format(tretail, "$###,###,##0.00")
+                            msg = "Expected " & Format(retail, "$###,###,##0.0000") & " Received " & Format(tretail, "$###,###,##0.0000")
                             Dim el As New XMLUpdate.ErrorLogger
                             el.WriteToErrorLog(msg, "Retail Mismatch", "Process Inventory")
                         End If
@@ -720,24 +846,41 @@ Module Module1
             sql = "UPDATE Item_Inv SET End_OH = 0, Max_OH = 0, Committed = 0 WHERE eDate = '" & thisEdate & "'"
             cmd = New SqlCommand(sql, con)
             cmd.ExecuteNonQuery()
+            ''sql = "MERGE Item_Inv AS target USING _t1 AS source ON (source.Loc_Id = target.Loc_Id AND source.Sku = target.Sku " & _
+            ''        "AND source.eDate = target.eDate) " & _
+            ''        "WHEN NOT MATCHED BY TARGET THEN " & _
+            ''        "INSERT (Loc_Id, Sku, sDate, eDate, Cost, Retail, YrWk, OnHand, Begin_OH, End_OH, Committed, " & _
+            ''            "Max_OH, Item, DIM1, DIM2, DIM3) " & _
+            ''        "VALUES (source.Loc_Id, source.Sku, source.sDate, source.eDate, source.Cost, source.Retail, " & _
+            ''            "source.YrWk, source.OnHand, source.Begin_OH, source.End_OH, source.Committed, source.Max_OH, " & _
+            ''            "source.Item, source.DIM1, source.DIM2, source.DIM3) " & _
+            ''    "WHEN MATCHED THEN " & _
+            ''        "UPDATE SET target.OnHand = source.OnHand, target.Begin_OH = source.Begin_OH, " & _
+            ''        "target.End_OH = source.End_OH, target.Cost = source.Cost, target.Retail = source.retail, " & _
+            ''        "target.Max_OH = source.Max_OH, target.Yrwk = source.YrWk, target.Committed = source.Committed;"
+
+
+            ''  code below changed the source for End_OH to OnHand
+
+
             sql = "MERGE Item_Inv AS target USING _t1 AS source ON (source.Loc_Id = target.Loc_Id AND source.Sku = target.Sku " & _
-                    "AND source.eDate = target.eDate) " & _
-                "WHEN NOT MATCHED BY TARGET THEN " & _
-                    "INSERT (Loc_Id, Sku, sDate, eDate, Cost, Retail, YrWk, OnHand, Begin_OH, End_OH, Committed, " & _
-                        "Max_OH, Item, DIM1, DIM2, DIM3) " & _
-                    "VALUES (source.Loc_Id, source.Sku, source.sDate, source.eDate, source.Cost, source.Retail, " & _
-                        "source.YrWk, source.OnHand, source.Begin_OH, source.End_OH, source.Committed, source.Max_OH, " & _
-                        "source.Item, source.DIM1, source.DIM2, source.DIM3) " & _
-                "WHEN MATCHED THEN " & _
-                    "UPDATE SET target.OnHand = source.OnHand, target.Begin_OH = source.Begin_OH, " & _
-                    "target.End_OH = source.End_OH, target.Cost = source.Cost, target.Retail = source.retail, " & _
-                    "target.Max_OH = source.Max_OH, target.Yrwk = source.YrWk, target.Committed = source.Committed;"
+                  "AND source.eDate = target.eDate) " & _
+                  "WHEN NOT MATCHED BY TARGET THEN " & _
+                  "INSERT (Loc_Id, Sku, sDate, eDate, Cost, Retail, YrWk, Avail, Begin_OH, End_OH, Committed, " & _
+                      "Max_OH, Item, DIM1, DIM2, DIM3) " & _
+                  "VALUES (source.Loc_Id, source.Sku, source.sDate, source.eDate, source.Cost, source.Retail, " & _
+                      "source.YrWk, source.Avail, source.Begin_OH, source.End_OH, source.Committed, source.Max_OH, " & _
+                      "source.Item, source.DIM1, source.DIM2, source.DIM3) " & _
+              "WHEN MATCHED THEN " & _
+                  "UPDATE SET target.Avail = source.Avail, target.Begin_OH = source.Begin_OH, " & _
+                  "target.End_OH = source.End_OH, target.Cost = source.Cost, target.Retail = source.retail, " & _
+                  "target.Max_OH = source.Max_OH, target.Yrwk = source.YrWk, target.Committed = source.Committed;"
             cmd = New SqlCommand(sql, con)
-            cmd.CommandTimeout = 480
+            cmd.CommandTimeout = 960
             cmd.ExecuteNonQuery()
             sql = "IF EXISTS (SELECT * FROM sysobjects WHERE name = '_t1' AND xtype = 'U') DROP TABLE dbo._t1 "
             cmd = New SqlCommand(sql, con)
-            cmd.ExecuteNonQuery()
+            '' cmd.ExecuteNonQuery()
             con.Close()
 
             Dim m As String = "Updated " & cnt & " records"
@@ -823,7 +966,7 @@ Module Module1
                         oTest = row("ORDER_TOTAL")
                         If IsDBNull(oTest) Then amt = 0 Else amt = CDec(oTest)
                         If amt <> totlCost Then
-                            msg = "Expected " & Format(amt, "###,###,##0.00") & " Received " & Format(totlCost, "###,###,##0.00")
+                            msg = "Expected " & Format(amt, "###,###,##0.0000") & " Received " & Format(totlCost, "###,###,##0.0000")
                             Dim el As New XMLUpdate.ErrorLogger
                             el.WriteToErrorLog(msg, "Record Count Mismatch " & conString, "Process PREQ Header")
                         End If
@@ -885,7 +1028,7 @@ Module Module1
                             dim2 = Nothing
                             dim3 = Nothing
                         End If
-                        
+
                         oTest = row("DESC")
                         If Not IsDBNull(oTest) Then desc = CStr(oTest) Else desc = ""
                         oTest = row("UOM")
@@ -895,10 +1038,10 @@ Module Module1
                         oTest = row("DENOM")
                         If IsDBNull(oTest) Or Not IsNothing(oTest) Then denom = 1 Else denom = CInt(oTest)
                         oTest = row("COST")
-                        If IsDBNull(oTest) Then cost = 0 Else cost = CDec(oTest)
+                        If IsDBNull(oTest) Then cost = 0 Else cost = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         oTest = row("QTY")
                         If IsDBNull(oTest) Or IsNothing(oTest) Then oTest = 0
-                        qty = CDec(oTest)
+                        qty = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         totlQty += qty
                         totlCost += (qty * cost)
                         sql = "INSERT INTO Purchase_Request_Detail(PREQ_NO, Seq_No, Sku, Description, " & _
@@ -911,17 +1054,17 @@ Module Module1
                     Else
                         oTest = row("COST")
                         If IsDBNull(oTest) Or IsNothing(oTest) Then oTest = 0
-                        cost = CDec(oTest)
+                        cost = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         oTest = row("QTY")
                         If IsDBNull(oTest) Or IsNothing(oTest) Then oTest = 0
-                        qty = CDec(oTest)
+                        qty = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         If cost <> totlCost Then
-                            msg = "Expected " & Format(cost, "###,###,##0.00") & " Received " & Format(totlCost, "###,###,##0.00")
+                            msg = "Expected " & Format(cost, "###,###,##0.0000") & " Received " & Format(totlCost, "###,###,##0.0000")
                             Dim el As New XMLUpdate.ErrorLogger
                             el.WriteToErrorLog(msg, "Record Count Mismatch " & conString, "Process PREQ Detail")
                         End If
                         If qty <> totlQty Then
-                            msg = "Expected " & Format(qty, "###,###,##0.00") & " Received " & Format(totlQty, "###,###,##0.00")
+                            msg = "Expected " & Format(qty, "###,###,##0.0000") & " Received " & Format(totlQty, "###,###,##0.0000")
                             Dim el As New XMLUpdate.ErrorLogger
                             el.WriteToErrorLog(msg, "Record Count Mismatch " & conString, "Process PREQ Detail")
                         End If
@@ -969,7 +1112,7 @@ Module Module1
                         oTest = row("LOCATION")
                         If Not IsDBNull(oTest) And Not IsNothing(oTest) Then store = CStr(oTest) Else store = "1"
                         oTest = row("PO")
-                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then po = CStr(oTest) Else po = "NA"
+                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then po = CStr(oTest) Else po = "UNKNOWN"
                         oTest = row("OrderDate")
                         If Not IsDBNull(oTest) And Not IsNothing(oTest) And oTest <> "" Then ordDate = CDate(oTest) Else ordDate = "1900-01-01"
                         oTest = row("DueDate")
@@ -977,26 +1120,39 @@ Module Module1
                         oTest = row("CancelDate")
                         If Not IsDBNull(oTest) And Not IsNothing(oTest) And oTest <> "" Then canDate = CDate(oTest) Else canDate = "1900-01-01"
                         oTest = row("Vendor")
-                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then vendor = CStr(oTest) Else vendor = "NA"
+                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then vendor = CStr(oTest) Else vendor = "UNKNOWN"
                         oTest = row("BUYER")
-                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then buyer = CStr(oTest) Else buyer = "NA"
+                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then buyer = CStr(oTest) Else buyer = "UNKNOWN"
                         oTest = row("STATUS")
                         If Not IsDBNull(oTest) And Not IsNothing(oTest) Then stat = CStr(oTest) Else stat = "X"
                         oTest = row("AMT")
-                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then amt = CDec(oTest) Else amt = 0
+                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
+                            amt = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
+                        Else : amt = 0
+                        End If
                         oTest = row("RECVD_COST")
-                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then recvd_cost = CDec(oTest) Else recvd_cost = 0
+                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
+                            recvd_cost = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
+                        Else : recvd_cost = 0
+                        End If
                         oTest = row("LINES")
                         If Not IsDBNull(oTest) And Not IsNothing(oTest) Then lines = CInt(oTest) Else lines = 0
                         oTest = row("ORD_QTY")
-                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then ord_qty = CDec(oTest) Else ord_qty = 0
+                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
+                            ord_qty = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
+                        Else : ord_qty = 0
+                        End If
                         oTest = row("OPEN_LINES")
                         If Not IsDBNull(oTest) And Not IsNothing(oTest) Then open_lines = CInt(oTest) Else open_lines = 0
                         oTest = row("OPEN_AMT")
-                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then open_amt = CDec(oTest) Else open_amt = 0
+                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
+                            open_amt = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
+                        Else : open_amt = 0
+                        End If
                         oTest = row("EXTRACT_DATE")
                         If Not IsDBNull(oTest) And Not IsNothing(oTest) Then datetime = CDate(oTest) Else datetime = Nothing
-                        sql = "INSERT INTO PO_Header (Loc_Id, PO_NO, Order_Date, Due_Date, Cancel_Date, Vendor_Id, Buyer, Status, " & _
+                        sql = "IF NOT EXISTS (SELECT PO_NO FROM PO_Header WHERE PO_NO = '" & po & "') " & _
+                            "INSERT INTO PO_Header (Loc_Id, PO_NO, Order_Date, Due_Date, Cancel_Date, Vendor_Id, Buyer, Status, " & _
                             "Amount, Recvd_Cost, Lines, Ord_Qty, Open_Lines, Open_Amt) " & _
                             "SELECT '" & store & "','" & po & "','" & ordDate & "','" & dueDate & "','" & canDate & "','" &
                             vendor & "','" & buyer & "','" & stat & "', " & amt & ", " & recvd_cost & ", " & lines & ", " &
@@ -1032,8 +1188,11 @@ Module Module1
             Dim oTest As Object
             Dim po, item, loc, sql, lastDate As String
             Dim seq As Int32
-            Dim cost, retail, ordQty, recvdQty, expQty, tqty, trecvd, tcan, tcost, tretail As Decimal
-            Dim canqty As Decimal
+            Dim cost, retail, qty, tqty, trecvd, tcan, tcost, tretail As Decimal
+            Dim oqty, rqty, eqty, cqty, ocost, oretail As Decimal
+            Dim ordQty As Decimal = 0
+            Dim recvdQty As Decimal = 0
+            Dim expQty As Decimal = 0
             Dim extractDate As DateTime
             Dim cmd As SqlCommand
             Dim ds As DataSet = New DataSet
@@ -1062,75 +1221,107 @@ Module Module1
                         seq = CInt(oTest)
                         item = Trim(row("Sku").ToString)
                         oTest = row("ORD_QTY")
-                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then ordQty = CDec(oTest) Else ordQty = 0
+                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
+                            ''oqty = Decimal.Round(CDec(oTest), 4, MidpeointRounding.AwayFromZero)
+                            oqty = CDec(oTest)
+                        Else : oqty = 0
+                        End If
+                        ordQty += oqty
                         oTest = row("QTY_RECVD")
-                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then recvdQty = CDec(oTest) Else recvdQty = 0
+                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
+                            rqty = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
+                        Else : rqty = 0
+                        End If
+                        recvdQty += rqty
                         oTest = row("EXP_QTY")
-                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then expQty = CDec(oTest) Else expQty = 0
-                        tqty += expQty
+                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
+                            eqty = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
+                        Else : eqty = 0
+                        End If
+                        expQty += eqty
                         oTest = row("LAST_RECVD_DATE")
                         If Not IsDBNull(oTest) And Not IsNothing(oTest) And oTest <> "" Then lastDate = CDate(oTest) Else lastDate = Nothing
                         oTest = row("COST")
-                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then cost = CDec(oTest) Else cost = 0
-                        tcost += cost * expQty
+                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
+                            cost = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
+                        Else : cost = 0
+                        End If
+                        tcost += (oqty * cost)
                         oTest = row("RETAIL")
-                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then retail = CDec(oTest) Else retail = 0
-                        tretail += retail * expQty
+                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
+                            retail = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
+                        Else : retail = 0
+                        End If
+                        tretail += (oqty * retail)
                         'vendor = row("VEND_NO")
                         'buyer = row("BUYER")
                         'stat = row("STATUS")
                         extractDate = row("EXTRACT_DATE")
                         If lastDate <> "" Then
-                            sql = "INSERT INTO PO_Detail (Loc_Id, PO_NO, Seq_No, Sku, Qty_Ordered, Qty_Recvd, Qty_Due, " & _
+                            sql = "IF NOT EXISTS (SELECT PO_NO FROM PO_Detail WHERE PO_NO = '" & po & "' " & _
+                                "AND Sku = '" & item & "' AND Seq_No = " & seq & ") " & _
+                                "INSERT INTO PO_Detail (Loc_Id, PO_NO, Seq_No, Sku, Qty_Ordered, Qty_Recvd, Qty_Due, " & _
                                 "Cost, Retail, Last_Recvd_Date, Item, DIM1, DIM2, DIM3) " & _
-                                "SELECT '" & loc & "','" & po & "'," & seq & ",'" & item & "'," & ordQty & "," & recvdQty & "," &
-                                expQty & "," & cost & "," & retail & ",'" & lastDate & "',Item, DIM1, DIM2, DIM3 FROM Item_Master " & _
+                                "SELECT '" & loc & "','" & po & "'," & seq & ",'" & item & "'," & oqty & "," & rqty & "," &
+                                eqty & "," & cost & "," & retail & ",'" & lastDate & "',Item, DIM1, DIM2, DIM3 FROM Item_Master " & _
                                 "WHERE Sku = '" & item & "'"
                         Else
-                            sql = "INSERT INTO PO_Detail (Loc_Id, PO_NO, Seq_No, Sku, Qty_Ordered, Qty_Recvd, Qty_Due, " & _
+                            sql = " IF NOT EXISTS (SELECT PO_NO FROM PO_Detail WHERE PO_NO = '" & po & "' " & _
+                                "AND Sku = '" & item & "' AND Seq_No = " & seq & ") " & _
+                                "INSERT INTO PO_Detail (Loc_Id, PO_NO, Seq_No, Sku, Qty_Ordered, Qty_Recvd, Qty_Due, " & _
                                 "Cost, Retail, Last_Recvd_Date, Item, DIM1, DIM2, DIM3) " & _
-                                "SELECT '" & loc & "','" & po & "'," & seq & ",'" & item & "'," & ordQty & "," & recvdQty & "," &
-                                expQty & "," & cost & "," & retail & ", NULL, Item, DIM1, DIM2, DIM3 FROM Item_Master " & _
+                                "SELECT '" & loc & "','" & po & "'," & seq & ",'" & item & "'," & oqty & "," & rqty & "," &
+                                eqty & "," & cost & "," & retail & ", NULL, Item, DIM1, DIM2, DIM3 FROM Item_Master " & _
                                 "WHERE Sku = '" & item & "'"
                         End If
+
+
+
+
+                        'If po = "1-41789" And item = "596477-2" Then
+                        '    Console.WriteLine(sql)
+                        '    Console.ReadLine()
+                        'End If
+
+
+
                         cmd = New SqlCommand(sql, con)
                         cmd.ExecuteNonQuery()
+                        ''End If
                     Else
-                        Dim oqty, rqty, cqty, ocost, oretail As Decimal
                         oTest = row("ORD_QTY")
-                        If IsNumeric(oTest) Then oqty = CDec(oTest)
+                        If IsNumeric(oTest) Then oqty = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         oTest = row("QTY_RECVD")
-                        If IsNumeric(oTest) Then rqty = CDec(oTest)
+                        If IsNumeric(oTest) Then rqty = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         oTest = row("EXP_QTY")
-                        If IsNumeric(oTest) Then cqty = CDec(oTest)
+                        If IsNumeric(oTest) Then cqty = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         oTest = row("COST")
-                        If IsNumeric(oTest) Then ocost = CDec(oTest)
+                        If IsNumeric(oTest) Then ocost = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         oTest = row("RETAIL")
-                        If IsNumeric(oTest) Then oretail = CDec(oTest)
-                        If oqty <> tqty Then
-                            msg = "Expected " & Format(oqty, "###,###,##0.0000") & " Received " & Format(ordQty, "###,###,##0.0000")
-                            Dim el As New XMLUpdate.ErrorLogger
-                            el.WriteToErrorLog(msg, "Order Quantity Mismatch " & conString, "Process PO Detail")
-                        End If
-                        If rqty <> trecvd Then
-                            msg = "Expected " & Format(rqty, "###,###,##0.0000") & " Received " & Format(recvdQty, "###,###,##0.0000")
-                            Dim el As New XMLUpdate.ErrorLogger
-                            el.WriteToErrorLog(msg, "Received Quantity Mismatch " & conString, "Process PO Detail")
-                        End If
-                        If cqty <> tqty Then
-                            msg = "Expected " & Format(cqty, "###,###,##0.0000") & " Received " & Format(tqty, "###,###,##0.0000")
-                            Dim el As New XMLUpdate.ErrorLogger
-                            el.WriteToErrorLog(msg, "Quantity Due Mismatch " & conString, "Process PO Detail")
+                        If IsNumeric(oTest) Then oretail = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
+                        If oqty <> ordQty Then
+                            diff = Math.Abs((oqty - ordQty) / oqty)
+                            If diff > 0.02 Then
+                                msg = "Expected " & Format(oqty, "###,###,##0.0000") & " Received " & Format(ordQty, "###,###,##0.0000")
+                                Dim el As New XMLUpdate.ErrorLogger
+                                el.WriteToErrorLog(msg, "Order Quantity Mismatch " & conString, "Process PO Detail")
+                            End If
                         End If
                         If ocost <> tcost Then
-                            msg = "Expected " & Format(ocost, "$###,###,##0.0000") & " Received " & Format(cost, "$###,###,##0.0000")
-                            Dim el As New XMLUpdate.ErrorLogger
-                            el.WriteToErrorLog(msg, "Ordered @ Cost Mismatch " & conString, "Process PO Detail")
+                            diff = Math.Abs((ocost - tcost) / ocost)
+                            If diff > 0.01 Then
+                                msg = "Expected " & Format(ocost, "$###,###,##0.0000") & " Received " & Format(cost, "$###,###,##0.0000")
+                                Dim el As New XMLUpdate.ErrorLogger
+                                el.WriteToErrorLog(msg, "Ordered @ Cost Mismatch " & conString, "Process PO Detail")
+                            End If
                         End If
                         If oretail <> tretail Then
-                            msg = "Expected " & Format(oretail, "$###,###,##0.0000") & " Received " & Format(retail, "####,###,##0.0000")
-                            Dim el As New XMLUpdate.ErrorLogger
-                            el.WriteToErrorLog(msg, "Ordered @ Retail Mismatch " & conString, "Process PO Detail")
+                            diff = Math.Abs((oretail - tretail) / oretail)
+                            If diff > 0.02 Then
+                                msg = "Expected " & Format(oretail, "$###,###,##0.0000") & " Received " & Format(tretail, "####,###,##0.0000")
+                                Dim el As New XMLUpdate.ErrorLogger
+                                el.WriteToErrorLog(msg, "Ordered @ Retail Mismatch " & conString, "Process PO Detail")
+                            End If
                         End If
                     End If
                 Next
@@ -1154,11 +1345,11 @@ Module Module1
             Dim oTest As Object
             Dim isPhysical As Boolean = False
             Dim id, sku, item, dim1, dim2, dim3, store, loc, dept, buyer, clss, sql, cust, tkt, reason,
-                coupon, typ, nam, cust_typ, ttype As String
+                coupon, typ, nam, ttype, ordtype, whsl As String
             Dim seq As Int32
             Dim cost, retail, mkdn, tCost, tRetail, tMkdn, qty, tQty As Decimal
             Dim dte, eDate As Date
-            Dim transDate As DateTime
+            Dim transDate, tktDate As DateTime
             Dim extractDate, datetimenow As DateTime
             Dim cmd As SqlCommand
             Dim ds As DataSet = New DataSet
@@ -1219,17 +1410,17 @@ Module Module1
                         oTest = row("QTY")
                         qty = 0
                         If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
-                            If IsNumeric(oTest) Then qty = oTest
+                            If IsNumeric(oTest) Then qty = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         End If
                         cost = 0
                         oTest = row("COST")
                         If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
-                            If IsNumeric(oTest) Then cost = oTest
+                            If IsNumeric(oTest) Then cost = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         End If
                         retail = 0
                         oTest = row("RETAIL")
                         If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
-                            If IsNumeric(oTest) Then retail = oTest
+                            If IsNumeric(oTest) Then retail = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         End If
                         totlQty += qty
                         totlCost += (qty * cost)
@@ -1243,7 +1434,8 @@ Module Module1
                             transDate = DateTime.Parse(oTest)
                         Else : transDate = "1900-01-01 00:00:00"
                         End If
-
+                        ordtype = ""
+                        whsl = ""
                         Select Case theField
                             Case "Sold"
                                 oTest = row("STR_ID")
@@ -1255,9 +1447,11 @@ Module Module1
                                 oTest = row("CLASS")
                                 If IsDBNull(oTest) Then clss = "UNKNOWN" Else clss = CStr(oTest)
                                 oTest = row("CUST_NO")
-                                If Not IsDBNull(oTest) Then cust = CStr(oTest)
+                                If Not IsDBNull(oTest) Then cust = CStr(oTest) Else cust = "UNKNOWN"
                                 oTest = row("TKT_NO")
-                                If Not IsDBNull(oTest) Then tkt = oTest
+                                If Not IsDBNull(oTest) Then tkt = oTest Else tkt = "UNKNOWN"
+                                oTest = row("TICKET_DATE")
+                                If Not IsDBNull(oTest) Then tktDate = CDate(oTest) Else tktDate = "1900-01-01 00:00:00"
                                 oTest = row("MARKDOWN")
                                 If Not IsDBNull(oTest) And Not IsNothing(oTest) And oTest <> "" Then mkdn = CDec(oTest) Else mkdn = 0
                                 totlMarkdown += mkdn
@@ -1265,6 +1459,10 @@ Module Module1
                                 If Not IsDBNull(oTest) Then reason = CStr(oTest)
                                 oTest = row("COUPON_CODE")
                                 If Not IsDBNull(oTest) Then coupon = CStr(oTest)
+                                oTest = row("ORD_TYPE")
+                                If Not IsDBNull(oTest) Then ordtype = CStr(oTest)
+                                oTest = row("WHOLESALE")
+                                If Not IsDBNull(oTest) Then whsl = CStr(oTest)
                             Case Else
                                 mkdn = 0
                                 store = ""
@@ -1275,6 +1473,8 @@ Module Module1
                                 coupon = ""
                                 cust = ""
                                 tkt = ""
+                                ordtype = ""
+                                whsl = ""
                         End Select
 
                         oTest = row("EXTRACT_DATE")
@@ -1282,9 +1482,9 @@ Module Module1
 
                         Dim itexists As Boolean = Check_Log(con2, id, seq, loc, sku, transDate, store)
                         If Not itexists Then
-                            tQty += qty
-                            tCost += (qty * cost)
-                            tRetail += (qty * retail)
+                            tqty += qty
+                            tcost += (qty * cost)
+                            tretail += (qty * retail)
                             tMkdn += mkdn
                             con.open()
                             sql = "SELECT eDate FROM Calendar WHERE '" & CDate(transDate) & "' BETWEEN sDate AND eDate AND Week_ID > 0"
@@ -1296,45 +1496,35 @@ Module Module1
                             End While
                             con.close()
 
-                            cust_typ = "UNKNOWN"
-                            If theField = "Sold" Then
-                                con.open()
-                                sql = "SELECT [Type] FROM Customers WHERE Cust_No = '" & cust & "'"
-                                cmd = New SqlCommand(sql, con)
-                                rdr = cmd.ExecuteReader
-                                While rdr.Read
-                                    cust_typ = rdr("Type")
-                                End While
-                                con.close()
-                            End If
                             row = eDateTBL.Rows.Find(eDate)              ' We need to send the eDate to Client_Weekly_Summary
                             If IsNothing(row) Then
                                 eDateTBL.Rows.Add(eDate)                 ' Add date to eDateTBL if it isn't already there
                             End If
-                            Call Update_Tables(store, loc, eDate, sku, qty, retail, cost, mkdn, theField, dept, buyer, clss, "", cust_typ, con2)
-
-                            datetimenow = DateAndTime.Now
-                            con.Open()
-                            sql = "IF NOT EXISTS (SELECT TRANS_ID FROM Daily_Transaction_Log WHERE TRANS_ID = '" & id & "' " & _
-                                "AND SEQUENCE_NO = '" & seq & "' AND STORE = '" & store & "' AND SKU = '" & sku & "' " & _
-                                "AND LOCATION = '" & loc & "' " & " AND TRANS_DATE = '" & transDate & "') " & _
-                                "INSERT INTO Daily_Transaction_Log (TRANS_ID, SEQUENCE_NO, STORE, SKU, LOCATION, QTY, COST, RETAIL, " & _
-                                "MKDN, TRANS_DATE, [TYPE], POST_DATE, DEPT,BUYER, CLASS, EXTRACT_DATE, CUST_NO, TKT_NO, MKDN_REASON, " & _
-                                "COUPON_CODE, ITEM, DIM1, DIM2, DIM3) " & _
-                                "SELECT '" & id & "', " & seq & ", '" & store & "', '" & sku & "','" & loc & "'," &
-                                qty & "," & cost & "," & retail & ", " & mkdn & ",'" & transDate & "','" & theField & "','" & datetimenow & "','" & _
-                                dept & "','" & buyer & "','" & clss & "', '" & extractDate & "','" & cust & "','" & tkt & "','" & _
-                                reason & "','" & coupon & "','" & item & "','" & dim1 & "','" & dim2 & "','" & dim3 & "'"
-                            cmd = New SqlCommand(sql, con)
-                            cmd.CommandTimeout = 120
-                            cmd.ExecuteNonQuery()
-
-                            con.Close()
+                            If qty <> 0 Then                             ' Don't do anything unless qty <> 0
+                                Call Update_Tables(store, loc, eDate, sku, qty, retail, cost, mkdn, theField, dept, buyer, clss, "", whsl, con2)
+                                datetimenow = DateAndTime.Now
+                                con.Open()
+                                sql = "IF NOT EXISTS (SELECT TRANS_ID FROM Daily_Transaction_Log WHERE TRANS_ID = '" & id & "' " & _
+                                    "AND SEQUENCE_NO = '" & seq & "' AND STORE = '" & store & "' AND SKU = '" & sku & "' " & _
+                                    "AND LOCATION = '" & loc & "' " & " AND TRANS_DATE = '" & transDate & "') " & _
+                                    "INSERT INTO Daily_Transaction_Log (TRANS_ID, SEQUENCE_NO, STORE, SKU, LOCATION, QTY, COST, RETAIL, " & _
+                                    "MKDN, TRANS_DATE, [TYPE], POST_DATE, DEPT,BUYER, CLASS, EXTRACT_DATE, CUST_NO, TKT_NO, MKDN_REASON, " & _
+                                    "COUPON_CODE, ITEM, DIM1, DIM2, DIM3, ORD_TYPE, WHOLESALE, TKT_DATE) " & _
+                                    "SELECT '" & id & "', " & seq & ", '" & store & "', '" & sku & "','" & loc & "'," &
+                                    qty & "," & cost & "," & retail & ", " & mkdn & ",'" & transDate & "','" & theField & "','" & datetimenow & "','" & _
+                                    dept & "','" & buyer & "','" & clss & "', '" & extractDate & "','" & cust & "','" & tkt & "','" & _
+                                    reason & "','" & coupon & "','" & item & "','" & dim1 & "','" & dim2 & "','" & dim3 & "','" & ordtype & "','" & _
+                                    whsl & "','" & tktDate & "'"
+                                cmd = New SqlCommand(sql, con)
+                                cmd.CommandTimeout = 120
+                                cmd.ExecuteNonQuery()
+                                con.Close()
+                            End If
                         End If
                     Else
-                        qty = CDec(row("QTY"))
-                        cost = CDec(row("COST"))
-                        retail = CDec(row("RETAIL"))
+                        qty = Decimal.Round(CDec(row("QTY")), 4, MidpointRounding.AwayFromZero)
+                        cost = Decimal.Round(CDec(row("COST")), 4, MidpointRounding.AwayFromZero)
+                        retail = Decimal.Round(CDec(row("RETAIL")), 4, MidpointRounding.AwayFromZero)
                         If theField = "Sold" Then mkdn = CDec(row("MARKDOWN"))
                         If qty <> totlQty Then
                             msg = "Expected " & qty & " Received " & totlQty & " "
@@ -1364,8 +1554,8 @@ Module Module1
 
             If isPhysical Then theField = "PHYS"
             Dim message As String = "Updated " & cnt & " records - Qty = " & qty &
-                " Total Cost = " & Format(tCost, "###,###,###.00") & " Total Retail = " & Format(tRetail, "###,###,###.00") &
-                " Total Markdowns = " & Format(tMkdn, "###,###,###.00")
+                " Total Cost = " & Format(tCost, "###,###,###.0000") & " Total Retail = " & Format(tRetail, "###,###,###.0000") &
+                " Total Markdowns = " & Format(tMkdn, "###,###,###.0000")
             Call Update_Process_Log("1", "Update " & theField & "", message, "")
 
         Catch ex As Exception
@@ -1406,7 +1596,7 @@ Module Module1
 
     Private Sub Update_Tables(ByVal store, ByVal location, ByVal dte, ByVal item, ByVal qty, ByVal retail,
                              ByVal cost, ByVal mkdn, ByVal theField, ByVal dept, ByVal buyer, ByVal clss,
-                             ByVal dttime, ByVal Cust_typ, ByVal con2)
+                             ByVal dttime, ByVal whsl, ByVal con2)
         Try
             Dim cmd As SqlCommand
             Dim itsadate As Date
@@ -1426,7 +1616,7 @@ Module Module1
             Else : thistime = DateAndTime.Now
             End If
 
-            If Cust_typ = "WHOLESALE" Then store &= "-WHSL"
+            If whsl = "Y" Then store &= "-WHSL"
 
             If theField = "Sold" Then
                 sql = "IF NOT EXISTS (SELECT * FROM Item_Sales WHERE Str_Id = '" & Trim(store) & "' AND Loc_Id = '" & location & "' " & _
@@ -1462,7 +1652,10 @@ Module Module1
             cmd.CommandTimeout = 120
             cmd.ExecuteNonQuery()
             con2.close()
-
+            ''
+            ''  if trans_date in a previous week
+            ''  write a record or something and run "ForwardFill" to correct Item_Inv
+            ''
         Catch ex As Exception
             If con.State = ConnectionState.Open Then con.Close()
             If con2.State = ConnectionState.Open Then con2.Close()
@@ -1536,16 +1729,6 @@ Module Module1
                     End If
                 Next
             End If
-            '                           Flag records in History and not in the other table
-            ''If theTable <> "Customers" Then
-            ''    sql = "UPDATE h SET Status = 'Omitted' FROM " & theTable & " h " & _
-            ''        "WHERE Extract_Date <> '" & xDate & "'"
-            ''    con.open()
-            ''    cmd = New SqlCommand(sql, con)
-            ''    cmd.CommandTimeout = 120
-            ''    cmd.ExecuteNonQuery()
-            ''    con.close()
-            ''End If
 
             con.open()
             cmd = New SqlCommand(sql, con)
@@ -1554,16 +1737,16 @@ Module Module1
             con.close()
 
             '                           Insert a record for buyer OTHER if we don't already have one
-            If theTable = "Buyers" Then
-                con.open()
-                sql = "IF NOT EXISTS (SELECT * FROM Buyers WHERE ID = 'OTHER') " & _
-               "INSERT INTO Buyers (ID, Description, Orig_Date) " & _
-               "SELECT 'OTHER','MISCELLANEOUS BUYER','" & CDate(Date.Today) & "'"
-                cmd = New SqlCommand(sql, con)
-                cmd.CommandTimeout = 120
-                cmd.ExecuteNonQuery()
-                con.close()
-            End If
+            ''If theTable = "Buyers" Then
+            con.open()
+            sql = "IF NOT EXISTS (SELECT * FROM Buyers WHERE ID = 'OTHER') " & _
+           "INSERT INTO Buyers (ID, Description, Orig_Date) " & _
+           "SELECT 'OTHER','MISCELLANEOUS BUYER','" & CDate(Date.Today) & "'"
+            cmd = New SqlCommand(sql, con)
+            cmd.CommandTimeout = 120
+            cmd.ExecuteNonQuery()
+            con.close()
+            ''End If
 
             Dim p As String = "Update " & theTable
             Dim m As String = "Updated " & cnt & " records"
@@ -1578,16 +1761,58 @@ Module Module1
         End Try
     End Sub
 
+    Private Sub Process_Coupons()
+        Try
+            stopWatch = New Stopwatch
+            stopWatch.Start()
+            Dim ds As DataSet = New DataSet
+            Dim dt As DataTable = New DataTable
+            Dim cnt As Int16 = 0
+            Dim id, code, thePath As String
+            Dim seq As Integer
+            thePath = xmlPath & "\Coupons.xml"
+            Dim xmlFile As XmlReader
+            xmlFile = Xml.XmlReader.Create(thePath, New XmlReaderSettings())
+            ds.ReadXml(xmlFile)
+            If ((ds.Tables.Count > 0) AndAlso ds.Tables(0).Rows.Count > 0) Then
+                con.Open()
+                dt = ds.Tables(0)
+                For Each row In dt.Rows
+                    id = ""
+                    code = ""
+                    oTest = row("TRANS_ID")
+                    If Not IsNothing(oTest) And oTest <> "" Then id = CStr(oTest)
+                    oTest = row("CODE")
+                    If Not IsNothing(oTest) And oTest <> "" Then code = CStr(oTest)
+                    oTest = row("SEQ_NO")
+                    If IsNumeric(oTest) Then seq = CInt(oTest) Else seq = 0
+                    sql = "UPDATE Daily_Transaction_Log SET COUPON_CODE = '" & code & "' " & _
+                        "WHERE TRANS_ID = '" & id & "' AND SEQUENCE_NO = " & seq & ""
+                    cmd = New SqlCommand(sql, con)
+                    cmd.ExecuteNonQuery()
+                Next
+                con.Close()
+            End If
+
+        Catch ex As Exception
+            If con.State = ConnectionState.Open Then con.Close()
+            Dim el As New XMLUpdate.ErrorLogger
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Process Coupons")
+            MsgBox(ex.Message)
+        End Try
+    End Sub
+
     Private Sub Merge_Tickets()
         Try
             Console.WriteLine("Updating Tickets table")
             con.Open()
             sql = "DECLARE @maxDate AS Date " & _
                 "SET @maxDate = (SELECT MAX(Date) FROM Tickets) " & _
-                "SELECT CONVERT(varchar(10),LOCATION) AS Str_Id, CONVERT(varchar(30),TRANS_ID) AS Ticket_No, " & _
+                "SET @maxDate = CASE WHEN @maxDate IS NULL THEN '1900-01-01' END " & _
+                "SELECT CONVERT(varchar(10),STORE) AS Str_Id, CONVERT(varchar(30),TRANS_ID) AS Ticket_No, " & _
                 "CONVERT(varchar(30),CUST_NO) AS Cust_No, CONVERT(date,TRANS_DATE) AS 'Date', " & _
                 "ISNULL(SUM(QTY * RETAIL),0) as Amt, COUNT(*) AS Items INTO #t1 FROM Daily_Transaction_Log " & _
-                "WHERE TYPE = 'Sold' AND TRANS_DATE >= @maxDate GROUP BY LOCATION, TRANS_ID, Cust_No, TRANS_DATE " & _
+                "WHERE TYPE = 'Sold' AND TRANS_DATE >= @maxDate GROUP BY STORE, TRANS_ID, Cust_No, TRANS_DATE " & _
                 "MERGE Tickets AS t " & _
                 "USING #t1 AS s " & _
                 "ON (t.Str_Id = s.Str_Id AND t.Ticket_No = s.Ticket_No AND t.Cust_No = s.Cust_No AND t.Date = s.Date) " & _
@@ -1616,50 +1841,47 @@ Module Module1
             If con.State = ConnectionState.Open Then con.Close()
             If con2.State = ConnectionState.Open Then con2.Close()
             If con3.State = ConnectionState.Open Then con3.Close()
-            con2.Open()
-            Dim maxx, onhand, sold As Decimal
+            Dim maxx, end_OH, sold As Decimal
             Dim location, sku As String
             Dim cnt As Integer = 0
             Dim tbl As New DataTable
             Dim edate As Date
-            sql = "SELECT Loc_Id, i.Sku, eDate, OnHand INTO #t1 FROM Item_Inv i WHERE eDate = '" & thisDate & "' " & _
+            con.Open()
+            con2.Open()
+            sql = "SELECT Loc_Id, i.Sku, eDate, End_OH INTO #t1 FROM Item_Inv i WHERE eDate = '" & thisDate & "' " & _
                "SELECT Loc_Id, Sku, eDate, SUM(ISNULL(Sold,0)) AS Sold INTO #t2 FROM Item_Sales " & _
                "WHERE eDate = '" & thisDate & "' GROUP BY Loc_Id, Sku, eDate " & _
-               "SELECT t1. Loc_Id, t1.Sku, t1.eDate, t1.OnHand, ISNULL(t2.Sold,0) AS Sold FROM #t1 t1 " & _
+               "SELECT t1. Loc_Id, t1.Sku, t1.eDate, t1.End_OH, ISNULL(t2.Sold,0) AS Sold FROM #t1 t1 " & _
                "LEFT JOIN #t2 t2 ON t2.Loc_Id = t1.Loc_Id AND t2.Sku = t1.Sku AND t1.eDate = t2.eDate"
-            Using con As New SqlConnection(conString)
-                con.Open()
-                Using adptr As New SqlDataAdapter(sql, con)
-                    adptr.Fill(tbl)
-                End Using
-                con.Close()
-            End Using
-            For Each row As DataRow In tbl.Rows
+            cmd = New SqlCommand(sql, con)
+            cmd.CommandTimeout = 960
+            rdr = cmd.ExecuteReader
+            While rdr.Read
                 cnt += 1
                 If cnt Mod 1000 = 0 Then Console.WriteLine(cnt)
-                oTest = row("OnHand")
-                If IsDBNull(oTest) Then onhand = 0 Else onhand = CDec(oTest)
-                oTest = row("Sku")
+                oTest = rdr("End_OH")
+                If IsDBNull(oTest) Then End_OH = 0 Else End_OH = CDec(oTest)
+                oTest = rdr("Sku")
                 If IsDBNull(oTest) Then sku = "" Else sku = Replace(oTest, "'", "''")
-                oTest = row("Loc_Id")
+                oTest = rdr("Loc_Id")
                 If IsDBNull(oTest) Then location = "" Else location = Replace(oTest, "'", "''")
-                oTest = row("eDate")
+                oTest = rdr("eDate")
                 If IsDBNull(oTest) Then edate = "1900-01-01" Else edate = CDate(oTest)
-                oTest = row("Sold")
+                oTest = rdr("Sold")
                 If IsDBNull(oTest) Then sold = 0 Else sold = CDec(oTest)
-                If onhand < 0 Then
+                If end_OH < 0 Then
                     maxx = sold
                 Else
-                    maxx = sold + onhand
+                    maxx = sold + end_OH
                 End If
                 If maxx < 0 Then maxx = 0
                 sql = "UPDATE Item_Inv SET Max_OH = " & maxx & " WHERE Loc_Id = '" & location & "' AND Sku = '" &
                     sku & "' AND eDate = '" & thisDate & "'"
                 cmd = New SqlCommand(sql, con2)
                 cmd.ExecuteNonQuery()
-            Next
+            End While
+            con.Close()
             con2.Close()
-
             Dim p As String = "Set Max Onhand"
             Dim m As String = "Updated " & cnt & " records"
             Call Update_Process_Log("1", p, m, "")
@@ -1715,11 +1937,19 @@ Module Module1
             length = infoReader.Length
             If length = 0 Then
                 Dim el As New XMLUpdate.ErrorLogger
-                el.WriteToErrorLog(fileName, "HAS NO RECORDS", "Check File Exists")
+                el.WriteToErrorLog(fileName, "HAS NO RECORDS", "Check File Size")
+            End If
+            Dim fileDate As DateTime = File.GetLastWriteTime(fileName)
+            Dim hoursDiff = DateDiff(DateInterval.Hour, fileDate, Date.Now)
+            If hoursDiff > 26 Then
+                Dim el As New XMLUpdate.ErrorLogger
+                el.WriteToErrorLog(fileName & " IS OLDER THAN 24 HOURS", "", "Check File Datetime")
             End If
         Else
-            Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(fileName & " not found", "", "Check File Size")
+            If fileName <> xmlPath & "\ErrLog.txt" Then
+                Dim el As New XMLUpdate.ErrorLogger
+                el.WriteToErrorLog(fileName & " NOT FOUND", "", "Check File Exists")
+            End If
         End If
         Return length
     End Function
@@ -1730,7 +1960,7 @@ Module Module1
     End Function
 
     Public Function cleanData(ByVal input As String) As String
-        Dim r As String = Regex.Replace(input, "[^A-Za-z0-9\-/]", "")
+        Dim r As String = Regex.Replace(input, "[~A-Za-z0-9\-/]", "")
         Return r.Replace(input, [String].Empty)
     End Function
 End Module

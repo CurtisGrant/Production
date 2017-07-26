@@ -37,6 +37,7 @@ Module Module2
         tbl.Columns.Add("Client")
         tbl.Columns.Add("Server")
         tbl.Columns.Add("dBase")
+        tbl.Columns.Add("exePath")
         tbl.Columns.Add("xmlPath")
         tbl.Columns.Add("sqlUserId")
         tbl.Columns.Add("sqlPassword")
@@ -47,7 +48,8 @@ Module Module2
         con = New SqlConnection(conString)
         con.Open()
         Console.WriteLine("RCClient is now open")
-        sql = "SELECT Client_Id, [Database] AS dbase, Server, SQLUserId, SQLPassword, XMLs AS Path, errorLog, Marketing FROM CLIENT_MASTER " & _
+        sql = "SELECT Client_Id, [Database] AS dbase, Server, SQLUserId, SQLPassword, XMLs AS Path, " & _
+            "errorLog, Marketing FROM CLIENT_MASTER " & _
             "WHERE Status = 'Active' ORDER BY Client_Id"
         cmd = New SqlCommand(sql, con)
         rdr = cmd.ExecuteReader
@@ -103,12 +105,11 @@ Module Module2
             errorLog = row("errorLog")
             marketing = row("Marketing")
             ''If client = "PARGIF" Then
-            Console.WriteLine("Calling XML_Update for " & client & " exepath=" & exePath)
+            Console.WriteLine("Calling XMLUpdate.exe for " & client & " exepath=" & exePath)
             Dim p As New ProcessStartInfo
             p.FileName = exePath & "\XMLUpdate.exe"
             p.Arguments = client & ";" & server & ";" & dbase & ";" & xmlPath & ";" & sqlUserId & ";" &
                 sqlPassword & ";" & BeginDate & ";" & EndDate & ";" & errorLog & ";" & marketing
-            Console.WriteLine("Calling Client_XML_Update " & p.Arguments)
             p.UseShellExecute = True
             p.WindowStyle = ProcessWindowStyle.Normal
             Dim proc As Process = Process.Start(p)
