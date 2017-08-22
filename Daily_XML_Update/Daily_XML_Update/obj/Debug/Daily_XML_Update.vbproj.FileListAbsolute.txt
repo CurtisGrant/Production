@@ -16,3 +16,13 @@ C:\Projects\DEMO\Daily_XML_Update\Daily_XML_Update\bin\Debug\Daily_XML_Update.pd
 C:\Projects\DEMO\Daily_XML_Update\Daily_XML_Update\bin\Debug\Daily_XML_Update.xml
 C:\Projects\DEMO\Daily_XML_Update\Daily_XML_Update\obj\Debug\Daily_XML_Update.Resources.resources
 C:\Projects\DEMO\Daily_XML_Update\Daily_XML_Update\obj\Debug\Daily_XML_Update.vbproj.GenerateResource.Cache
+C:\Projects\Production\Daily_XML_Update\Daily_XML_Update\bin\Debug\Daily_XML_Update.exe.config
+C:\Projects\Production\Daily_XML_Update\Daily_XML_Update\obj\Debug\Daily_XML_Update.exe
+C:\Projects\Production\Daily_XML_Update\Daily_XML_Update\obj\Debug\Daily_XML_Update.xml
+C:\Projects\Production\Daily_XML_Update\Daily_XML_Update\obj\Debug\Daily_XML_Update.pdb
+C:\Projects\Production\Daily_XML_Update\Daily_XML_Update\bin\Debug\Daily_XML_Update.exe
+C:\Projects\Production\Daily_XML_Update\Daily_XML_Update\bin\Debug\Daily_XML_Update.pdb
+C:\Projects\Production\Daily_XML_Update\Daily_XML_Update\bin\Debug\Daily_XML_Update.xml
+C:\Projects\Production\Daily_XML_Update\Daily_XML_Update\obj\Debug\Daily_XML_Update.vbprojResolveAssemblyReference.cache
+C:\Projects\Production\Daily_XML_Update\Daily_XML_Update\obj\Debug\Daily_XML_Update.Resources.resources
+C:\Projects\Production\Daily_XML_Update\Daily_XML_Update\obj\Debug\Daily_XML_Update.vbproj.GenerateResource.Cache

@@ -15,13 +15,13 @@ Module Module1
     Private stopWatch As Stopwatch
     Private totlQty, totlCost, totlRetail, totlMarkdown, diff As Decimal
     Private records As Integer
-    Private msg As String
+    Private msg, xmlProcess As String
 
     Sub Main()
         ''Try
         Dim fileSZ As Integer = 0
         Dim xmlReader As XmlTextReader = New XmlTextReader("c:\RetailClarity\RCCLIENT.xml")
-        Dim rcServer, rcExePath, rcPassword As String
+        Dim rcServer, rcExePath, RCUserId, rcPassword As String
         Dim fld As String = ""
         Dim valu As String = ""
         Dim cust As String = "N"
@@ -37,9 +37,10 @@ Module Module1
             End Select
             If fld = "SERVER" Then rcServer = valu
             If fld = "EXEPATH" Then rcExePath = valu
+            If fld = "USERID" Then RCUserId = valu
             If fld = "PD" Then rcPassword = valu
         End While
-        ''rcConString = "Server=" & rcServer & ";Initial Catalog=RCClient;User Id=sa;Password=" & rcPassword & ""
+        ''rcConString = "Server=" & rcServer & ";Initial Catalog=RCClient;User Id=" & RCUserId & ";Password=" & rcPassword & ""
         rcConString = "Server=" & rcServer & ";Initial Catalog=RCClient;Integrated Security=True"
         rcCon = New SqlConnection(rcConString)
         eDateTBL = New DataTable
@@ -56,7 +57,6 @@ Module Module1
         Dim cnt As Int32 = 0
         Dim thisDate, thisEdate, thisSdate, clearDate, lastWeekseDate As Date
         Dim DayOfWeek As Integer
-
         Dim args As String() = Environment.GetCommandLineArgs()
         Dim txtArray() As String = args(1).Split(";")
         client = txtArray(0)
@@ -69,31 +69,34 @@ Module Module1
         thisEdate = txtArray(7)
         rcErrorPath = txtArray(8)
         cust = txtArray(9)
+        xmlProcess = txtArray(10)
+
         eDateTBL.Rows.Add(thisEdate)
         lastWeekseDate = DateAdd(DateInterval.Day, -7, thisEdate)
+
 
 
         ''client = "TCM"
         '' ''server = "alrm6hn0ql.database.windows.net,1433"
         ''server = "LP-CURTIS"
         ''dbase = "TCM"
-        ''xmlPath = "c:\RetailClarity\XMLs\PARGIF"
+        ''xmlPath = "c:\RetailClarity\XMLs\TCM"
         '' ''xmlPath = "\\LPS2-2\RetailClarity\PARGIF\XMLs\Build"
-        ''thisSdate = "7/23/2017"
-        ''thisEdate = "7/29/2017"
+        ''thisSdate = "8/13/2017"
+        ''thisEdate = "8/19/2017"
         ''lastWeekseDate = DateAdd(DateInterval.Day, -7, thisEdate)
         ''sqlUserId = "sa"
         ''sqlPassword = "PGadm01!"
         ''rcErrorPath = "c:\RetailClarity\RCSystem\SYSFAIL"
         ''rcExePath = "c:\RetailClarity\EXEs"
         ''cust = "N"
-        ' ''eDateTBL.Rows.Add("7/10/2016")
-        ''eDateTBL.Rows.Add("7/23/2017")
+        ''eDateTBL.Rows.Add("8/19/2017")
+        ''xmlProcess = "BUYERS"
 
 
 
-        conString = "server=" & server & ";Initial Catalog=" & dbase & ";Integrated Security=True" & ""
-        ''conString = "server=RC-RDP01;Initial Catalog=PARGIF;Integrated Security=True"
+
+        conString = "server=" & server & ";Initial Catalog=" & dbase & ";User ID=" & sqlUserId & ";Password=" & sqlPassword & ""
         con = New SqlConnection(conString)
         con2 = New SqlConnection(conString)
         con3 = New SqlConnection(conString)
@@ -102,15 +105,16 @@ Module Module1
         thisDate = CDate(Date.Today)
         DayOfWeek = thisDate.DayOfWeek
         clearDate = DateAdd(DateInterval.Month, -6, thisEdate)
-        '' If cust = "Y" Then oktoprocessCustomers = True
         stopWatch = New Stopwatch
 
-        Console.WriteLine("Check_Log for existance of ErrorLog.xml")
-        thePath = xmlPath & "\ErrLog.txt"
-        If FileSize(thePath) > 0 Then
-            msg = "Error Log from Counterpoint found"
-            Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(msg, "", "Look for Counterpoint Error Log")
+        If xmlProcess = "ALL" Then
+            Console.WriteLine("Check_Log for existance of ErrorLog.xml")
+            thePath = xmlPath & "\ErrLog.txt"
+            If FileSize(thePath) > 0 Then
+                msg = "Error Log from Counterpoint found"
+                Dim el As New XMLUpdate.ErrorLogger
+                el.WriteToErrorLog(msg, "", "Look for Counterpoint Error Log")
+            End If
         End If
 
 
@@ -118,226 +122,233 @@ Module Module1
 
 
 
-        ''        GoTo 100
+
+        ''    GoTo 100
 
 
 
+        If xmlProcess = "ALL" Then
+            Dim rCon As New SqlConnection(rcConString)
+            rCon.Open()
+            sql = "UPDATE Client_Master SET Last_XML_Update = NULL WHERE Client_ID = '" & client & "'"
+            cmd = New SqlCommand(sql, rCon)
+            cmd.ExecuteNonQuery()
+            rCon.Close()
+            Console.WriteLine("Processing Calendar")
+            thePath = xmlPath & "\Calendar.xml"
+            If FileSize(thePath) > 0 Then Call Process_Calendar(thePath, con, con2, constr)
+        End If
 
-        Dim rCon As New SqlConnection(rcConString)
-        rCon.Open()
-        sql = "UPDATE Client_Master SET Last_XML_Update = NULL WHERE Client_ID = '" & client & "'"
-        cmd = New SqlCommand(sql, rCon)
-        cmd.ExecuteNonQuery()
-        rCon.Close()
+        If xmlProcess = "ITEMS" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing " & client & " Item records")
+            thePath = xmlPath & "\Items.xml"
+            If FileSize(thePath) > 0 Then Call Process_Items(thePath, con, con2, constr)
+            If xmlProcess = "ITEMS" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing Calendar")
-        thePath = xmlPath & "\Calendar.xml"
-        If FileSize(thePath) > 0 Then Call Process_Calendar(thePath, con, con2, constr)
+        If xmlProcess = "BARCODES" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing Barcodes")
+            thePath = xmlPath & "\Barcodes.xml"
+            If FileSize(thePath) > 0 Then Call Process_Barcodes(thePath, con, con2, constr)
+            If xmlProcess = "BARCODES" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing " & client & " Item records")
-        thePath = xmlPath & "\Items.xml"
-        If FileSize(thePath) > 0 Then Call Process_Items(thePath, con, con2, constr)
+        If xmlProcess = "PREQHEADER" Or xmlProcess = "ALL" Then
+            Console.WriteLine(" Purchase Request Header")
+            thePath = xmlPath & "\Purchase_Request_Header.xml"
+            If FileSize(thePath) > 0 Then Call Process_PREQ_Header(thePath, con, con2)
+            If xmlProcess = "PREQHEADER" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing Barcodes")
-        thePath = xmlPath & "\Barcodes.xml"
-        If FileSize(thePath) > 0 Then Call Process_Barcodes(thePath, con, con2, constr)
-        
-        Console.WriteLine(" Purchase Request Header")
-        thePath = xmlPath & "\Purchase_Request_Header.xml"
-        If FileSize(thePath) > 0 Then Call Process_PREQ_Header(thePath, con, con2)
+        If xmlProcess = "PREQDETAIL" Or xmlProcess = "ALL" Then
+            Console.WriteLine(" Purchase Request Detail")
+            thePath = xmlPath & "\Purchase_Request_Detail.xml"
+            If FileSize(thePath) > 0 Then Call Process_PREQ_Detail(thePath, con, con2)
+            If xmlProcess = "PREQDETAIL" Then Exit Sub
+        End If
 
-        Console.WriteLine(" Purchase Request Detail")
-        thePath = xmlPath & "\Purchase_Request_Detail.xml"
-        If FileSize(thePath) > 0 Then Call Process_PREQ_Detail(thePath, con, con2)
+        If xmlProcess = "INVENTORY" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing " & client & " Inventory records")
+            thePath = xmlPath & "\Inventory.xml"
+            If FileSize(thePath) > 0 Then Call Process_Inventory(thePath, con, con2)
+            If xmlProcess = "INVENTORY" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing " & client & " Inventory records")
-        thePath = xmlPath & "\Inventory.xml"
-        If FileSize(thePath) > 0 Then Call Process_Inventory(thePath, con, con2)
+        If xmlProcess = "POHEADER" Or xmlProcess = "ALL then" Then
+            Console.WriteLine("Processing " & client & " Purchase Order Header")
+            thePath = xmlPath & "\POHeader.xml"
+            If FileSize(thePath) > 0 Then Call Process_POHeader(thePath, con, con2)
+            If xmlProcess = "POHEADER" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing " & client & " Purchase Order Header")
-        thePath = xmlPath & "\POHeader.xml"
-        If FileSize(thePath) > 0 Then Call Process_POHeader(thePath, con, con2)
+        If xmlProcess = "PODETAIL" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing " & client & " Purchase Order Detail")
+            thePath = xmlPath & "\PODetail.xml"
+            If FileSize(thePath) > 0 Then Call Process_PODetail(thePath, con, con2)
+            If xmlProcess = "PODETAIL" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing " & client & " Purchase Order Detail")
-        thePath = xmlPath & "\PODetail.xml"
-        If FileSize(thePath) > 0 Then Call Process_PODetail(thePath, con, con2)
+        If xmlProcess = "ADJUSTMENTS" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing " & client & " Adjustment records")
+            thePath = xmlPath & "\Adjustment.xml"
+            If FileSize(thePath) > 0 Then Call Process_Data(thePath, "ADJ", con, con2)
+            If xmlProcess = "ADJUSTMENTS" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing " & client & " Adjustment records")
-        thePath = xmlPath & "\Adjustment.xml"
-        If FileSize(thePath) > 0 Then Call Process_Data(thePath, "ADJ", con, con2)
+        If xmlProcess = "PHYSICAL" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing " & client & " Physical records")
+            thePath = xmlPath & "\Physical.xml"
+            If FileSize(thePath) > 0 Then Call Process_Data(thePath, "ADJ", con, con2)
+            If xmlProcess = "PHYSICAL" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing " & client & " Physical records")
-        thePath = xmlPath & "\Physical.xml"
-        If FileSize(thePath) > 0 Then Call Process_Data(thePath, "ADJ", con, con2)
+        If xmlProcess = "RECEIPTS" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing " & client & " Receiving records")
+            thePath = xmlPath & "\Receipt.xml"
+            If FileSize(thePath) > 0 Then Call Process_Data(thePath, "RECVD", con, con2)
+            If xmlProcess = "RECEIPTS" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing " & client & " Receiving records")
-        thePath = xmlPath & "\Receipt.xml"
-        If FileSize(thePath) > 0 Then Call Process_Data(thePath, "RECVD", con, con2)
+        If xmlProcess = "RETURN" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Process " & client & " Return records")
+            thePath = xmlPath & "\Return.xml"
+            If FileSize(thePath) > 0 Then Call Process_Data(thePath, "RTV", con, con2)
+            If xmlProcess = "RETURNS" Then Exit Sub
+        End If
 
-        Console.WriteLine("Process " & client & " Return records")
-        thePath = xmlPath & "\Return.xml"
-        If FileSize(thePath) > 0 Then Call Process_Data(thePath, "RTV", con, con2)
+        If xmlProcess = "SALES" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing Sales for " & client)
+            Dim files As String() = Directory.GetFiles(xmlPath, "Sales*.xml")
+            If files.Length > 0 Then
+                For Each File As String In files
+                    Call Process_Data(File, "Sold", con, con2)
+                Next
+            End If
 
-        Console.WriteLine("Processing Sales for " & client)
-        thePath = xmlPath & "\Sales.xml"
-        If FileSize(thePath) > 0 Then Call Process_Data(thePath, "Sold", con, con2)
-        Call Merge_Tickets()
+            ''thePath = xmlPath & "\Sales.xml"
+            ''If FileSize(thePath) > 0 Then Call Process_Data(thePath, "Sold", con, con2)
+            Call Merge_Tickets()
+            If xmlProcess = "SALES" Then Exit Sub
+        End If
 
-        Call Set_Max_OH(thisEdate)
-        Call Update_Store_Table()
+        If xmlProcess = "ORDERS" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing Orders for " & client)
+            thePath = xmlPath & "\Orders.xml"
+            If FileSize(thePath) > 0 Then Call Process_Data(thePath, "Order", con, con2)
+            If xmlProcess = "ORDERS" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing " & client & " Transfer records")
-        thePath = xmlPath & "\Transfer.xml"
-        If FileSize(thePath) > 0 Then Call Process_Data(thePath, "XFER", con, con2)
+        If xmlProcess = "ALL" Then
+            Call Set_Max_OH(thisEdate)
+            Call Update_Store_Table()
+        End If
 
-        Console.WriteLine("Processing " & client & " Buyer records")
-        thePath = xmlPath & "\Buyers.xml"
-        If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Buyers", con, con2)
+        If xmlProcess = "TRANSFERS" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing " & client & " Transfer records")
+            thePath = xmlPath & "\Transfer.xml"
+            If FileSize(thePath) > 0 Then Call Process_Data(thePath, "XFER", con, con2)
+            If xmlProcess = "TRANSFERS" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing " & client & " Class records")
-        thePath = xmlPath & "\Classes.xml"
-        If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Classes", con, con2)
+        If xmlProcess = "BUYERS" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing " & client & " Buyer records")
+            thePath = xmlPath & "\Buyers.xml"
+            If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Buyers", con, con2)
+            If xmlProcess = "BUYERS" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing " & client & " Coupon_Code records")
-        thePath = xmlPath & "\Coupon_Codes.xml"
-        If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Coupon_Codes", con, con2)
+        If xmlProcess = "CLASSES" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing " & client & " Class records")
+            thePath = xmlPath & "\Classes.xml"
+            If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Classes", con, con2)
+            If xmlProcess = "CLASSES" Then Exit Sub
+        End If
 
-        Console.WriteLine("Process " & client & " Coupons")
-        Call Process_Coupons()
+        If xmlProcess = "COUPONS" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing " & client & " Coupon_Code records")
+            thePath = xmlPath & "\Coupon_Codes.xml"
+            If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Coupon_Codes", con, con2)
+            Console.WriteLine("Process " & client & " Coupons")
+            Call Process_Coupons()
+            If xmlProcess = "COUPONS" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing " & client & " Department records")
-        thePath = xmlPath & "\Departments.xml"
-        If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Departments", con, con2)
+        If xmlProcess = "DEPARTMENTS" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing " & client & " Department records")
+            thePath = xmlPath & "\Departments.xml"
+            If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Departments", con, con2)
+            If xmlProcess = "DEPARTMENTS" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing " & client & " Seasons records") '
-        thePath = xmlPath & "\Seasons.xml"
-        If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Seasons", con, con2)
+        If xmlProcess = "SEASONS" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing " & client & " Seasons records") '
+            thePath = xmlPath & "\Seasons.xml"
+            If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Seasons", con, con2)
+            If xmlProcess = "SEASONS" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing " & client & " Store records")
-        thePath = xmlPath & "\Stores.xml"
-        If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Stores", con, con2)
+        If xmlProcess = "STORES" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing " & client & " Store records")
+            thePath = xmlPath & "\Stores.xml"
+            If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Stores", con, con2)
+            If xmlProcess = "STORES" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing " & client & " Shipping Locations")
-        thePath = xmlPath & "\Locations.xml"
-        If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Locations", con, con2)
+        If xmlProcess = "LOCATIONS" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing " & client & " Shipping Locations")
+            thePath = xmlPath & "\Locations.xml"
+            If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Locations", con, con2)
+            If xmlProcess = "LOCATIONS" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing " & client & " Product Line records")
-        thePath = xmlPath & "\ProductLines.xml"
-        If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "ProductLines", con, con2)
+        If xmlProcess = "PLINES" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing " & client & " Product Line records")
+            thePath = xmlPath & "\ProductLines.xml"
+            If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "ProductLines", con, con2)
+            If xmlProcess = "PLINES" Then Exit Sub
+        End If
 
-        Console.WriteLine("Processing " & client & " Vendor records")
-        thePath = xmlPath & "\Vendors.xml"
-        If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Vendors", con, con2)
+        If xmlProcess = "VENDORS" Or xmlProcess = "ALL" Then
+            Console.WriteLine("Processing " & client & " Vendor records")
+            thePath = xmlPath & "\Vendors.xml"
+            If FileSize(thePath) > 0 Then Call Process_Other_Data(thePath, "Vendors", con, con2)
+            If xmlProcess = "VENDORS" Then Exit Sub
+        End If
 
-100:    Try
-            '    Create records for the next week when processing the last day of the week
+        If xmlProcess <> "ALL" Then Exit Sub
+
+        Try                 '    Create records for the next week when processing the last day of the week
             Dim nextSdate, nextEdate As Date
-            Dim rdr2 As SqlDataReader
-            Dim location, item, sku, dim1, dim2, dim3 As String
-            Dim onhand, committed, endoh As Decimal
-            Dim cost, retail As Decimal
-            Dim dte As Date = Date.Today
-            Dim newsku, newitem As String
-
             If DayOfWeek = 0 Then                                              ' create new inventory records on Sunday
                 Console.WriteLine("Adding Item_Inv records for next week.")
                 ''                                        thisSdate and thisEdate were set when this thing first started
                 con2.Open()
-                nextSdate = thisSdate                                           ' changed when job was scheduled to run at 2:00 AM
+                nextSdate = thisSdate
                 nextEdate = thisEdate
 
-                sql = "DECLARE @sDate date = '" & nextSdate & "' " & _
-                    "DECLARE @eDate date = '" & nextEdate & "' " & _
-                    "DECLARE @lasteDate date = '" & lastWeekseDate & "' " & _
-                    "IF OBJECT_ID('temp.dbo.#t1','U') IS NOT NULL DROP TABLE dbo.#t1; " & _
-                    "SELECT Loc_Id, Sku, @sDate sDate, @eDate eDate, Cost, Retail, c.YrWk, End_OH OnHand, End_OH Begin_OH, End_OH, " & _
-                    "Item, DIM1, DIM2, DIM3 INTO #t1 FROM Item_Inv i " & _
-                    "JOIN Calendar c ON c.eDate = @eDate AND c.week_Id > 0 " & _
-                    "WHERE i.eDate = @lasteDate AND End_OH <> 0 " & _
-                    "MERGE Item_Inv AS t USING #t1 AS s ON s.Loc_Id=t.Loc_Id AND s.Sku=t.Sku AND s.eDate=t.eDate " & _
-                    "WHEN NOT MATCHED BY Target THEN " & _
-                    "INSERT(Loc_Id, sku, sDate, eDate, cost, retail, YrWk, onhand, Begin_OH, End_OH, item, dim1, dim2, dim3) " & _
-                    "VALUES(s.Loc_Id, s.Sku, s.sDate, s.eDate, s.Cost, s.Retail, s.YrWk, s.OnHand, s.Begin_OH, s.End_OH, s.Item, s.DIM1, s.DIM2, s.DIM3);"
+                sql = "DECLARE @sDate date = '" & nextSdate & "' " &
+                    "DECLARE @eDate date = '" & nextEdate & "' " &
+                    "DECLARE @lasteDate date = '" & lastWeekseDate & "' " &
+                    "IF OBJECT_ID('tempdb.dbo.#t1','U') IS NOT NULL DROP TABLE dbo.#t1; " &
+                    "SELECT Loc_Id, Sku, @sDate sDate, @eDate eDate, Cost, Retail, c.YrWk, Avail, Begin_OH, End_OH, " &
+                    "Item, DIM1, DIM2, DIM3 INTO #t1 FROM Item_Inv i " &
+                    "JOIN Calendar c ON c.eDate = @eDate AND c.week_Id > 0 " &
+                    "WHERE i.eDate = @lasteDate AND End_OH <> 0 " &
+                    "MERGE Item_Inv AS t USING #t1 AS s ON s.Loc_Id=t.Loc_Id AND s.Sku=t.Sku AND s.eDate=t.eDate " &
+                    "WHEN NOT MATCHED BY Target THEN " &
+                    "INSERT(Loc_Id, sku, sDate, eDate, cost, retail, YrWk, Avail, Begin_OH, End_OH, item, dim1, dim2, dim3) " &
+                    "VALUES(s.Loc_Id, s.Sku, s.sDate, s.eDate, s.Cost, s.Retail, s.YrWk, s.Avail, s.End_OH, s.End_OH, s.Item, s.DIM1, s.DIM2, s.DIM3) " &
+                    "WHEN MATCHED THEN UPDATE SET t.Begin_OH = s.End_OH;"
                 cmd = New SqlCommand(sql, con2)
                 cmd.ExecuteNonQuery()
                 con2.Close()
 
-                ''cnt = 0
-                ''Console.WriteLine("Setting Sys_OH = End_OH")
-                ''sql = "UPDATE Item_Inv SET Sys_OH = End_OH WHERE eDate = '" & thisEdate & "'"
-                ''cmd = New SqlCommand(sql, con2)
-                ''cmd.CommandTimeout = 480
-                ''cmd.ExecuteNonQuery()
-                ''con2.Close()
-
-                ''con2.Open()
-
-                ''con2.Open()
-                ''Console.WriteLine("Selecting records with End_OH <> 0")
-                ' ''sql = "SELECT Loc_Id, Sku, ISNULL(End_OH,0) End_OH, ISNULL(OnHand,0) OnHand, ISNULL(Committed,0) Committed, " & _
-                ' ''    "ISNULL(Cost,0) AS Cost, ISNULL(Retail,0) AS Retail, Item, Dim1, Dim2, Dim3 FROM Item_Inv " & _
-                ' ''    "WHERE ISNULL(End_OH,0) <> 0 AND eDate = '" & lastWeekseDate & "' " & _
-                ' ''    "ORDER BY Loc_ID, Sku"
-
-
-                ''sql = "SELECT Loc_Id, Sku, ISNULL(End_OH,0) End_OH, ISNULL(OnHand,0) OnHand, ISNULL(Committed,0) Committed, " & _
-                ''   "ISNULL(Cost,0) AS Cost, ISNULL(Retail,0) AS Retail, Item, Dim1, Dim2, Dim3 FROM Item_Inv " & _
-                ''   "WHERE ISNULL(End_OH,0) <> 0 AND eDate = '7/1/2017'  ORDER BY Loc_ID, Sku"
-
-
-
-                ''cmd = New SqlCommand(sql, con2)
-                ''cmd.CommandTimeout = 960
-                ''rdr2 = cmd.ExecuteReader
-                ''Console.WriteLine("Processing")
-                ''While rdr2.Read
-                ''    oTest = rdr2("Loc_Id")
-                ''    If Not IsDBNull(oTest) Then location = CStr(oTest) Else location = "UNKNOWN"
-                ''    oTest = rdr2("Sku")
-                ''    If Not IsDBNull(oTest) Then sku = CStr(oTest) Else sku = "UNKNOWN"
-                ''    newsku = Replace(sku, "'", "''")
-                ''    endoh = rdr2("End_OH")
-
-
-
-
-                ''    ''Console.WriteLine(location & "," & sku & "," & endoh)
-                ''    ''Console.ReadLine()
-
-
-
-
-                ''    committed = rdr2("Committed")
-                ''    onhand = rdr2("onhand")
-                ''    cost = rdr2("Cost")
-                ''    retail = rdr2("Retail")
-                ''    oTest = rdr2("Item")
-                ''    If Not IsDBNull(oTest) Then item = rdr2("Item") Else item = Nothing
-                ''    oTest = rdr2("DIM1")
-                ''    If Not IsDBNull(oTest) Then dim1 = CStr(oTest) Else dim1 = Nothing
-                ''    oTest = rdr2("DIM2")
-                ''    If Not IsDBNull(oTest) Then dim2 = CStr(oTest) Else dim2 = Nothing
-                ''    oTest = rdr2("DIM3")
-                ''    If Not IsDBNull(oTest) Then dim3 = CStr(oTest) Else dim3 = Nothing
-                ''    newitem = Replace(item, "'", "''")
-                ''    cnt += 1
-                ''    If cnt Mod 1000 = 0 Then Console.WriteLine(cnt & "  " & item)
-                ''    sql = "IF NOT EXISTS (SELECT Sku FROM Item_Inv WHERE Loc_Id = '" & location & "' AND Sku = '" & newsku & "' AND eDate = '" & nextEdate & "') " & _
-                ''        "INSERT INTO Item_Inv (Loc_Id, Sku, sDate, eDate, Begin_OH, End_OH, OnHand, Committed, Max_OH, Cost, Retail, " & _
-                ''        "Item, Dim1, Dim2, Dim3, YrWk) " & _
-                ''        "SELECT '" & Trim(location) & "','" & Trim(newsku) & "','" & nextSdate & "','" & nextEdate & "'," &
-                ''        onhand & "," & onhand & "," & onhand & "," & committed & "," & onhand & "," & cost & ", " & retail & ", '" &
-                ''        newitem & "','" & dim1 & "','" & dim2 & "','" & dim3 & "', yrwk FROM Calendar " & _
-                ''        "WHERE eDate = '" & nextEdate & "' AND Week_Id > 0 " & _
-                ''        "ELSE " & _
-                ''        "UPDATE Item_Inv SET Begin_OH = " & onhand & ", End_OH = " & onhand & " " & _
-                ''        "WHERE Loc_Id = '" & location & "' AND Sku = '" & item & "' AND eDate = '" & nextEdate & "'"
-                ''    cmd3 = New SqlCommand(sql, con3)
-                ''    cmd3.CommandTimeout = 960
-                ''    cmd3.ExecuteNonQuery()
-                ''End While
+                Console.WriteLine("Setting Sys_OH = End_OH")
+                sql = "UPDATE Item_Inv SET Sys_OH = End_OH WHERE eDate = '" & thisEdate & "'"
+                cmd = New SqlCommand(sql, con2)
+                cmd.CommandTimeout = 480
+                cmd.ExecuteNonQuery()
                 con2.Close()
-                con3.Close()
                 Dim m As String = "Created " & cnt & " Records"
                 Call Update_Process_Log("1", "Create Inventory Records for Next Week", m, "")
             End If
@@ -878,7 +889,7 @@ Module Module1
             cmd = New SqlCommand(sql, con)
             cmd.CommandTimeout = 960
             cmd.ExecuteNonQuery()
-            sql = "IF EXISTS (SELECT * FROM sysobjects WHERE name = '_t1' AND xtype = 'U') DROP TABLE dbo._t1 "
+            sql = "IF EXISTS (SELECT * FROM sysobjects WHERE name = '_t1' AND xtype = 'U') DROP TABLE dbo._t1; "
             cmd = New SqlCommand(sql, con)
             '' cmd.ExecuteNonQuery()
             con.Close()
@@ -1345,7 +1356,7 @@ Module Module1
             Dim oTest As Object
             Dim isPhysical As Boolean = False
             Dim id, sku, item, dim1, dim2, dim3, store, loc, dept, buyer, clss, sql, cust, tkt, reason,
-                coupon, typ, nam, ttype, ordtype, whsl As String
+                coupon, typ, nam, ttype, ordtype, whsl, station, drawer, sales_rep, userid, sale_type As String
             Dim seq As Int32
             Dim cost, retail, mkdn, tCost, tRetail, tMkdn, qty, tQty As Decimal
             Dim dte, eDate As Date
@@ -1461,8 +1472,39 @@ Module Module1
                                 If Not IsDBNull(oTest) Then coupon = CStr(oTest)
                                 oTest = row("ORD_TYPE")
                                 If Not IsDBNull(oTest) Then ordtype = CStr(oTest)
-                                oTest = row("WHOLESALE")
-                                If Not IsDBNull(oTest) Then whsl = CStr(oTest)
+                                oTest = row("USER_ID")
+                                If Not IsDBNull(oTest) Then userid = CStr(oTest)
+                                oTest = row("SALES_REP")
+                                If Not IsDBNull(oTest) Then sales_rep = CStr(oTest) Else sales_rep = ""
+                                oTest = row("STATION")
+                                If Not IsDBNull(oTest) Then station = CStr(oTest)
+                                oTest = row("DRAWER")
+                                If Not IsDBNull(oTest) Then drawer = CStr(oTest)
+                                sale_type = "T"
+                                If ordtype = "WHOLESALE" Then whsl = "Y"
+                            Case "Order"
+                                oTest = row("STATION")
+                                If IsDBNull(oTest) Then station = "UNKNOWN" Else station = CStr(oTest)
+                                oTest = row("DRAWER")
+                                If IsDBNull(oTest) Then drawer = "UNKNOWN" Else drawer = CStr(oTest)
+                                oTest = row("MARKDOWN")
+                                If Not IsDBNull(oTest) And Not IsNothing(oTest) And oTest <> "" Then mkdn = CDec(oTest) Else mkdn = 0
+                                totlMarkdown += mkdn
+                                oTest = row("MKDN_REASON")
+                                If Not IsDBNull(oTest) Then reason = CStr(oTest)
+                                oTest = row("COUPON_CODE")
+                                If Not IsDBNull(oTest) Then coupon = CStr(oTest)
+                                oTest = row("DEPT")
+                                If IsDBNull(oTest) Then dept = "UNKNOWN else dept =cstr(otest)"
+                                oTest = row("BUYER")
+                                If IsDBNull(oTest) Then buyer = "UNKNOWN" Else buyer = CStr(oTest)
+                                oTest = row("CLASS")
+                                If IsDBNull(oTest) Then clss = "UNKNOWN" Else clss = CStr(oTest)
+                                oTest = row("CUST_NO")
+                                If Not IsDBNull(oTest) Then cust = CStr(oTest) Else cust = "UNKNOWN"
+                                oTest = row("SALES_REP")
+                                If Not IsDBNull(oTest) Then sales_rep = CStr(oTest) Else sales_rep = ""
+                                sale_type = "O"
                             Case Else
                                 mkdn = 0
                                 store = ""
@@ -1474,7 +1516,11 @@ Module Module1
                                 cust = ""
                                 tkt = ""
                                 ordtype = ""
-                                whsl = ""
+                                userid = ""
+                                sales_rep = ""
+                                station = ""
+                                drawer = ""
+                                sale_type = ""
                         End Select
 
                         oTest = row("EXTRACT_DATE")
@@ -1486,15 +1532,15 @@ Module Module1
                             tcost += (qty * cost)
                             tretail += (qty * retail)
                             tMkdn += mkdn
-                            con.open()
+                            If con2.state = ConnectionState.Closed Then con2.open()
                             sql = "SELECT eDate FROM Calendar WHERE '" & CDate(transDate) & "' BETWEEN sDate AND eDate AND Week_ID > 0"
-                            cmd = New SqlCommand(sql, con)
+                            cmd = New SqlCommand(sql, con2)
                             cmd.CommandTimeout = 120
                             rdr = cmd.ExecuteReader
                             While rdr.Read
                                 If Not IsDBNull(rdr(0)) And Not IsNothing(rdr(0)) Then eDate = rdr(0) Else eDate = "2012-01-01"
                             End While
-                            con.close()
+                            If con2.state = ConnectionState.Open Then con2.close()
 
                             row = eDateTBL.Rows.Find(eDate)              ' We need to send the eDate to Client_Weekly_Summary
                             If IsNothing(row) Then
@@ -1503,22 +1549,22 @@ Module Module1
                             If qty <> 0 Then                             ' Don't do anything unless qty <> 0
                                 Call Update_Tables(store, loc, eDate, sku, qty, retail, cost, mkdn, theField, dept, buyer, clss, "", whsl, con2)
                                 datetimenow = DateAndTime.Now
-                                con.Open()
-                                sql = "IF NOT EXISTS (SELECT TRANS_ID FROM Daily_Transaction_Log WHERE TRANS_ID = '" & id & "' " & _
-                                    "AND SEQUENCE_NO = '" & seq & "' AND STORE = '" & store & "' AND SKU = '" & sku & "' " & _
-                                    "AND LOCATION = '" & loc & "' " & " AND TRANS_DATE = '" & transDate & "') " & _
-                                    "INSERT INTO Daily_Transaction_Log (TRANS_ID, SEQUENCE_NO, STORE, SKU, LOCATION, QTY, COST, RETAIL, " & _
-                                    "MKDN, TRANS_DATE, [TYPE], POST_DATE, DEPT,BUYER, CLASS, EXTRACT_DATE, CUST_NO, TKT_NO, MKDN_REASON, " & _
-                                    "COUPON_CODE, ITEM, DIM1, DIM2, DIM3, ORD_TYPE, WHOLESALE, TKT_DATE) " & _
+                                If con.state = ConnectionState.Closed Then con.Open()
+                                sql = "IF NOT EXISTS (SELECT TRANS_ID FROM Daily_Transaction_Log WHERE TRANS_ID = '" & id & "' " &
+                                    "AND SEQUENCE_NO = '" & seq & "' AND STORE = '" & store & "' AND SKU = '" & sku & "' " &
+                                    "AND LOCATION = '" & loc & "' " & " AND TRANS_DATE = '" & transDate & "') " &
+                                    "INSERT INTO Daily_Transaction_Log (TRANS_ID, SEQUENCE_NO, STORE, SKU, LOCATION, QTY, COST, RETAIL, " &
+                                    "MKDN, TRANS_DATE, [TYPE], POST_DATE, DEPT, BUYER, CLASS, EXTRACT_DATE, CUST_NO, TKT_NO, MKDN_REASON, " &
+                                    "COUPON_CODE, ITEM, DIM1, DIM2, DIM3, ORD_TYPE, TKT_DATE, SALES_REP, USER_ID, STATION, DRAWER, SALE_TYPE) " &
                                     "SELECT '" & id & "', " & seq & ", '" & store & "', '" & sku & "','" & loc & "'," &
-                                    qty & "," & cost & "," & retail & ", " & mkdn & ",'" & transDate & "','" & theField & "','" & datetimenow & "','" & _
-                                    dept & "','" & buyer & "','" & clss & "', '" & extractDate & "','" & cust & "','" & tkt & "','" & _
-                                    reason & "','" & coupon & "','" & item & "','" & dim1 & "','" & dim2 & "','" & dim3 & "','" & ordtype & "','" & _
-                                    whsl & "','" & tktDate & "'"
+                                    qty & "," & cost & "," & retail & ", " & mkdn & ",'" & transDate & "','" & theField & "','" & datetimenow & "','" &
+                                    dept & "','" & buyer & "','" & clss & "', '" & extractDate & "','" & cust & "','" & tkt & "','" &
+                                    reason & "','" & coupon & "','" & item & "','" & dim1 & "','" & dim2 & "','" & dim3 & "','" & ordtype & "','" &
+                                    tktDate & "','" & sales_rep & "','" & userid & "','" & station & "','" & drawer & "','" & sale_type & "'"
                                 cmd = New SqlCommand(sql, con)
                                 cmd.CommandTimeout = 120
                                 cmd.ExecuteNonQuery()
-                                con.Close()
+
                             End If
                         End If
                     Else
@@ -1550,6 +1596,7 @@ Module Module1
                         End If
                     End If
 10:             Next
+                If con.state = ConnectionState.Open Then con.Close()
             End If
 
             If isPhysical Then theField = "PHYS"
@@ -1610,7 +1657,7 @@ Module Module1
             Dim thistime As DateTime
             Dim sql As String = ""
             Dim maxQty, endOH As Decimal
-            If con.State = ConnectionState.Closed Then con2.open()
+            If con2.State = ConnectionState.Closed Then con2.open()
             If DateTime.TryParse(dttime, itsadate) Then
                 thistime = dttime
             Else : thistime = DateAndTime.Now
@@ -1618,21 +1665,21 @@ Module Module1
 
             If whsl = "Y" Then store &= "-WHSL"
 
-            If theField = "Sold" Then
-                sql = "IF NOT EXISTS (SELECT * FROM Item_Sales WHERE Str_Id = '" & Trim(store) & "' AND Loc_Id = '" & location & "' " & _
-                    "AND Sku = '" & item & "' AND eDate = '" & thisEdate & "') " & _
-                    "INSERT INTO Item_Sales (Str_Id, Loc_Id, Sku, sDate, eDate, Sold, Avg_Cost, Retail_Price, Markdown, " & _
-                    "Sales_Cost, Sales_Retail, YrWk, Item, DIM1, DIM2, DIM3) " & _
-                     "SELECT '" & Trim(store) & "', '" & location & "', '" & Trim(item) & "', '" & thisSdate & "', '" & thisEdate & "', " & _
-                     qty & ", " & cost & ", Curr_Retail, " & mkdn & ", " & cost * qty & ", " & (retail * qty) & ", " & _
-                     "(SELECT YrWk FROM Calendar WHERE eDate = '" & thisEdate & "' AND Prd_Id > 0 AND Week_Id > 0), " & _
-                     "Item, DIM1, DIM2, DIM3 " & _
-                     "FROM Item_Master WHERE Sku = '" & Trim(item) & "' " & _
-                    "ELSE " & _
-                    "UPDATE p SET Sold = ISNULL(Sold,0) + " & qty & ", Sales_Cost = ISNULL(Sales_Cost,0) + " & cost * qty & ", Sales_Retail = " & _
-                    "ISNULL(Sales_Retail,0) + " & retail * qty & ", " & _
-                    "Markdown = ISNULL(Markdown,0) + " & mkdn & " " & _
-                    "FROM Item_Sales AS p " & _
+            If theField = "Sold" Or theField = "Order" Then
+                sql = "IF NOT EXISTS (SELECT * FROM Item_Sales WHERE Str_Id = '" & Trim(store) & "' AND Loc_Id = '" & location & "' " &
+                    "AND Sku = '" & item & "' AND eDate = '" & thisEdate & "') " &
+                    "INSERT INTO Item_Sales (Str_Id, Loc_Id, Sku, sDate, eDate, Sold, Avg_Cost, Retail_Price, Markdown, " &
+                    "Sales_Cost, Sales_Retail, YrWk, Item, DIM1, DIM2, DIM3) " &
+                     "SELECT '" & Trim(store) & "', '" & location & "', '" & Trim(item) & "', '" & thisSdate & "', '" & thisEdate & "', " &
+                     qty & ", " & cost & ", Curr_Retail, " & mkdn & ", " & cost * qty & ", " & (retail * qty) & ", " &
+                     "(SELECT YrWk FROM Calendar WHERE eDate = '" & thisEdate & "' AND Prd_Id > 0 AND Week_Id > 0), " &
+                     "Item, DIM1, DIM2, DIM3 " &
+                     "FROM Item_Master WHERE Sku = '" & Trim(item) & "' " &
+                    "ELSE " &
+                    "UPDATE p SET Sold = ISNULL(Sold,0) + " & qty & ", Sales_Cost = ISNULL(Sales_Cost,0) + " & cost * qty & ", Sales_Retail = " &
+                    "ISNULL(Sales_Retail,0) + " & retail * qty & ", " &
+                    "Markdown = ISNULL(Markdown,0) + " & mkdn & " " &
+                    "FROM Item_Sales AS p " &
                         "WHERE Str_Id = '" & store & "' AND Loc_Id = '" & location & "' AND Sku = '" & item & "' AND eDate = '" & thisEdate & "' "
             Else
                 sql = "IF NOT EXISTS (SELECT * FROM Item_Inv d WHERE Loc_Id = '" & Trim(location) & "' AND Sku = '" & Trim(item) & "' " &
@@ -1917,9 +1964,9 @@ Module Module1
         While rdr.Read
             oTest = rdr("Str_ID")
             If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
-                sql = "IF NOT EXISTS (SELECT * FROM Stores WHERE ID = '" & CStr(oTest) & "') " & _
-                    "INSERT INTO Stores(ID, Description, Status, Last_Change_Date, Last_Change_User) " & _
-                    "SELECT '" & CStr(oTest) & "','WHOLESALE','Active','" & Date.Today & "','RC'"
+                sql = "IF NOT EXISTS (SELECT * FROM Stores WHERE ID = '" & CStr(oTest) & "') " &
+                    "INSERT INTO Stores(ID, Description, Status, Last_Change_Date, Last_Change_User) " &
+                    "SELECT '" & CStr(oTest) & "','" & CStr(oTest) & "','Active','" & Date.Today & "','RC'"
                 cmd = New SqlCommand(sql, con2)
                 cmd.ExecuteNonQuery()
             End If

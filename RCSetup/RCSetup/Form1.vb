@@ -18,7 +18,7 @@ Public Class DBAdmin
     Private Shared thisYear As Integer = DatePart("yyyy", thisDate)
     Private Shared BuildStartDate, BuildEndDate As Date
     Private Shared invDateConfirmed As Boolean = False
-    Public Shared conString, errorPath, thisClient, message As String
+    Public Shared conString, errorLog, thisClient, message, arguments As String
     Public Shared con, con2, con3, con4, con5, rcCon As SqlConnection
     Private Shared sqlUserID, sqlPassword As String
     Private Shared adapter As SqlDataAdapter
@@ -38,13 +38,14 @@ Public Class DBAdmin
         Try
             '
             '   Comment line below for CURTIS-MOBILE only!
-            '
+            '   
             serverTable = InitialSetup.serverTable
             RCClientConString = InitialSetup.RCClientConString
             RCClientServer = InitialSetup.RCClientServer
             exePath = InitialSetup.exePath
             '
-            '  Comment next 6 line for CURTIS-MOBILE only!
+            '  Comment next 4 lines for CURTIS-MOBILE only!
+            '  Comment line 53 in InitialSetup also
             '
             cboServers.Items.Clear()
             For Each rw In serverTable.Rows
@@ -101,7 +102,7 @@ Public Class DBAdmin
 
 
 
-        Dim x As String = "Server=" & server & ";Initial Catalog=RCClient;Integrated Security=True"
+        Dim x As String = "Server=" & clientServer & ";Initial Catalog=RCClient;Integrated Security=True"
         rcCon = New SqlConnection(x)
         '' Dim conx As New SqlConnection(RCClientConString)
 
@@ -185,10 +186,28 @@ Public Class DBAdmin
             MsgBox("You need a calendar for this year before you can continue!")
             Exit Sub
         End If
+        ''arguments = thisClient & ";" & server & ";" & dbName & ";" & xmlPath & ";" & sqlUserID & ";" &
+        ''        sqlPassword & ";" & Date.Today & ";" & Date.Today & ";" & errorLog & ";" & Client.DoMarketing
         stopwatch = New Stopwatch
         stopwatch.Start()
-        theFile = "\Buyers.xml"
-        Call Load_Data_Table(theFile, "Buyers", "Buyer", "Name")
+        Dim cnt As Integer = 0
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";BUYERS"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        ''theFile = "\Buyers.xml"
+        ''Call Load_Data_Table(theFile, "Buyers", "Buyer", "Name")
+
+        con.Open()
+        sql = "SELECT COUNT(*) cnt FROM Buyers"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+        End While
+        con.Close()
         txtBuyers.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
         btnClasses.Enabled = True
         GroupBox9.Visible = True
@@ -202,8 +221,23 @@ Public Class DBAdmin
         End If
         stopwatch = New Stopwatch
         stopwatch.Start()
-        theFile = "\Classes.xml"
-        Call Load_Data_Table(theFile, "Classes", "Class", "ClassDescr")
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";CLASSES"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        cnt = 0
+        ''theFile = "\Classes.xml"
+        ''Call Load_Data_Table(theFile, "Classes", "Class", "ClassDescr")
+        con.Open()
+        sql = "SELECT COUNT(*) cnt FROM Classes"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+        End While
+        con.Close()
         txtClasses.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
         btnDept.Enabled = True
         Me.Refresh()
@@ -216,8 +250,23 @@ Public Class DBAdmin
         End If
         stopwatch = New Stopwatch
         stopwatch.Start()
-        theFile = "\Departments.xml"
-        Call Load_Data_Table(theFile, "Departments", "Dept", "Department")
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";DEPARTMENTS"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        cnt = 0
+        'theFile = "\Departments.xml"
+        'Call Load_Data_Table(theFile, "Departments", "Dept", "Department")
+        con.Open()
+        sql = "SELECT COUNT(*) cnt FROM Departments"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+        End While
+        con.Close()
         txtDepartments.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
         btnLocations.Enabled = True
         Me.Refresh()
@@ -230,8 +279,23 @@ Public Class DBAdmin
         End If
         stopwatch = New Stopwatch
         stopwatch.Start()
-        theFile = "\Locations.xml"
-        Call Load_Data_Table(theFile, "Locations", "Loc", "Location")
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";LOCATIONS"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        cnt = 0
+        ''theFile = "\Locations.xml"
+        ''Call Load_Data_Table(theFile, "Locations", "Loc", "Location")
+        con.Open()
+        sql = "SELECT COUNT(*) cnt FROM Locations"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+        End While
+        con.Close()
         txtLocations.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
         ''                      Add GMROI Weeks to Controls Table
         con.Open()
@@ -256,8 +320,23 @@ Public Class DBAdmin
         End If
         stopwatch = New Stopwatch
         stopwatch.Start()
-        theFile = "\ProductLines.xml"
-        Call Load_Data_Table(theFile, "ProductLines", "PLine", "ProductLine")
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";PLINES"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        cnt = 0
+        ''theFile = "\ProductLines.xml"
+        ''Call Load_Data_Table(theFile, "ProductLines", "PLine", "ProductLine")
+        con.Open()
+        sql = "SELECT COUNT(*) cnt FROM ProductLines"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+        End While
+        con.Close()
         txtProductlines.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
         btnSeasons.Enabled = True
         Me.Refresh()
@@ -270,8 +349,23 @@ Public Class DBAdmin
         End If
         stopwatch = New Stopwatch
         stopwatch.Start()
-        theFile = "\Seasons.xml"
-        Call Load_Data_Table(theFile, "Seasons", "Season", "SeasonDescr")
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";SEASONS"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        cnt = 0
+        ''theFile = "\Seasons.xml"
+        ''Call Load_Data_Table(theFile, "Seasons", "Season", "SeasonDescr")
+        con.Open()
+        sql = "SELECT COUNT(*) cnt FROM Seasons"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+        End While
+        con.Close()
         txtSeasons.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
         btnStores.Enabled = True
         Me.Refresh()
@@ -284,8 +378,24 @@ Public Class DBAdmin
         End If
         stopwatch = New Stopwatch
         stopwatch.Start()
-        theFile = "\Stores.xml"
-        Call Load_Data_Table(theFile, "Stores", "Str_Id", "Store")
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";STORES"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        cnt = 0
+        ''theFile = "\Stores.xml"
+        ''Call Load_Data_Table(theFile, "Stores", "Str_Id", "Store")
+        txtStores.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
+        con.Open()
+        sql = "SELECT COUNT(*) cnt FROM Stores"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+        End While
+        con.Close()
         txtStores.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
         btnVendors.Enabled = True
         Me.Refresh()
@@ -298,8 +408,23 @@ Public Class DBAdmin
         End If
         stopwatch = New Stopwatch
         stopwatch.Start()
-        theFile = "\Vendors.xml"
-        Call Load_Data_Table(theFile, "Vendors", "Vendor_Id", "Vendor")
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";VENDORS"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        cnt = 0
+        'theFile = "\Vendors.xml"
+        'Call Load_Data_Table(theFile, "Vendors", "Vendor_Id", "Vendor")
+        con.Open()
+        sql = "SELECT COUNT(*) cnt FROM Vendors"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+        End While
+        con.Close()
         txtVendors.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
         btnItems.Enabled = True
         Me.Refresh()
@@ -311,15 +436,56 @@ Public Class DBAdmin
             Exit Sub
         End If
         stopwatch = New Stopwatch
-        stopWatch.Start()
+        stopwatch.Start()
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";ITEMS"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        cnt = 0
         Dim thisDate As Date = CDate(Date.Today)
-        theFile = "\Items.xml"
-        Call Process_Items(theFile)
+        ''theFile = "\Items.xml"
+        ''Call Process_Items(theFile)
+        con.Open()
+        sql = "SELECT COUNT(*) cnt FROM Item_Master"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+        End While
+        con.Close()
+        txtItems.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
+        btnBarcodes.Enabled = True
+        Me.Refresh()
+    End Sub
+
+    Private Sub btnBarcodes_Click(sender As Object, e As EventArgs) Handles btnBarcodes.Click
+        stopwatch = New Stopwatch
+        stopwatch.Start()
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";BARCODES"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        cnt = 0
+        Dim thisDate As Date = CDate(Date.Today)
+        ''theFile = "\Barcodes.xml"
+        ''Call Process_Barcodes(theFile)
+        con.Open()
+        sql = "SELECT COUNT(*) cnt FROM Item_Barcodes"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+        End While
+        con.Close()
+        txtBarcodes.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
         GroupBox8.Visible = True
         btnAdj.Enabled = True
         Me.Refresh()
     End Sub
-
     Private Sub btnInv_Click(sender As Object, e As EventArgs) Handles btnInv.Click
         If Not invDateConfirmed Then
             MessageBox.Show("Set Min and Max Dates and try again", "ERROR - CAN NOT CONTINUE!")
@@ -336,11 +502,32 @@ Public Class DBAdmin
             con2 = New SqlConnection(conString)
         End If            '                                  update inventory from the Inventory.xml extract
 
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";INVENTORY"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        Dim cost As Decimal = 0
+        Dim retail As Decimal = 0
 
-        theFile = "\Inventory.xml"
-        Call Process_Inventory(theFile)
+        cnt = 0
+        ''theFile = "\Inventory.xml"
+        ''Call Process_Inventory(theFile)
+        con.Open()
+        sql = "SELECT COUNT(*) cnt, SUM(ISNULL(End_OH,0) * ISNULL(Cost,0)) cost, SUM(ISNULL(End_OH,0) * ( ISNULL(Retail,0)) retail FROM Item_Inv"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+            cost = rdr("cost")
+            retail = rdr("retail")
+        End While
+        con.Close()
 
-
+        txtInvRecords.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
+        txtInvCost.Text = cost.ToString("0,0", CultureInfo.InvariantCulture)
+        txtInvRetail.Text = retail.ToString("0,0", CultureInfo.InvariantCulture)
         stopwatch = New Stopwatch
         stopwatch.Start()
 
@@ -489,13 +676,42 @@ Public Class DBAdmin
             MessageBox.Show("Set Min and Max Dates and try again", "ERROR - CAN NOT CONTINUE!")
             Exit Sub
         End If
+        If IsDBNull(arguments) Then Console.WriteLine("its null")
+        If IsNothing(arguments) Then Console.WriteLine("its nothing")
+        If arguments = "" Then Console.WriteLine("its double quotes")
+        Console.WriteLine(arguments)
+        Console.ReadLine()
+
+        arguments = thisClient & ";" & server & ";" & dbName & ";" & xmlPath & ";" & sqlUserID & ";" &
+                sqlPassword & ";" & BuildStartDate & ";" & BuildEndDate & ";" & errorLog & ";" & Client.DoMarketing
         stopwatch = New Stopwatch
         stopwatch.Start()
-        txtAdjustments.Text = Nothing
-        txtAdjCost.Text = Nothing
-        txtAdjRetail.Text = Nothing
-        theFile = "\Adjustment.xml"
-        Call Process_Data(theFile, "ADJ")                                                  ' Add new records to Daily Transaction Log
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";ADJUSTMENTS"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        Dim cost As Decimal = 0
+        Dim retail As Decimal = 0
+        cnt = 0
+        con.Open()
+        sql = "SELECT COUNT(*) cnt, SUM(ISNULL(QTY,0) * ISNULL(COST,0)) cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) retail " &
+            "FROM Daily_Transaction_Log WHERE [TYPE] = 'ADJ'"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+            cost = rdr("cost")
+            retail = rdr("retail")
+        End While
+        con.Close()
+        txtAdjustments.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
+        txtAdjCost.Text = cost.ToString("0,0", CultureInfo.InvariantCulture)
+        txtAdjRetail.Text = retail.ToString("0,0", CultureInfo.InvariantCulture)
+
+        ''theFile = "\Adjustment.xml"
+        ''Call Process_Data(theFile, "ADJ")                                                  ' Add new records to Daily Transaction Log
         btnPhys.Enabled = True
         Me.Refresh()
     End Sub
@@ -506,16 +722,36 @@ Public Class DBAdmin
             con = New SqlConnection(conString)
         End If
         If Not invDateConfirmed Then
-            MessageBox.Show("Set Min and Max Dates and try again", "ERROR - CAN NOT CONTINUE!")
+            MessageBox.Show("Set Min And Max Dates And try again", "ERROR - CAN Not CONTINUE!")
             Exit Sub
         End If
-        txtPhysical.Text = Nothing
-        txtPhysCost.Text = Nothing
-        txtPhysRetail.Text = Nothing
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";PHYSICAL"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        Dim cost As Decimal = 0
+        Dim retail As Decimal = 0
+        cnt = 0
+        con.Open()
+        sql = "SELECT COUNT(*) cnt, SUM(ISNULL(QTY,0) * ISNULL(COST,0)) cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) retail " &
+            "FROM Daily_Transaction_Log WHERE [TYPE] = 'ADJ' AND TRANS_ID LIKE 'P%'"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+            cost = rdr("cost")
+            retail = rdr("retail")
+        End While
+        con.Close()
+        txtPhysical.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
+        txtPhysCost.Text = cost.ToString("0,0", CultureInfo.InvariantCulture)
+        txtPhysRetail.Text = retail.ToString("0,0", CultureInfo.InvariantCulture)
         stopwatch = New Stopwatch
         stopwatch.Start()
-        theFile = "\Physical.xml"
-        Call Process_Data(theFile, "ADJ")                                                         ' Add new records to Daily Transaction Log
+        'theFile = "\Physical.xml"
+        'Call Process_Data(theFile, "ADJ")                                                         ' Add new records to Daily Transaction Log
         btnRecv.Enabled = True
         Me.Refresh()
     End Sub
@@ -526,17 +762,37 @@ Public Class DBAdmin
             con = New SqlConnection(conString)
         End If
         If Not invDateConfirmed Then
-            MessageBox.Show("Set Min and Max Dates and try again", "ERROR - CAN NOT CONTINUE!")
+            MessageBox.Show("Set Min And Max Dates And try again", "ERROR - CAN Not CONTINUE!")
             Exit Sub
         End If
-        txtReceipts.Text = Nothing
-        txtRecvCost.Text = Nothing
-        txtRecvRetail.Text = Nothing
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";RECEIVED"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        Dim cost As Decimal = 0
+        Dim retail As Decimal = 0
+        cnt = 0
+        con.Open()
+        sql = "SELECT COUNT(*) cnt, SUM(ISNULL(QTY,0) * ISNULL(COST,0)) cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) retail " &
+            "FROM Daily_Transaction_Log WHERE [TYPE] = 'RECVD'"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+            cost = rdr("cost")
+            retail = rdr("retail")
+        End While
+        con.Close()
+        txtReceipts.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
+        txtRecvCost.Text = cost.ToString("0,0", CultureInfo.InvariantCulture)
+        txtRecvRetail.Text = retail.ToString("0,0", CultureInfo.InvariantCulture)
         stopwatch = New Stopwatch
         stopwatch.Start()
-        theFile = "\Receipt.xml"
-        Call Process_Data(theFile, "RECVD")                                                      ' Add new records to Daily Transaction Log
-        btnRtn.Enabled = True
+        'theFile = "\Receipt.xml"
+        'Call Process_Data(theFile, "RECVD")                                                      ' Add new records to Daily Transaction Log
+        'btnRtn.Enabled = True
         Me.Refresh()
     End Sub
 
@@ -546,41 +802,114 @@ Public Class DBAdmin
             con = New SqlConnection(conString)
         End If
         If Not invDateConfirmed Then
-            MessageBox.Show("Set Min and Max Dates and try again", "ERROR - CAN NOT CONTINUE!")
+            MessageBox.Show("Set Min And Max Dates And try again", "ERROR - CAN Not CONTINUE!")
             Exit Sub
         End If
-        txtReturns.Text = Nothing
-        txtRtnCost.Text = Nothing
-        txtRtnRetail.Text = Nothing
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";RETURNED"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        Dim cost As Decimal = 0
+        Dim retail As Decimal = 0
+        cnt = 0
+        con.Open()
+        sql = "SELECT COUNT(*) cnt, SUM(ISNULL(QTY,0) * ISNULL(COST,0)) cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) retail " &
+            "FROM Daily_Transaction_Log WHERE [TYPE] = 'RTV'"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+            cost = rdr("cost")
+            retail = rdr("retail")
+        End While
+        con.Close()
+        txtReturns.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
+        txtRtnCost.Text = cost.ToString("0,0", CultureInfo.InvariantCulture)
+        txtRtnRetail.Text = retail.ToString("0,0", CultureInfo.InvariantCulture)
         stopwatch = New Stopwatch
         stopwatch.Start()
-        theFile = "\Return.xml"
-        Call Process_Data(theFile, "RTV")                                                       ' Add new records to Daily Transaction Log
-        btnSales.Enabled = True
+        'theFile = "\Return.xml"
+        'Call Process_Data(theFile, "RTV")                                                       ' Add new records to Daily Transaction Log
+        btnOrders.Enabled = True
         Me.Refresh()
     End Sub
 
+
+    Private Sub btnOrders_Click(sender As Object, e As EventArgs) Handles btnOrders.Click
+        If IsNothing(conString) Then
+            Call Connect_Database()
+            con = New SqlConnection(conString)
+        End If
+        If Not invDateConfirmed Then
+            MessageBox.Show("Set Min And Max Dates And try again", "ERROR - CAN Not CONTINUE!")
+            Exit Sub
+        End If
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";ORDERS"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        Dim cost As Decimal = 0
+        Dim retail As Decimal = 0
+        cnt = 0
+        con.Open()
+        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(ISNULL(QTY,0) * ISNULL(COST,0)),0) cost, " &
+            "ISNULL(SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)),0) retail " &
+            "FROM Daily_Transaction_Log WHERE [TYPE] = 'Sold' AND SALE_TYPE = 'O'"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+            cost = rdr("cost")
+            retail = rdr("retail")
+        End While
+        con.Close()
+        txtOrders.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
+        txtOrdersCost.Text = cost.ToString("0,0", CultureInfo.InvariantCulture)
+        txtOrdersRetail.Text = retail.ToString("0,0", CultureInfo.InvariantCulture)
+        stopwatch = New Stopwatch
+        stopwatch.Start()
+        btnSales.Enabled = True
+        Me.Refresh()
+    End Sub
     Private Sub btnSales_Click(sender As Object, e As EventArgs) Handles btnSales.Click
         If IsNothing(conString) Then
             Call Connect_Database()
             con = New SqlConnection(conString)
         End If
         If Not invDateConfirmed Then
-            MessageBox.Show("Set Min and Max Dates and try again", "ERROR - CAN NOT CONTINUE!")
+            MessageBox.Show("Set Min And Max Dates And try again", "ERROR - CAN Not CONTINUE!")
             Exit Sub
         End If
-        txtSales.Text = Nothing
-        txtSalesCost.Text = Nothing
-        txtSalesRetail.Text = Nothing
         stopwatch = New Stopwatch
         stopwatch.Start()
-
-        Dim files As String() = Directory.GetFiles(xmlPath, "Sales*.xml")
-        If files.Length > 0 Then
-            For Each File As String In files
-                Call Process_Data(File, "Sold")
-            Next
-        End If
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";SALES"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        Dim cost As Decimal = 0
+        Dim retail As Decimal = 0
+        cnt = 0
+        con.Open()
+        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(ISNULL(QTY,0) * ISNULL(COST,0)),0) cost, " &
+            "ISNULL(SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)),0) retail " &
+            "FROM Daily_Transaction_Log WHERE [TYPE] = 'Sold' AND SALE_TYPE = 'T'"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+            cost = rdr("cost")
+            retail = rdr("retail")
+        End While
+        con.Close()
+        txtSales.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
+        txtSalesCost.Text = cost.ToString("0,0", CultureInfo.InvariantCulture)
+        txtSalesRetail.Text = retail.ToString("0,0", CultureInfo.InvariantCulture)
         btnXfer.Enabled = True
         Me.Refresh()
     End Sub
@@ -591,16 +920,36 @@ Public Class DBAdmin
             con = New SqlConnection(conString)
         End If
         If Not invDateConfirmed Then
-            MessageBox.Show("Set Min and Max Dates and try again", "ERROR - CAN NOT CONTINUE!")
+            MessageBox.Show("Set Min And Max Dates And try again", "ERROR - CAN Not CONTINUE!")
             Exit Sub
         End If
-        txtTransfers.Text = Nothing
-        txtXferCost.Text = Nothing
-        txtXferRetail.Text = Nothing
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";SALES"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        Dim cost As Decimal = 0
+        Dim retail As Decimal = 0
+        cnt = 0
+        con.Open()
+        sql = "SELECT COUNT(*) cnt, SUM(ISNULL(QTY,0) * ISNULL(COST,0)) cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) retail " &
+            "FROM Daily_Transaction_Log WHERE [TYPE] = 'XFER'"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+            cost = rdr("cost")
+            retail = rdr("retail")
+        End While
+        con.Close()
+        txtTransfers.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
+        txtXferCost.Text = cost.ToString("0,0", CultureInfo.InvariantCulture)
+        txtXferRetail.Text = retail.ToString("0,0", CultureInfo.InvariantCulture)
         stopwatch = New Stopwatch
         stopwatch.Start()
-        theFile = "\Transfer.xml"
-        Call Process_Data(theFile, "XFER")
+        'theFile = "\Transfer.xml"
+        'Call Process_Data(theFile, "XFER")
         btnLoadPOs.Enabled = True
         Me.Refresh()
     End Sub
@@ -610,12 +959,37 @@ Public Class DBAdmin
         txtprogress.Text = "Loading POs"
         Me.Refresh()
         If Not invDateConfirmed Then
-            MessageBox.Show("Set Min and Max Dates and try again", "ERROR - CAN NOT CONTINUE!")
+            MessageBox.Show("Set Min And Max Dates And try again", "ERROR - CAN Not CONTINUE!")
             Exit Sub
         End If
         stopwatch = New Stopwatch
         stopwatch.Start()
-        Call Process_POs()
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";POHEADER"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        Dim p2 As New ProcessStartInfo
+        p2.FileName = exePath & "\XMLUpdate.exe"
+        p2.Arguments = arguments & ";PODETAIL"
+        p2.UseShellExecute = True
+        p2.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc2 As Process = Process.Start(p2)
+        Dim cost As Decimal = 0
+        Dim retail As Decimal = 0
+        cnt = 0
+        con.Open()
+        sql = "SELECT COUNT(*) cnt, SUM(ISNULL(COST,0)) cost, SUM(ISNULL(RETAIL,0)) retail FROM PO_Detail"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+            cost = rdr("cost")
+            retail = rdr("retail")
+        End While
+        con.Close()
+        ''Call Process_POs()
         txtprogress.Text = ""
         btnLoadPReq.Enabled = True
         Me.Refresh()
@@ -625,12 +999,37 @@ Public Class DBAdmin
         txtprogress.Text = "Load Purchase Requests"
         Me.Refresh()
         If Not invDateConfirmed Then
-            MessageBox.Show("Set Min and Max Dates and try again", "ERROR - CAN NOT CONTINUE!")
+            MessageBox.Show("Set Min And Max Dates And try again", "ERROR - CAN Not CONTINUE!")
             Exit Sub
         End If
         stopwatch = New Stopwatch
         stopwatch.Start()
-        Call Process_Preqs()
+        Dim p As New ProcessStartInfo
+        p.FileName = exePath & "\XMLUpdate.exe"
+        p.Arguments = arguments & ";PREQHEADER"
+        p.UseShellExecute = True
+        p.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc As Process = Process.Start(p)
+        Dim p2 As New ProcessStartInfo
+        p2.FileName = exePath & "\XMLUpdate.exe"
+        p2.Arguments = arguments & ";PREQDETAIL"
+        p2.UseShellExecute = True
+        p2.WindowStyle = ProcessWindowStyle.Normal
+        Dim proc2 As Process = Process.Start(p2)
+        Dim cost As Decimal = 0
+        Dim retail As Decimal = 0
+        cnt = 0
+        con.Open()
+        sql = "SELECT COUNT(*) cnt, SUM(ISNULL(COST,0)) cost, SUM(ISNULL(RETAIL,0)) retail FROM Purchase_Request_Detail"
+        cmd = New SqlCommand(sql, con)
+        rdr = cmd.ExecuteReader
+        While rdr.Read
+            cnt = rdr("cnt")
+            cost = rdr("cost")
+            retail = rdr("retail")
+        End While
+        con.Close()
+        ''Call Process_Preqs()
         txtprogress.Text = ""
         Me.Refresh()
         btnInv.Enabled = True
@@ -647,7 +1046,7 @@ Public Class DBAdmin
         thePath = xmlPath & thefile
         If System.IO.File.Exists(thePath) Then
         Else
-            MsgBox(thePath & " Not found. Copy it there and try again.")
+            MsgBox(thePath & " Not found. Copy it there And try again.")
             Exit Sub
         End If
         cnt = 0
@@ -682,8 +1081,8 @@ Public Class DBAdmin
                             Case "Classes"
                                 oTest = row("DEPT")
                                 If Not IsDBNull(oTest) And Not IsNothing(oTest) Then thisDept = oTest
-                                sql = "IF NOT EXISTS (SELECT * FROM Classes WHERE ID = '" & ID & "' AND Dept = '" & thisDept & "') " & _
-                                  "INSERT INTO " & tableName & " (ID, Dept, Description, Status, Orig_Date) " & _
+                                sql = "IF Not EXISTS (SELECT * FROM Classes WHERE ID = '" & ID & "' AND Dept = '" & thisDept & "') " &
+                                  "INSERT INTO " & tableName & " (ID, Dept, Description, Status, Orig_Date) " &
                                   "SELECT '" & ID & "','" & thisDept & "', '" & desc & "', 'Active', '" & today & "'"
                             Case "Stores"
                                 oTest = row("LOCATION")
@@ -773,7 +1172,7 @@ Public Class DBAdmin
         Dim aok As Boolean = True
         Dim records As Integer = 0
         Dim item, descr, vid, vendor, vitem, note, buyer, dept, clss, custom1, custom2, custom3, custom4, custom5, uom,
-            sku, dim1, dim2, dim3, status, sql, type, mktg As String
+            sku, dim1, dim2, dim3, dim1_descr, dim2_descr, dim3_descr, status, sql, type As String
         Dim buyunit, sellunit As Int16
         Dim cost, retail As Decimal
         Dim thePath As String = ""
@@ -809,6 +1208,9 @@ Public Class DBAdmin
         dt2.Columns.Add("DIM1")
         dt2.Columns.Add("DIM2")
         dt2.Columns.Add("DIM3")
+        dt2.Columns.Add("DIM1_DESCR")
+        dt2.Columns.Add("DIM2_DESCR")
+        dt2.Columns.Add("DIM3_DESCR")
         Dim xmlFile As XmlReader
         thePath = path & theFile
         Dim rw As DataRow
@@ -837,6 +1239,9 @@ Public Class DBAdmin
                         dim2 = Nothing
                         dim3 = Nothing
                     End If
+                    dim1_descr = Trim(Microsoft.VisualBasic.Left(row("DIM1_DESCR"), 30))
+                    dim2_descr = Trim(Microsoft.VisualBasic.Left(row("DIM2_DESCR"), 30))
+                    dim3_descr = Trim(Microsoft.VisualBasic.Left(row("DIM3_DESCR"), 30))
                     descr = Trim(Microsoft.VisualBasic.Left(row("DESCRIPTION"), 40))
                     vid = Trim(Microsoft.VisualBasic.Left(row("VENDOR_ID"), 20))
                     vendor = Trim(Microsoft.VisualBasic.Left(row("VENDOR"), 40))
@@ -901,6 +1306,9 @@ Public Class DBAdmin
                     rw("DIM1") = dim1
                     rw("DIM2") = dim2
                     rw("DIM3") = dim3
+                    rw("DIM1_DESCR") = dim1_descr
+                    rw("DIM2_DESCR") = dim2_descr
+                    rw("DIM3_DESCR") = dim3_descr
                     dt2.Rows.Add(rw)
                 Else
                     records = CInt(row("DESCRIPTION"))
@@ -955,6 +1363,40 @@ Public Class DBAdmin
 
     End Sub
 
+    Private Sub Process_Barcodes(ByVal thefile)
+        txtprogress.Text = "Processing Barcodes"
+        stopwatch.Start()
+        Dim cnt As Integer = 0
+        Dim ds As DataSet = New DataSet
+        Dim dt As DataTable = New DataTable
+        dt.Columns.Add("Sku")
+        dt.Columns.Add("Item")
+        dt.Columns.Add("DIM1")
+        dt.Columns.Add("DIM2")
+        dt.Columns.Add("DIM3")
+        dt.Columns.Add("Type")
+        dt.Columns.Add("Barcode")
+        dt.Columns.Add("Date")
+        Dim thePath As String = ""
+        thePath = path & thefile
+        Dim xmlFile As XmlReader
+        xmlFile = Xml.XmlReader.Create(thePath, New XmlReaderSettings())
+        ds.ReadXml(xmlFile)
+        If ((ds.Tables.Count > 0) AndAlso ds.Tables(0).Rows.Count > 0) Then
+            dt = ds.Tables(0)
+            cnt = dt.Rows.Count
+            Dim connection As SqlConnection = New SqlConnection(conString)
+            Dim bulkCopy As SqlBulkCopy = New SqlBulkCopy(connection)
+            connection.Open()
+            bulkCopy.DestinationTableName = "dbo.Item_Barcodes"
+            bulkCopy.BulkCopyTimeout = 960
+            bulkCopy.WriteToServer(dt)
+            connection.Close()
+        End If
+        txtBarcodes.Text = cnt
+        txtprogress.Text = ""
+    End Sub
+
     Private Sub Process_Inventory(ByVal thefile)
         Dim stopWatch As New Stopwatch
         stopWatch.Start()
@@ -967,8 +1409,8 @@ Public Class DBAdmin
         Dim records As Integer = 0
         Dim aok As Boolean = True
         cnt = 0
-        Dim avail, qty, committed As Decimal
-        Dim tqty As Decimal = 0
+        Dim avail, onhand, committed As Decimal
+        Dim tonhand As Decimal = 0
         Dim invOH As Decimal = 0
         Dim invCost As Decimal = 0
         Dim invRetail As Decimal = 0
@@ -981,7 +1423,7 @@ Public Class DBAdmin
         Dim inventorysDate As Date = DateAdd(DateInterval.Day, -6, BuildEndDate)
         tcost = 0
         tretail = 0
-        tqty = 0
+        tonhand = 0
         txtprogress.Text = "Inserting records into Item_Inv"
         Me.Refresh()
 
@@ -1020,7 +1462,7 @@ Public Class DBAdmin
 
                     loc = Trim(row("LOCATION"))
                     oTest = row("ONHAND")
-                    If IsNumeric(oTest) Then qty = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero) Else qty = 0
+                    If IsNumeric(oTest) Then onhand = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero) Else onhand = 0
                     oTest = row("COMMITTED")
                     If IsNumeric(oTest) Then committed = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero) Else committed = 0
                     oTest = row("AVAIL")
@@ -1029,9 +1471,9 @@ Public Class DBAdmin
                     If IsNumeric(oTest) Then cost = Decimal.Round(oTest, 2, MidpointRounding.AwayFromZero) Else cost = 0
                     oTest = row("RETAIL")
                     If IsNumeric(oTest) Then retail = Decimal.Round(oTest, 2, MidpointRounding.AwayFromZero) Else retail = 0
-                    tqty += qty
-                    tcost += (qty * cost)
-                    tretail += (qty * retail)
+                    tonhand += onhand
+                    tcost += (onhand * cost)
+                    tretail += (onhand * retail)
                     oTest = row("EXTRACT_DATE")
                     If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
                         If oTest <> "" Then
@@ -1040,11 +1482,12 @@ Public Class DBAdmin
                         End If
                     Else : dttime = DateAndTime.Now
                     End If
-                    sql = "INSERT INTO Item_Inv (Loc_Id, Sku, sDate, eDate, Begin_OH, End_OH, Max_OH, Cost, " & _
-                        "Retail, YrWk, Item, DIM1, DIM2, DIM3, Committed, Avail) " & _
+                    sql = "INSERT INTO Item_Inv (Loc_Id, Sku, sDate, eDate, Avail, End_OH, Committed, Cost, " & _
+                        "Retail, YrWk, Item, DIM1, DIM2, DIM3) " & _
                         "SELECT '" & loc & "','" & sku & "','" & inventorysDate & "','" & BuildEndDate &
-                           "'," & qty & "," & qty & "," & qty & "," & cost & "," & retail & ", YrWk, '" & _
-                        item & "','" & dim1 & "','" & dim2 & "','" & dim3 & "'," & committed & "," & avail & " FROM Calendar " & _
+                           "'," & avail & "," & onhand & "," & committed & "," & cost & "," & retail & ", YrWk, '" & _
+                        item & "','" & dim1 & "','" & dim2 & "','" & dim3 & "' FROM Calendar c " & _
+                        "JOIN Item_Master m ON m.Sku = '" & sku & "' AND m.[Type] = 'I' " & _
                         "WHERE eDate = '" & BuildEndDate & "' AND Week_Id > 0"
                     cmd = New SqlCommand(sql, con)
                     cmd.CommandTimeout = 120
@@ -1100,9 +1543,9 @@ Public Class DBAdmin
         txtInvCost.Text = Format(tcost, "0,0.00")
         txtInvRetail.Text = Format(tretail, "0,0.00")
 
-        If tqty <> invOH Then
+        If tonhand <> invOH Then
             aok = False
-            message = "Summed On Hand Quantity (" & Format(tqty, "###,###") & ") is not equal XML Total Quantity (" &
+            message = "Summed On Hand Quantity (" & Format(tonhand, "###,###") & ") is not equal XML Total Quantity (" &
                             Format(invOH, "###,###") & ")."
         End If
         If tcost <> invCost Then
@@ -1129,9 +1572,9 @@ Public Class DBAdmin
         End While
         con.Close()
 
-        If invOH <> tqty Then
+        If invOH <> tonhand Then
             aok = False
-            message = "Summed XML OnHand (" & Format(tqty, "###,###") & ") is not equal to Item_Inv.End_OH (" &
+            message = "Summed XML OnHand (" & Format(tonhand, "###,###") & ") is not equal to Item_Inv.End_OH (" &
                             Format(invOH, "###,###,###") & ")."
             Call Log_Error(message)
         End If
@@ -1157,7 +1600,7 @@ Public Class DBAdmin
         Dim sql As String
         Dim cmd As SqlCommand
         Dim cnt As Integer = 0
-        Dim store, po, vendor, buyer, stat As String
+        Dim store, po, vendor, buyer, stat, terms As String
         Dim ordDate, dueDate, canDate As Date
         Dim amt, recvd_cost, ord_qty, open_amt As Decimal
         Dim lines, open_lines As Integer
@@ -1206,14 +1649,16 @@ Public Class DBAdmin
                     If Not IsDBNull(oTest) And Not IsNothing(oTest) Then open_lines = CInt(oTest) Else open_lines = 0
                     oTest = row("OPEN_AMT")
                     If Not IsDBNull(oTest) And Not IsNothing(oTest) Then open_amt = CDec(oTest) Else open_amt = 0
+                    oTest = row("TERMS")
+                    If Not IsDBNull(oTest) And Not IsNothing(oTest) Then terms = CStr(oTest) Else terms = "NA"
                     oTest = row("EXTRACT_DATE")
                     If Not IsDBNull(oTest) And Not IsNothing(oTest) Then datetime = CDate(oTest) Else datetime = Nothing
                     sql = "IF NOT EXISTS (SELECT PO_NO FROM PO_Header WHERE Loc_Id = '" & store & "' AND PO_NO = '" & po & "') " & _
                         "INSERT INTO PO_Header (Loc_Id, PO_NO, Order_Date, Due_Date, Cancel_Date, Vendor_Id, Buyer, Amount, " & _
-                        "Recvd_Cost, Lines, Ord_Qty, Open_Lines, Open_Amt, Status) " & _
+                        "Recvd_Cost, Lines, Ord_Qty, Open_Lines, Open_Amt, Terms, Status) " & _
                         "SELECT '" & store & "','" & po & "','" & ordDate & "','" & dueDate & "','" & canDate & "','" &
                         vendor & "','" & buyer & "'," & amt & "," & recvd_cost & "," & lines & "," & ord_qty & "," &
-                        open_lines & "," & open_amt & ",'" & stat & "'"
+                        open_lines & "," & open_amt & ",'" & terms & "','" & stat & "'"
                     cmd = New SqlCommand(sql, con)
                     cmd.ExecuteNonQuery()
                 End If
@@ -1308,7 +1753,7 @@ Public Class DBAdmin
                     poRetail = CDec(row("RETAIL"))
 
                 End If
-                    ''End If
+                ''End If
             Next
             con.Close()
         End If
@@ -1459,8 +1904,8 @@ Public Class DBAdmin
         ds = New DataSet
         dt = New DataTable
         thePath = xmlPath & "\Purchase_Request_Detail.xml"
-        xmlfile = Xml.XmlReader.Create(thePath, New XmlReaderSettings())
-        ds.ReadXml(xmlfile)
+        xmlFile = Xml.XmlReader.Create(thePath, New XmlReaderSettings())
+        ds.ReadXml(xmlFile)
         If ((ds.Tables.Count > 0) AndAlso ds.Tables(0).Rows.Count > 0) Then
             con.Open()
             con2.Open()
@@ -1692,7 +2137,7 @@ Public Class DBAdmin
 
                         oTest = row("EXTRACT_DATE")
                         If Not IsDBNull(oTest) And Not IsNothing(oTest) Then extractDate = oTest
-                        tQty += qty
+                        tqty += qty
                         tcost += qty * cost
                         tretail += qty * retail
                         tmkdn += mkdn
@@ -1714,21 +2159,21 @@ Public Class DBAdmin
                         cmd.ExecuteNonQuery()
                         con.Close()
                     End If
-                    Else
+                Else
                     xmlQty = CDec(row("QTY"))
                     xmlCost = CDec(row("COST"))
                     xmlRetail = CDec(row("RETAIL"))
-                        If theField = "Sold" Then
-                            oTest = row("TKT_NO")
-                            If IsNumeric(oTest) Then grandQty = CDec(oTest) Else grandQty = 0
-                            oTest = row("MKDN_REASON")
-                            If IsNumeric(oTest) Then grandCost = CDec(oTest) Else grandCost = 0
-                            oTest = row("COUPON_CODE")
-                            If IsNumeric(oTest) Then grandRetail = CDec(oTest) Else grandRetail = 0
+                    If theField = "Sold" Then
+                        oTest = row("TKT_NO")
+                        If IsNumeric(oTest) Then grandQty = CDec(oTest) Else grandQty = 0
+                        oTest = row("MKDN_REASON")
+                        If IsNumeric(oTest) Then grandCost = CDec(oTest) Else grandCost = 0
+                        oTest = row("COUPON_CODE")
+                        If IsNumeric(oTest) Then grandRetail = CDec(oTest) Else grandRetail = 0
                         oTest = row("ORD_TYPE")
-                            If IsNumeric(oTest) Then grandMarkdown = CDec(oTest) Else grandMarkdown = 0
-                        End If
+                        If IsNumeric(oTest) Then grandMarkdown = CDec(oTest) Else grandMarkdown = 0
                     End If
+                End If
             Next
         End If
         Dim isPhysical As Boolean = False
@@ -1764,10 +2209,10 @@ Public Class DBAdmin
         Me.Refresh()
 
         If isPhysical Then theField = "PHYS"
-        Dim message As String = "Updated " & cnt & " records - Qty = " & tQty &
+        Dim message As String = "Updated " & cnt & " records - Qty = " & tqty &
             " Total Cost = " & tcost & " Total Retail = " & tretail & " Total Markdowns = " & tmkdn
         Call Update_Process_Log("1", "Update " & theField & "", message, "")
-        If tQty <> xmlQty Then
+        If tqty <> xmlQty Then
             aok = False
             message = "Quantity summed (" & tqty & ") does not equal Total Qty in XML file (" & xmlQty & ")."
             Call Log_Error(message)
@@ -2160,7 +2605,6 @@ righthere:
             If Client.DoScoring Then btnScore.Enabled = True
             If Client.DoMarketing Then btnCustomers.Enabled = True
             If Client.DoSalesPlan Then btnSalesPlan.Enabled = True
-            btnCustomers.Enabled = True                                  ' force it true, Customers are part of Module 1 now
             Me.Refresh()
         Catch ex As Exception
             MsgBox(ex.Message)
@@ -2200,6 +2644,8 @@ righthere:
                     If Not IsDBNull(oTest) And Not IsNothing(oTest) Then sqlUserID = CStr(oTest)
                     oTest = rdr("SQLPassword")
                     If Not IsDBNull(oTest) And Not IsNothing(oTest) Then sqlPassword = CStr(oTest)
+                    oTest = rdr("errorLog")
+                    If Not IsDBNull(oTest) And Not IsNothing(oTest) Then errorLog = CStr(oTest)
                 End If
             End While
             RTRACcon.Close()
@@ -2817,7 +3263,8 @@ righthere:
                 lblClient.Text = "Client"
                 GroupBox5.Visible = True
             End If
-
+            arguments = thisClient & ";" & server & ";" & dbName & ";" & xmlPath & ";" & sqlUserID & ";" &
+                            sqlPassword & ";" & Date.Today & ";" & Date.Today & ";" & errorLog & ";" & Client.DoMarketing
         Catch ex As Exception
 
         End Try
@@ -2858,8 +3305,8 @@ righthere:
     End Sub
 
     Private Sub Update_Process_Log(ByRef modul As String, ByRef process As String, ByRef m As String, ByRef stat As String)
-        stopWatch.Stop()
-        Dim ts As TimeSpan = stopWatch.Elapsed
+        stopwatch.Stop()
+        Dim ts As TimeSpan = stopwatch.Elapsed
         Dim et As String = String.Format("{0:00}:{1:00}:{2:00}:{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10)
         Dim pgm As String = "RCSetup"
         con.Open()
@@ -3072,4 +3519,5 @@ righthere:
         '' cmd.ExecuteNonQuery()
         rcCon.Close()
     End Sub
+
 End Class

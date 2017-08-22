@@ -7,7 +7,7 @@ Module Module1
     Public errorPath As String
     Private con, cpCon As SqlConnection
     Private StopWatch As Stopwatch
-    Private sql As String
+    Private sql, xmlPath As String
     Private cmd As SqlCommand
     Private rdr As SqlDataReader
     Private qty, cost, retail, discountAmt, discount As Decimal
@@ -33,7 +33,7 @@ Module Module1
         Dim totlRetail As Decimal = 0
         Dim totlMarkdown As Decimal = 0
         Dim oTest As Object
-        Dim fld, valu, server, database, client, user, password, sql, rcServer, xmlPath, conString, path, cpString As String
+        Dim fld, valu, server, database, client, user, password, sql, rcServer, conString, path, cpString As String
         Dim cpServer, cpDatabase, cpUserID, cpPassword As String
         Dim logPath As String = ""
         Dim xmlWriter As XmlTextWriter
@@ -91,7 +91,10 @@ Module Module1
 
 
 
-        '' GoTo 100
+        ''        GoTo 100
+        Call ZipIt()
+
+
 
 
 
@@ -1695,7 +1698,7 @@ Module Module1
             If cpCon.State = ConnectionState.Open Then cpCon.Close()
         End Try
 
-100:    Try
+        Try
             StopWatch = New Stopwatch
             StopWatch.Start()
             Console.WriteLine("Extracting Adjustment data")
@@ -1712,11 +1715,11 @@ Module Module1
             xmlWriter.Indentation = 2
             xmlWriter.WriteStartElement("Adjustments")
             cpCon.Open()
-            sql = "SELECT h.EVENT_NO AS TRANS_ID, h.SEQ_NO, h.ITEM_NO, c.DIM_1_UPR, c.DIM_2_UPR, c.DIM_3_UPR, h.LOC_ID AS LOCATION, " & _
-                "CASE WHEN c.QTY IS NOT NULL THEN c.QTY ELSE h.QTY * QTY_NUMER END AS QTY, COST, UNIT_RETL_VAL AS RETAIL, h.TRX_DAT AS DATE " & _
-                "FROM IM_ADJ_HIST h " & _
-                "LEFT JOIN IM_ADJ_HIST_CELL c ON c.EVENT_NO = h.EVENT_NO AND c.BAT_ID = h.BAT_ID AND c.ITEM_NO = h.ITEM_NO " & _
-                "AND c.LOC_ID = h.LOC_ID AND c.SEQ_NO = h.SEQ_NO " & _
+            sql = "SELECT h.EVENT_NO AS TRANS_ID, h.SEQ_NO, h.ITEM_NO, c.DIM_1_UPR, c.DIM_2_UPR, c.DIM_3_UPR, h.LOC_ID AS LOCATION, " &
+                "CASE WHEN c.QTY IS NOT NULL THEN c.QTY ELSE h.QTY * QTY_NUMER END AS QTY, COST, UNIT_RETL_VAL AS RETAIL, h.TRX_DAT AS DATE " &
+                "FROM IM_ADJ_HIST h " &
+                "LEFT JOIN IM_ADJ_HIST_CELL c ON c.EVENT_NO = h.EVENT_NO AND c.BAT_ID = h.BAT_ID AND c.ITEM_NO = h.ITEM_NO " &
+                "AND c.LOC_ID = h.LOC_ID AND c.SEQ_NO = h.SEQ_NO " &
                 "WHERE h.LST_MAINT_DT >= '" & minADJdate & "'"
             cmd = New SqlCommand(sql, cpCon)
             cmd.CommandTimeout = 120
@@ -2599,9 +2602,8 @@ Module Module1
             xmlWriter.WriteEndElement()
             xmlWriter.WriteEndDocument()
             xmlWriter.Close()
-
-            Dim m As String = Format(cnt, "###,###,##0") & " Records"
-            Call Update_Process_Log("1", "Extract Transfers", m, "")
+            ''Dim m As String = Format(cnt, "###,###,##0") & " Records"
+            ''Call Update_Process_Log("1", "Extract Transfers", m, "")
         Catch ex As Exception
             Dim el As New XMLExtract_PARGIF.ErrorLogger
             el.WriteToErrorLog(ex.Message, ex.StackTrace, "Daily_XML_Extract Collected Transfer Records")
@@ -2609,6 +2611,20 @@ Module Module1
         End Try
     End Sub
 
+    Private Sub ZipIt()
+        Dim p As Process = New Process
+        Dim pi As ProcessStartInfo = New ProcessStartInfo
+        Process.Start("cmd", "/c cd " + xmlPath)
+        pi.Arguments = "del " + xmlPath + "\*.zip"
+        pi.FileName = "cmd.exe"
+        p.StartInfo = pi
+        p.Start()
+
+        pi.Arguments = " compact /c /s:" + xmlPath
+        p.StartInfo = pi
+        p.Start()
+
+    End Sub
     Private Sub Update_Process_Log(ByVal modul As String, ByVal process As String, ByVal m As String, ByVal stat As String)
         ''     We're not connected to a local Retail Clarity database
         Exit Sub

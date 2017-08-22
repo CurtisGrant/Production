@@ -18,3 +18,13 @@ C:\Projects\DEMO\Client_Weekly_Summary\Client_Weekly_Summary\bin\Debug\Client_We
 C:\Projects\DEMO\Client_Weekly_Summary\Client_Weekly_Summary\obj\Debug\Client_Weekly_Summary.vbprojResolveAssemblyReference.cache
 C:\Projects\DEMO\Client_Weekly_Summary\Client_Weekly_Summary\obj\Debug\Client_Weekly_Summary.Resources.resources
 C:\Projects\DEMO\Client_Weekly_Summary\Client_Weekly_Summary\obj\Debug\Client_Weekly_Summary.vbproj.GenerateResource.Cache
+C:\Projects\Production\Client_Weekly_Summary\Client_Weekly_Summary\bin\Debug\Client_Weekly_Summary.exe.config
+C:\Projects\Production\Client_Weekly_Summary\Client_Weekly_Summary\obj\Debug\Client_Weekly_Summary.exe
+C:\Projects\Production\Client_Weekly_Summary\Client_Weekly_Summary\obj\Debug\Client_Weekly_Summary.xml
+C:\Projects\Production\Client_Weekly_Summary\Client_Weekly_Summary\obj\Debug\Client_Weekly_Summary.pdb
+C:\Projects\Production\Client_Weekly_Summary\Client_Weekly_Summary\bin\Debug\Client_Weekly_Summary.exe
+C:\Projects\Production\Client_Weekly_Summary\Client_Weekly_Summary\bin\Debug\Client_Weekly_Summary.pdb
+C:\Projects\Production\Client_Weekly_Summary\Client_Weekly_Summary\bin\Debug\Client_Weekly_Summary.xml
+C:\Projects\Production\Client_Weekly_Summary\Client_Weekly_Summary\obj\Debug\Client_Weekly_Summary.vbprojResolveAssemblyReference.cache
+C:\Projects\Production\Client_Weekly_Summary\Client_Weekly_Summary\obj\Debug\Client_Weekly_Summary.Resources.resources
+C:\Projects\Production\Client_Weekly_Summary\Client_Weekly_Summary\obj\Debug\Client_Weekly_Summary.vbproj.GenerateResource.Cache

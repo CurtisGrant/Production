@@ -1,1 +1,11 @@
 C:\Projects\DEMO\XMLExtract_TCM\XMLExtract_TCM\bin\Debug\XMLExtract_TCM.exe.config
+C:\Projects\Production\XMLExtract_TCM\XMLExtract_TCM\bin\Debug\XMLExtract_TCM.exe.config
+C:\Projects\Production\XMLExtract_TCM\XMLExtract_TCM\obj\Debug\XMLExtract_TCM.vbprojResolveAssemblyReference.cache
+C:\Projects\Production\XMLExtract_TCM\XMLExtract_TCM\obj\Debug\XMLExtract_TCM.Resources.resources
+C:\Projects\Production\XMLExtract_TCM\XMLExtract_TCM\obj\Debug\XMLExtract_TCM.vbproj.GenerateResource.Cache
+C:\Projects\Production\XMLExtract_TCM\XMLExtract_TCM\obj\Debug\XMLExtract_TCM.xml
+C:\Projects\Production\XMLExtract_TCM\XMLExtract_TCM\bin\Debug\XMLExtract_TCM.exe
+C:\Projects\Production\XMLExtract_TCM\XMLExtract_TCM\bin\Debug\XMLExtract_TCM.pdb
+C:\Projects\Production\XMLExtract_TCM\XMLExtract_TCM\bin\Debug\XMLExtract_TCM.xml
+C:\Projects\Production\XMLExtract_TCM\XMLExtract_TCM\obj\Debug\XMLExtract_TCM.exe
+C:\Projects\Production\XMLExtract_TCM\XMLExtract_TCM\obj\Debug\XMLExtract_TCM.pdb

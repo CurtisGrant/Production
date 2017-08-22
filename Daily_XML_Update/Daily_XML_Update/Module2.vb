@@ -6,7 +6,7 @@ Module Module2
     Sub Main()
         Dim oTest As Object
         Dim xmlReader As XmlTextReader = New XmlTextReader("c:\RetailClarity\RCCLIENT.xml")
-        Dim server, conString, exePath, passWord As String
+        Dim server, conString, exePath, userid, passWord As String
         Dim fld As String = ""
         Dim valu As String = ""
         While xmlReader.Read
@@ -18,10 +18,13 @@ Module Module2
             End Select
             If fld = "SERVER" Then server = valu
             If fld = "EXEPATH" Then exePath = valu
+            If fld = "USERID" Then userid = valu
             If fld = "PD" Then passWord = valu
         End While
-        ''conString = "Server=" & server & ";Initial Catalog=RCClient;User Id=sa;Password=" & passWord & ""
+        ''conString = "Server=" & server & ";Initial Catalog=RCClient;User Id=" & userid & ";Password=" & passWord & ""
         conString = "Server=" & server & ";Initial Catalog=RCClient;Integrated Security=True" & ""
+        Console.WriteLine(conString)
+
         Dim dbase As String = ""
         Dim client As String = ""
         Dim sqlUserId As String = ""
@@ -48,8 +51,8 @@ Module Module2
         con = New SqlConnection(conString)
         con.Open()
         Console.WriteLine("RCClient is now open")
-        sql = "SELECT Client_Id, [Database] AS dbase, Server, SQLUserId, SQLPassword, XMLs AS Path, " & _
-            "errorLog, Marketing FROM CLIENT_MASTER " & _
+        sql = "SELECT Client_Id, [Database] AS dbase, Server, SQLUserId, SQLPassword, XMLs AS Path, " &
+            "errorLog, Marketing FROM RCClient.dbo.CLIENT_MASTER " &
             "WHERE Status = 'Active' ORDER BY Client_Id"
         cmd = New SqlCommand(sql, con)
         rdr = cmd.ExecuteReader
@@ -64,8 +67,8 @@ Module Module2
             If Not IsDBNull(oTest) And Not IsNothing(oTest) Then errorLog = oTest Else errorLog = ""
             oTest = rdr("Marketing")
             If Not IsDBNull(oTest) And Not IsNothing(oTest) Then marketing = CStr(oTest) Else marketing = ""
-            ''ClientConString = "Server=" & server & ";Initial Catalog=" & dbase & ";User Id=" & sqlUserId & ";Password=" & sqlPassword & ""
-            ClientConString = "Server=" & server & ";Initial Catalog=" & dbase & ";Integrated Security=True" & ""
+            ClientConString = "Server=" & server & ";Initial Catalog=" & dbase & ";User Id=" & sqlUserId & ";Password=" & sqlPassword & ""
+            ''ClientConString = "Server=" & server & ";Initial Catalog=" & dbase & ";Integrated Security=True" & ""
             con2 = New SqlConnection(ClientConString)
             con2.Open()
             todaysDate = CDate(Date.Today)
@@ -109,7 +112,7 @@ Module Module2
             Dim p As New ProcessStartInfo
             p.FileName = exePath & "\XMLUpdate.exe"
             p.Arguments = client & ";" & server & ";" & dbase & ";" & xmlPath & ";" & sqlUserId & ";" &
-                sqlPassword & ";" & BeginDate & ";" & EndDate & ";" & errorLog & ";" & marketing
+                sqlPassword & ";" & BeginDate & ";" & EndDate & ";" & errorLog & ";" & marketing & ";ALL"
             p.UseShellExecute = True
             p.WindowStyle = ProcessWindowStyle.Normal
             Dim proc As Process = Process.Start(p)

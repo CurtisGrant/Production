@@ -47,6 +47,7 @@ Module Module1
             If fld = "PD" Then rcPassword = valu
         End While
         rcConString = "Server=" & rcServer & ";Initial Catalog=RCClient;Integrated Security=True"
+        ''rcConString = "Server=" & rcServer & ";Initial Catalog=RCClient;User Id=sa;Password=" & rcPassword & ""
 
         Dim clientTbl As New DataTable
         clientTbl.Columns.Add("Client", GetType(System.String))
@@ -99,7 +100,8 @@ Module Module1
                 Exit Sub
             End If
             xmlPath = clientRow("XMLs")
-            conString = "server=" & server & ";Initial Catalog=" & dbase & ";Integrated Security=True"
+            ''conString = "server=" & server & ";Initial Catalog=" & dbase & ";Integrated Security=True"
+            conString = "server=" & server & ";Initial Catalog=" & dbase & ";User Id=" & sqluserId & ";Password=" & sqlPassword & ""
             con = New SqlConnection(conString)
             con2 = New SqlConnection(conString)
             con3 = New SqlConnection(conString)

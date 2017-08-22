@@ -40,7 +40,8 @@ Module Module1
             If fld = "EXEPATH" Then rcExePath = valu
             If fld = "PD" Then rcPassword = valu
         End While
-        rcConString = "Server=" & rcServer & ";Initial Catalog=RCClient;Integrated Security=True"
+
+
         Try
             Dim args As String() = Environment.GetCommandLineArgs()
             Dim txtArray() As String = args(1).Split(";")
@@ -60,25 +61,21 @@ Module Module1
         End Try
 
 
-
-
         ''client = "TCM"
-        ''server = "LP-CURTIS"
+        ''server = "ATL-SQL14"
         ''dbase = "TCM"
         ''xmlPath = "c:\retailclarity\xmls\tcm"
-        ''sqlUserId = "sa"
-        ''sqlPassword = "PGadm01!"
-        ''dateStr = "6/24/2017"
+        ''sqlUserId = "RCSQLADMIN"
+        ''sqlPassword = "Adv@nc3d525!"
+        ''dateStr = "8/12/2017"
         ''errorLog = "c:\retailclarity\errors"
 
 
         Try
-
-
             rcConString = "Server=" & rcServer & ";Initial Catalog=RCClient;Integrated Security=True"
             rcCON = New SqlConnection(rcConString)
             rcCON.Open()
-            sql = "SELECT Server, [Database], SQLUserId, SQLPassword, XMLs, ErrorLog, SalesPlan FROM Client_Master " & _
+            sql = "SELECT Server, [Database], SQLUserId, SQLPassword, XMLs, ErrorLog, SalesPlan FROM Client_Master " &
                 "WHERE Client_ID = '" & client & "'"
             cmd = New SqlCommand(sql, rcCON)
             rdr = cmd.ExecuteReader
@@ -119,7 +116,8 @@ Module Module1
 
 
 
-        conString = "server=" & server & ";Initial Catalog=" & dbase & ";Integrated Security=True"
+        ''conString = "server=" & server & ";Initial Catalog=" & dbase & ";Integrated Security=True"
+        conString = "server=" & server & ";Initial Catalog=" & dbase & ";User Id=" & sqlUserId & ";Password=" & sqlPassword & ""
         con = New SqlConnection(conString)
         con2 = New SqlConnection(conString)
 

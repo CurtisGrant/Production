@@ -8,3 +8,13 @@ C:\Projects\DEMO\CounterpointXMLExtract\CounterpointXMLExtract\bin\Debug\Counter
 C:\Projects\DEMO\CounterpointXMLExtract\CounterpointXMLExtract\obj\Debug\CounterpointXMLExtract.exe
 C:\Projects\DEMO\CounterpointXMLExtract\CounterpointXMLExtract\obj\Debug\CounterpointXMLExtract.xml
 C:\Projects\DEMO\CounterpointXMLExtract\CounterpointXMLExtract\obj\Debug\CounterpointXMLExtract.pdb
+C:\Projects\Production\CounterpointXMLExtract\CounterpointXMLExtract\bin\Debug\CounterpointXMLExtract.exe.config
+C:\Projects\Production\CounterpointXMLExtract\CounterpointXMLExtract\obj\Debug\CounterpointXMLExtract.exe
+C:\Projects\Production\CounterpointXMLExtract\CounterpointXMLExtract\obj\Debug\CounterpointXMLExtract.xml
+C:\Projects\Production\CounterpointXMLExtract\CounterpointXMLExtract\obj\Debug\CounterpointXMLExtract.pdb
+C:\Projects\Production\CounterpointXMLExtract\CounterpointXMLExtract\bin\Debug\CounterpointXMLExtract.exe
+C:\Projects\Production\CounterpointXMLExtract\CounterpointXMLExtract\bin\Debug\CounterpointXMLExtract.pdb
+C:\Projects\Production\CounterpointXMLExtract\CounterpointXMLExtract\bin\Debug\CounterpointXMLExtract.xml
+C:\Projects\Production\CounterpointXMLExtract\CounterpointXMLExtract\obj\Debug\CounterpointXMLExtract.vbprojResolveAssemblyReference.cache
+C:\Projects\Production\CounterpointXMLExtract\CounterpointXMLExtract\obj\Debug\CounterpointXMLExtract.Resources.resources
+C:\Projects\Production\CounterpointXMLExtract\CounterpointXMLExtract\obj\Debug\CounterpointXMLExtract.vbproj.GenerateResource.Cache

@@ -33,6 +33,12 @@ Partial Class DBAdmin
         Me.txtInvRecords = New System.Windows.Forms.TextBox()
         Me.btnAddWeeklyRecords = New System.Windows.Forms.Button()
         Me.GroupBox3 = New System.Windows.Forms.GroupBox()
+        Me.chkOrders = New System.Windows.Forms.CheckBox()
+        Me.btnOrders = New System.Windows.Forms.Button()
+        Me.Label24 = New System.Windows.Forms.Label()
+        Me.txtOrders = New System.Windows.Forms.TextBox()
+        Me.txtOrdersRetail = New System.Windows.Forms.TextBox()
+        Me.txtOrdersCost = New System.Windows.Forms.TextBox()
         Me.chkINV = New System.Windows.Forms.CheckBox()
         Me.chkPREQ = New System.Windows.Forms.CheckBox()
         Me.chkPO = New System.Windows.Forms.CheckBox()
@@ -91,6 +97,10 @@ Partial Class DBAdmin
         Me.txtSalesRetail = New System.Windows.Forms.TextBox()
         Me.txtSalesCost = New System.Windows.Forms.TextBox()
         Me.GroupBox2 = New System.Windows.Forms.GroupBox()
+        Me.chkBarcodes = New System.Windows.Forms.CheckBox()
+        Me.btnBarcodes = New System.Windows.Forms.Button()
+        Me.Label1 = New System.Windows.Forms.Label()
+        Me.txtBarcodes = New System.Windows.Forms.TextBox()
         Me.chkItems = New System.Windows.Forms.CheckBox()
         Me.chkVendors = New System.Windows.Forms.CheckBox()
         Me.chkStores = New System.Windows.Forms.CheckBox()
@@ -172,7 +182,7 @@ Partial Class DBAdmin
         '
         Me.GroupBox6.Controls.Add(Me.btnCreateWeekly)
         Me.GroupBox6.Controls.Add(Me.txtWeeklySummary)
-        Me.GroupBox6.Location = New System.Drawing.Point(17, 467)
+        Me.GroupBox6.Location = New System.Drawing.Point(17, 505)
         Me.GroupBox6.Name = "GroupBox6"
         Me.GroupBox6.Size = New System.Drawing.Size(129, 86)
         Me.GroupBox6.TabIndex = 87
@@ -238,7 +248,7 @@ Partial Class DBAdmin
         '
         Me.GroupBox4.Controls.Add(Me.txtInvRecords)
         Me.GroupBox4.Controls.Add(Me.btnAddWeeklyRecords)
-        Me.GroupBox4.Location = New System.Drawing.Point(217, 467)
+        Me.GroupBox4.Location = New System.Drawing.Point(217, 505)
         Me.GroupBox4.Name = "GroupBox4"
         Me.GroupBox4.Size = New System.Drawing.Size(135, 86)
         Me.GroupBox4.TabIndex = 85
@@ -248,7 +258,7 @@ Partial Class DBAdmin
         'txtInvRecords
         '
         Me.txtInvRecords.Location = New System.Drawing.Point(20, 23)
-        Me.txtInvRecords.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.txtInvRecords.Margin = New System.Windows.Forms.Padding(2)
         Me.txtInvRecords.Name = "txtInvRecords"
         Me.txtInvRecords.Size = New System.Drawing.Size(85, 20)
         Me.txtInvRecords.TabIndex = 3
@@ -264,6 +274,12 @@ Partial Class DBAdmin
         '
         'GroupBox3
         '
+        Me.GroupBox3.Controls.Add(Me.chkOrders)
+        Me.GroupBox3.Controls.Add(Me.btnOrders)
+        Me.GroupBox3.Controls.Add(Me.Label24)
+        Me.GroupBox3.Controls.Add(Me.txtOrders)
+        Me.GroupBox3.Controls.Add(Me.txtOrdersRetail)
+        Me.GroupBox3.Controls.Add(Me.txtOrdersCost)
         Me.GroupBox3.Controls.Add(Me.chkINV)
         Me.GroupBox3.Controls.Add(Me.chkPREQ)
         Me.GroupBox3.Controls.Add(Me.chkPO)
@@ -323,16 +339,69 @@ Partial Class DBAdmin
         Me.GroupBox3.Controls.Add(Me.txtSalesCost)
         Me.GroupBox3.Location = New System.Drawing.Point(392, 167)
         Me.GroupBox3.Name = "GroupBox3"
-        Me.GroupBox3.Size = New System.Drawing.Size(519, 278)
+        Me.GroupBox3.Size = New System.Drawing.Size(519, 301)
         Me.GroupBox3.TabIndex = 84
         Me.GroupBox3.TabStop = False
         Me.GroupBox3.Text = "Load History"
         '
+        'chkOrders
+        '
+        Me.chkOrders.AutoSize = True
+        Me.chkOrders.Location = New System.Drawing.Point(470, 141)
+        Me.chkOrders.Margin = New System.Windows.Forms.Padding(2)
+        Me.chkOrders.Name = "chkOrders"
+        Me.chkOrders.Size = New System.Drawing.Size(15, 14)
+        Me.chkOrders.TabIndex = 104
+        Me.chkOrders.UseVisualStyleBackColor = True
+        '
+        'btnOrders
+        '
+        Me.btnOrders.Enabled = False
+        Me.btnOrders.Location = New System.Drawing.Point(351, 139)
+        Me.btnOrders.Name = "btnOrders"
+        Me.btnOrders.Size = New System.Drawing.Size(104, 23)
+        Me.btnOrders.TabIndex = 103
+        Me.btnOrders.Text = "Load Orders"
+        Me.btnOrders.UseVisualStyleBackColor = True
+        '
+        'Label24
+        '
+        Me.Label24.AutoSize = True
+        Me.Label24.Location = New System.Drawing.Point(18, 147)
+        Me.Label24.Name = "Label24"
+        Me.Label24.Size = New System.Drawing.Size(38, 13)
+        Me.Label24.TabIndex = 102
+        Me.Label24.Text = "Orders"
+        '
+        'txtOrders
+        '
+        Me.txtOrders.Location = New System.Drawing.Point(105, 140)
+        Me.txtOrders.Name = "txtOrders"
+        Me.txtOrders.Size = New System.Drawing.Size(69, 20)
+        Me.txtOrders.TabIndex = 99
+        Me.txtOrders.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
+        '
+        'txtOrdersRetail
+        '
+        Me.txtOrdersRetail.Location = New System.Drawing.Point(268, 140)
+        Me.txtOrdersRetail.Name = "txtOrdersRetail"
+        Me.txtOrdersRetail.Size = New System.Drawing.Size(77, 20)
+        Me.txtOrdersRetail.TabIndex = 101
+        Me.txtOrdersRetail.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
+        '
+        'txtOrdersCost
+        '
+        Me.txtOrdersCost.Location = New System.Drawing.Point(182, 140)
+        Me.txtOrdersCost.Name = "txtOrdersCost"
+        Me.txtOrdersCost.Size = New System.Drawing.Size(77, 20)
+        Me.txtOrdersCost.TabIndex = 100
+        Me.txtOrdersCost.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
+        '
         'chkINV
         '
         Me.chkINV.AutoSize = True
-        Me.chkINV.Location = New System.Drawing.Point(470, 246)
-        Me.chkINV.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkINV.Location = New System.Drawing.Point(470, 272)
+        Me.chkINV.Margin = New System.Windows.Forms.Padding(2)
         Me.chkINV.Name = "chkINV"
         Me.chkINV.Size = New System.Drawing.Size(15, 14)
         Me.chkINV.TabIndex = 98
@@ -341,8 +410,8 @@ Partial Class DBAdmin
         'chkPREQ
         '
         Me.chkPREQ.AutoSize = True
-        Me.chkPREQ.Location = New System.Drawing.Point(470, 220)
-        Me.chkPREQ.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkPREQ.Location = New System.Drawing.Point(470, 246)
+        Me.chkPREQ.Margin = New System.Windows.Forms.Padding(2)
         Me.chkPREQ.Name = "chkPREQ"
         Me.chkPREQ.Size = New System.Drawing.Size(15, 14)
         Me.chkPREQ.TabIndex = 97
@@ -351,8 +420,8 @@ Partial Class DBAdmin
         'chkPO
         '
         Me.chkPO.AutoSize = True
-        Me.chkPO.Location = New System.Drawing.Point(470, 194)
-        Me.chkPO.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkPO.Location = New System.Drawing.Point(470, 220)
+        Me.chkPO.Margin = New System.Windows.Forms.Padding(2)
         Me.chkPO.Name = "chkPO"
         Me.chkPO.Size = New System.Drawing.Size(15, 14)
         Me.chkPO.TabIndex = 96
@@ -361,8 +430,8 @@ Partial Class DBAdmin
         'chkXFER
         '
         Me.chkXFER.AutoSize = True
-        Me.chkXFER.Location = New System.Drawing.Point(470, 168)
-        Me.chkXFER.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkXFER.Location = New System.Drawing.Point(470, 194)
+        Me.chkXFER.Margin = New System.Windows.Forms.Padding(2)
         Me.chkXFER.Name = "chkXFER"
         Me.chkXFER.Size = New System.Drawing.Size(15, 14)
         Me.chkXFER.TabIndex = 95
@@ -371,8 +440,8 @@ Partial Class DBAdmin
         'chkSales
         '
         Me.chkSales.AutoSize = True
-        Me.chkSales.Location = New System.Drawing.Point(470, 142)
-        Me.chkSales.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkSales.Location = New System.Drawing.Point(470, 168)
+        Me.chkSales.Margin = New System.Windows.Forms.Padding(2)
         Me.chkSales.Name = "chkSales"
         Me.chkSales.Size = New System.Drawing.Size(15, 14)
         Me.chkSales.TabIndex = 94
@@ -382,7 +451,7 @@ Partial Class DBAdmin
         '
         Me.chkRTN.AutoSize = True
         Me.chkRTN.Location = New System.Drawing.Point(470, 116)
-        Me.chkRTN.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkRTN.Margin = New System.Windows.Forms.Padding(2)
         Me.chkRTN.Name = "chkRTN"
         Me.chkRTN.Size = New System.Drawing.Size(15, 14)
         Me.chkRTN.TabIndex = 93
@@ -392,7 +461,7 @@ Partial Class DBAdmin
         '
         Me.chkRecv.AutoSize = True
         Me.chkRecv.Location = New System.Drawing.Point(470, 90)
-        Me.chkRecv.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkRecv.Margin = New System.Windows.Forms.Padding(2)
         Me.chkRecv.Name = "chkRecv"
         Me.chkRecv.Size = New System.Drawing.Size(15, 14)
         Me.chkRecv.TabIndex = 92
@@ -402,7 +471,7 @@ Partial Class DBAdmin
         '
         Me.chkPhys.AutoSize = True
         Me.chkPhys.Location = New System.Drawing.Point(470, 65)
-        Me.chkPhys.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkPhys.Margin = New System.Windows.Forms.Padding(2)
         Me.chkPhys.Name = "chkPhys"
         Me.chkPhys.Size = New System.Drawing.Size(15, 14)
         Me.chkPhys.TabIndex = 91
@@ -412,7 +481,7 @@ Partial Class DBAdmin
         '
         Me.chkAdj.AutoSize = True
         Me.chkAdj.Location = New System.Drawing.Point(470, 37)
-        Me.chkAdj.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkAdj.Margin = New System.Windows.Forms.Padding(2)
         Me.chkAdj.Name = "chkAdj"
         Me.chkAdj.Size = New System.Drawing.Size(15, 14)
         Me.chkAdj.TabIndex = 90
@@ -420,7 +489,7 @@ Partial Class DBAdmin
         '
         'txtPReqRetail
         '
-        Me.txtPReqRetail.Location = New System.Drawing.Point(267, 219)
+        Me.txtPReqRetail.Location = New System.Drawing.Point(267, 245)
         Me.txtPReqRetail.Name = "txtPReqRetail"
         Me.txtPReqRetail.Size = New System.Drawing.Size(77, 20)
         Me.txtPReqRetail.TabIndex = 86
@@ -428,7 +497,7 @@ Partial Class DBAdmin
         '
         'txtPReqCost
         '
-        Me.txtPReqCost.Location = New System.Drawing.Point(181, 219)
+        Me.txtPReqCost.Location = New System.Drawing.Point(181, 245)
         Me.txtPReqCost.Name = "txtPReqCost"
         Me.txtPReqCost.Size = New System.Drawing.Size(77, 20)
         Me.txtPReqCost.TabIndex = 85
@@ -436,7 +505,7 @@ Partial Class DBAdmin
         '
         'txtPReq
         '
-        Me.txtPReq.Location = New System.Drawing.Point(106, 218)
+        Me.txtPReq.Location = New System.Drawing.Point(106, 244)
         Me.txtPReq.Name = "txtPReq"
         Me.txtPReq.Size = New System.Drawing.Size(69, 20)
         Me.txtPReq.TabIndex = 82
@@ -444,7 +513,7 @@ Partial Class DBAdmin
         '
         'btnLoadPReq
         '
-        Me.btnLoadPReq.Location = New System.Drawing.Point(352, 217)
+        Me.btnLoadPReq.Location = New System.Drawing.Point(352, 243)
         Me.btnLoadPReq.Name = "btnLoadPReq"
         Me.btnLoadPReq.Size = New System.Drawing.Size(104, 23)
         Me.btnLoadPReq.TabIndex = 84
@@ -454,7 +523,7 @@ Partial Class DBAdmin
         'Label26
         '
         Me.Label26.AutoSize = True
-        Me.Label26.Location = New System.Drawing.Point(18, 225)
+        Me.Label26.Location = New System.Drawing.Point(18, 251)
         Me.Label26.Name = "Label26"
         Me.Label26.Size = New System.Drawing.Size(75, 13)
         Me.Label26.TabIndex = 83
@@ -462,7 +531,7 @@ Partial Class DBAdmin
         '
         'txtPORetail
         '
-        Me.txtPORetail.Location = New System.Drawing.Point(267, 193)
+        Me.txtPORetail.Location = New System.Drawing.Point(267, 219)
         Me.txtPORetail.Name = "txtPORetail"
         Me.txtPORetail.Size = New System.Drawing.Size(77, 20)
         Me.txtPORetail.TabIndex = 81
@@ -470,7 +539,7 @@ Partial Class DBAdmin
         '
         'txtPOCost
         '
-        Me.txtPOCost.Location = New System.Drawing.Point(181, 193)
+        Me.txtPOCost.Location = New System.Drawing.Point(181, 219)
         Me.txtPOCost.Name = "txtPOCost"
         Me.txtPOCost.Size = New System.Drawing.Size(77, 20)
         Me.txtPOCost.TabIndex = 80
@@ -478,7 +547,7 @@ Partial Class DBAdmin
         '
         'txtPO
         '
-        Me.txtPO.Location = New System.Drawing.Point(106, 192)
+        Me.txtPO.Location = New System.Drawing.Point(106, 218)
         Me.txtPO.Name = "txtPO"
         Me.txtPO.Size = New System.Drawing.Size(69, 20)
         Me.txtPO.TabIndex = 77
@@ -487,7 +556,7 @@ Partial Class DBAdmin
         'btnLoadPOs
         '
         Me.btnLoadPOs.Enabled = False
-        Me.btnLoadPOs.Location = New System.Drawing.Point(352, 191)
+        Me.btnLoadPOs.Location = New System.Drawing.Point(352, 217)
         Me.btnLoadPOs.Name = "btnLoadPOs"
         Me.btnLoadPOs.Size = New System.Drawing.Size(104, 23)
         Me.btnLoadPOs.TabIndex = 79
@@ -497,7 +566,7 @@ Partial Class DBAdmin
         'Label30
         '
         Me.Label30.AutoSize = True
-        Me.Label30.Location = New System.Drawing.Point(18, 199)
+        Me.Label30.Location = New System.Drawing.Point(18, 225)
         Me.Label30.Name = "Label30"
         Me.Label30.Size = New System.Drawing.Size(72, 13)
         Me.Label30.TabIndex = 78
@@ -505,7 +574,7 @@ Partial Class DBAdmin
         '
         'txtInvRetail
         '
-        Me.txtInvRetail.Location = New System.Drawing.Point(266, 244)
+        Me.txtInvRetail.Location = New System.Drawing.Point(266, 270)
         Me.txtInvRetail.Name = "txtInvRetail"
         Me.txtInvRetail.Size = New System.Drawing.Size(77, 20)
         Me.txtInvRetail.TabIndex = 76
@@ -513,7 +582,7 @@ Partial Class DBAdmin
         '
         'txtInvCost
         '
-        Me.txtInvCost.Location = New System.Drawing.Point(180, 244)
+        Me.txtInvCost.Location = New System.Drawing.Point(180, 270)
         Me.txtInvCost.Name = "txtInvCost"
         Me.txtInvCost.Size = New System.Drawing.Size(77, 20)
         Me.txtInvCost.TabIndex = 75
@@ -540,7 +609,7 @@ Partial Class DBAdmin
         'btnXfer
         '
         Me.btnXfer.Enabled = False
-        Me.btnXfer.Location = New System.Drawing.Point(351, 166)
+        Me.btnXfer.Location = New System.Drawing.Point(351, 192)
         Me.btnXfer.Name = "btnXfer"
         Me.btnXfer.Size = New System.Drawing.Size(104, 23)
         Me.btnXfer.TabIndex = 73
@@ -559,7 +628,7 @@ Partial Class DBAdmin
         'btnSales
         '
         Me.btnSales.Enabled = False
-        Me.btnSales.Location = New System.Drawing.Point(351, 140)
+        Me.btnSales.Location = New System.Drawing.Point(351, 166)
         Me.btnSales.Name = "btnSales"
         Me.btnSales.Size = New System.Drawing.Size(104, 23)
         Me.btnSales.TabIndex = 72
@@ -577,7 +646,7 @@ Partial Class DBAdmin
         '
         'txtInventory
         '
-        Me.txtInventory.Location = New System.Drawing.Point(105, 243)
+        Me.txtInventory.Location = New System.Drawing.Point(105, 269)
         Me.txtInventory.Name = "txtInventory"
         Me.txtInventory.Size = New System.Drawing.Size(69, 20)
         Me.txtInventory.TabIndex = 7
@@ -632,7 +701,7 @@ Partial Class DBAdmin
         'Label11
         '
         Me.Label11.AutoSize = True
-        Me.Label11.Location = New System.Drawing.Point(17, 174)
+        Me.Label11.Location = New System.Drawing.Point(17, 200)
         Me.Label11.Name = "Label11"
         Me.Label11.Size = New System.Drawing.Size(51, 13)
         Me.Label11.TabIndex = 35
@@ -640,7 +709,7 @@ Partial Class DBAdmin
         '
         'btnInv
         '
-        Me.btnInv.Location = New System.Drawing.Point(351, 242)
+        Me.btnInv.Location = New System.Drawing.Point(351, 268)
         Me.btnInv.Name = "btnInv"
         Me.btnInv.Size = New System.Drawing.Size(104, 23)
         Me.btnInv.TabIndex = 36
@@ -658,7 +727,7 @@ Partial Class DBAdmin
         'Label10
         '
         Me.Label10.AutoSize = True
-        Me.Label10.Location = New System.Drawing.Point(17, 148)
+        Me.Label10.Location = New System.Drawing.Point(18, 174)
         Me.Label10.Name = "Label10"
         Me.Label10.Size = New System.Drawing.Size(33, 13)
         Me.Label10.TabIndex = 34
@@ -758,7 +827,7 @@ Partial Class DBAdmin
         '
         'txtXferRetail
         '
-        Me.txtXferRetail.Location = New System.Drawing.Point(268, 167)
+        Me.txtXferRetail.Location = New System.Drawing.Point(268, 193)
         Me.txtXferRetail.Name = "txtXferRetail"
         Me.txtXferRetail.Size = New System.Drawing.Size(77, 20)
         Me.txtXferRetail.TabIndex = 27
@@ -767,7 +836,7 @@ Partial Class DBAdmin
         'Label20
         '
         Me.Label20.AutoSize = True
-        Me.Label20.Location = New System.Drawing.Point(17, 250)
+        Me.Label20.Location = New System.Drawing.Point(17, 276)
         Me.Label20.Name = "Label20"
         Me.Label20.Size = New System.Drawing.Size(51, 13)
         Me.Label20.TabIndex = 29
@@ -783,7 +852,7 @@ Partial Class DBAdmin
         '
         'txtXferCost
         '
-        Me.txtXferCost.Location = New System.Drawing.Point(182, 167)
+        Me.txtXferCost.Location = New System.Drawing.Point(182, 193)
         Me.txtXferCost.Name = "txtXferCost"
         Me.txtXferCost.Size = New System.Drawing.Size(77, 20)
         Me.txtXferCost.TabIndex = 26
@@ -799,7 +868,7 @@ Partial Class DBAdmin
         '
         'txtTransfers
         '
-        Me.txtTransfers.Location = New System.Drawing.Point(105, 167)
+        Me.txtTransfers.Location = New System.Drawing.Point(105, 193)
         Me.txtTransfers.Name = "txtTransfers"
         Me.txtTransfers.Size = New System.Drawing.Size(69, 20)
         Me.txtTransfers.TabIndex = 25
@@ -807,7 +876,7 @@ Partial Class DBAdmin
         '
         'txtSales
         '
-        Me.txtSales.Location = New System.Drawing.Point(105, 141)
+        Me.txtSales.Location = New System.Drawing.Point(105, 167)
         Me.txtSales.Name = "txtSales"
         Me.txtSales.Size = New System.Drawing.Size(69, 20)
         Me.txtSales.TabIndex = 22
@@ -815,7 +884,7 @@ Partial Class DBAdmin
         '
         'txtSalesRetail
         '
-        Me.txtSalesRetail.Location = New System.Drawing.Point(268, 141)
+        Me.txtSalesRetail.Location = New System.Drawing.Point(268, 167)
         Me.txtSalesRetail.Name = "txtSalesRetail"
         Me.txtSalesRetail.Size = New System.Drawing.Size(77, 20)
         Me.txtSalesRetail.TabIndex = 24
@@ -823,7 +892,7 @@ Partial Class DBAdmin
         '
         'txtSalesCost
         '
-        Me.txtSalesCost.Location = New System.Drawing.Point(182, 141)
+        Me.txtSalesCost.Location = New System.Drawing.Point(182, 167)
         Me.txtSalesCost.Name = "txtSalesCost"
         Me.txtSalesCost.Size = New System.Drawing.Size(77, 20)
         Me.txtSalesCost.TabIndex = 23
@@ -831,6 +900,10 @@ Partial Class DBAdmin
         '
         'GroupBox2
         '
+        Me.GroupBox2.Controls.Add(Me.chkBarcodes)
+        Me.GroupBox2.Controls.Add(Me.btnBarcodes)
+        Me.GroupBox2.Controls.Add(Me.Label1)
+        Me.GroupBox2.Controls.Add(Me.txtBarcodes)
         Me.GroupBox2.Controls.Add(Me.chkItems)
         Me.GroupBox2.Controls.Add(Me.chkVendors)
         Me.GroupBox2.Controls.Add(Me.chkStores)
@@ -870,17 +943,53 @@ Partial Class DBAdmin
         Me.GroupBox2.Controls.Add(Me.Label17)
         Me.GroupBox2.Location = New System.Drawing.Point(16, 167)
         Me.GroupBox2.Name = "GroupBox2"
-        Me.GroupBox2.Size = New System.Drawing.Size(336, 278)
+        Me.GroupBox2.Size = New System.Drawing.Size(336, 301)
         Me.GroupBox2.TabIndex = 83
         Me.GroupBox2.TabStop = False
         Me.GroupBox2.Text = "Initialize Data Tables"
         Me.GroupBox2.Visible = False
         '
+        'chkBarcodes
+        '
+        Me.chkBarcodes.AutoSize = True
+        Me.chkBarcodes.Location = New System.Drawing.Point(308, 268)
+        Me.chkBarcodes.Margin = New System.Windows.Forms.Padding(2)
+        Me.chkBarcodes.Name = "chkBarcodes"
+        Me.chkBarcodes.Size = New System.Drawing.Size(15, 14)
+        Me.chkBarcodes.TabIndex = 93
+        Me.chkBarcodes.UseVisualStyleBackColor = True
+        '
+        'btnBarcodes
+        '
+        Me.btnBarcodes.Location = New System.Drawing.Point(190, 263)
+        Me.btnBarcodes.Name = "btnBarcodes"
+        Me.btnBarcodes.Size = New System.Drawing.Size(104, 23)
+        Me.btnBarcodes.TabIndex = 92
+        Me.btnBarcodes.Text = "Load Barcodes"
+        Me.btnBarcodes.UseVisualStyleBackColor = True
+        '
+        'Label1
+        '
+        Me.Label1.AutoSize = True
+        Me.Label1.Location = New System.Drawing.Point(17, 274)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(75, 13)
+        Me.Label1.TabIndex = 91
+        Me.Label1.Text = "Item Barcodes"
+        '
+        'txtBarcodes
+        '
+        Me.txtBarcodes.Location = New System.Drawing.Point(105, 264)
+        Me.txtBarcodes.Name = "txtBarcodes"
+        Me.txtBarcodes.Size = New System.Drawing.Size(69, 20)
+        Me.txtBarcodes.TabIndex = 90
+        Me.txtBarcodes.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
+        '
         'chkItems
         '
         Me.chkItems.AutoSize = True
         Me.chkItems.Location = New System.Drawing.Point(308, 242)
-        Me.chkItems.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkItems.Margin = New System.Windows.Forms.Padding(2)
         Me.chkItems.Name = "chkItems"
         Me.chkItems.Size = New System.Drawing.Size(15, 14)
         Me.chkItems.TabIndex = 89
@@ -890,7 +999,7 @@ Partial Class DBAdmin
         '
         Me.chkVendors.AutoSize = True
         Me.chkVendors.Location = New System.Drawing.Point(308, 216)
-        Me.chkVendors.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkVendors.Margin = New System.Windows.Forms.Padding(2)
         Me.chkVendors.Name = "chkVendors"
         Me.chkVendors.Size = New System.Drawing.Size(15, 14)
         Me.chkVendors.TabIndex = 88
@@ -900,7 +1009,7 @@ Partial Class DBAdmin
         '
         Me.chkStores.AutoSize = True
         Me.chkStores.Location = New System.Drawing.Point(308, 190)
-        Me.chkStores.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkStores.Margin = New System.Windows.Forms.Padding(2)
         Me.chkStores.Name = "chkStores"
         Me.chkStores.Size = New System.Drawing.Size(15, 14)
         Me.chkStores.TabIndex = 87
@@ -910,7 +1019,7 @@ Partial Class DBAdmin
         '
         Me.chkSeasons.AutoSize = True
         Me.chkSeasons.Location = New System.Drawing.Point(308, 165)
-        Me.chkSeasons.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkSeasons.Margin = New System.Windows.Forms.Padding(2)
         Me.chkSeasons.Name = "chkSeasons"
         Me.chkSeasons.Size = New System.Drawing.Size(15, 14)
         Me.chkSeasons.TabIndex = 86
@@ -920,7 +1029,7 @@ Partial Class DBAdmin
         '
         Me.chkProdLines.AutoSize = True
         Me.chkProdLines.Location = New System.Drawing.Point(308, 138)
-        Me.chkProdLines.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkProdLines.Margin = New System.Windows.Forms.Padding(2)
         Me.chkProdLines.Name = "chkProdLines"
         Me.chkProdLines.Size = New System.Drawing.Size(15, 14)
         Me.chkProdLines.TabIndex = 85
@@ -930,7 +1039,7 @@ Partial Class DBAdmin
         '
         Me.chkLoactions.AutoSize = True
         Me.chkLoactions.Location = New System.Drawing.Point(308, 111)
-        Me.chkLoactions.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkLoactions.Margin = New System.Windows.Forms.Padding(2)
         Me.chkLoactions.Name = "chkLoactions"
         Me.chkLoactions.Size = New System.Drawing.Size(15, 14)
         Me.chkLoactions.TabIndex = 84
@@ -940,7 +1049,7 @@ Partial Class DBAdmin
         '
         Me.chkDepartments.AutoSize = True
         Me.chkDepartments.Location = New System.Drawing.Point(308, 86)
-        Me.chkDepartments.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkDepartments.Margin = New System.Windows.Forms.Padding(2)
         Me.chkDepartments.Name = "chkDepartments"
         Me.chkDepartments.Size = New System.Drawing.Size(15, 14)
         Me.chkDepartments.TabIndex = 83
@@ -950,7 +1059,7 @@ Partial Class DBAdmin
         '
         Me.chkClasses.AutoSize = True
         Me.chkClasses.Location = New System.Drawing.Point(308, 61)
-        Me.chkClasses.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkClasses.Margin = New System.Windows.Forms.Padding(2)
         Me.chkClasses.Name = "chkClasses"
         Me.chkClasses.Size = New System.Drawing.Size(15, 14)
         Me.chkClasses.TabIndex = 82
@@ -960,7 +1069,7 @@ Partial Class DBAdmin
         '
         Me.chkBuyers.AutoSize = True
         Me.chkBuyers.Location = New System.Drawing.Point(308, 36)
-        Me.chkBuyers.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.chkBuyers.Margin = New System.Windows.Forms.Padding(2)
         Me.chkBuyers.Name = "chkBuyers"
         Me.chkBuyers.Size = New System.Drawing.Size(15, 14)
         Me.chkBuyers.TabIndex = 81
@@ -1336,7 +1445,7 @@ Partial Class DBAdmin
         '
         'btnExit
         '
-        Me.btnExit.Location = New System.Drawing.Point(826, 479)
+        Me.btnExit.Location = New System.Drawing.Point(826, 517)
         Me.btnExit.Name = "btnExit"
         Me.btnExit.Size = New System.Drawing.Size(85, 46)
         Me.btnExit.TabIndex = 80
@@ -1359,7 +1468,7 @@ Partial Class DBAdmin
         Me.GroupBox7.Controls.Add(Me.btnCustomers)
         Me.GroupBox7.Controls.Add(Me.btnScore)
         Me.GroupBox7.Controls.Add(Me.btnSalesPlan)
-        Me.GroupBox7.Location = New System.Drawing.Point(389, 467)
+        Me.GroupBox7.Location = New System.Drawing.Point(389, 505)
         Me.GroupBox7.Name = "GroupBox7"
         Me.GroupBox7.Size = New System.Drawing.Size(400, 86)
         Me.GroupBox7.TabIndex = 89
@@ -1413,9 +1522,9 @@ Partial Class DBAdmin
         Me.GroupBox8.Controls.Add(Me.txtsDate)
         Me.GroupBox8.Controls.Add(Me.dtp)
         Me.GroupBox8.Location = New System.Drawing.Point(492, 74)
-        Me.GroupBox8.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.GroupBox8.Margin = New System.Windows.Forms.Padding(2)
         Me.GroupBox8.Name = "GroupBox8"
-        Me.GroupBox8.Padding = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.GroupBox8.Padding = New System.Windows.Forms.Padding(2)
         Me.GroupBox8.Size = New System.Drawing.Size(418, 69)
         Me.GroupBox8.TabIndex = 90
         Me.GroupBox8.TabStop = False
@@ -1444,7 +1553,7 @@ Partial Class DBAdmin
         'DTP1
         '
         Me.DTP1.Location = New System.Drawing.Point(15, 33)
-        Me.DTP1.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.DTP1.Margin = New System.Windows.Forms.Padding(2)
         Me.DTP1.Name = "DTP1"
         Me.DTP1.Size = New System.Drawing.Size(80, 20)
         Me.DTP1.TabIndex = 92
@@ -1452,7 +1561,7 @@ Partial Class DBAdmin
         'btnConfirm
         '
         Me.btnConfirm.Location = New System.Drawing.Point(353, 17)
-        Me.btnConfirm.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.btnConfirm.Margin = New System.Windows.Forms.Padding(2)
         Me.btnConfirm.Name = "btnConfirm"
         Me.btnConfirm.Size = New System.Drawing.Size(52, 41)
         Me.btnConfirm.TabIndex = 91
@@ -1462,7 +1571,7 @@ Partial Class DBAdmin
         'txteDate
         '
         Me.txteDate.Location = New System.Drawing.Point(270, 33)
-        Me.txteDate.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.txteDate.Margin = New System.Windows.Forms.Padding(2)
         Me.txteDate.Name = "txteDate"
         Me.txteDate.Size = New System.Drawing.Size(74, 20)
         Me.txteDate.TabIndex = 90
@@ -1471,7 +1580,7 @@ Partial Class DBAdmin
         'txtsDate
         '
         Me.txtsDate.Location = New System.Drawing.Point(190, 33)
-        Me.txtsDate.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.txtsDate.Margin = New System.Windows.Forms.Padding(2)
         Me.txtsDate.Name = "txtsDate"
         Me.txtsDate.Size = New System.Drawing.Size(74, 20)
         Me.txtsDate.TabIndex = 1
@@ -1480,7 +1589,7 @@ Partial Class DBAdmin
         'dtp
         '
         Me.dtp.Location = New System.Drawing.Point(103, 33)
-        Me.dtp.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.dtp.Margin = New System.Windows.Forms.Padding(2)
         Me.dtp.Name = "dtp"
         Me.dtp.Size = New System.Drawing.Size(80, 20)
         Me.dtp.TabIndex = 0
@@ -1490,9 +1599,9 @@ Partial Class DBAdmin
         Me.GroupBox9.Controls.Add(Me.txtprogress)
         Me.GroupBox9.Controls.Add(Me.btnClndr)
         Me.GroupBox9.Location = New System.Drawing.Point(492, 11)
-        Me.GroupBox9.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.GroupBox9.Margin = New System.Windows.Forms.Padding(2)
         Me.GroupBox9.Name = "GroupBox9"
-        Me.GroupBox9.Padding = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.GroupBox9.Padding = New System.Windows.Forms.Padding(2)
         Me.GroupBox9.Size = New System.Drawing.Size(424, 58)
         Me.GroupBox9.TabIndex = 91
         Me.GroupBox9.TabStop = False
@@ -1502,7 +1611,7 @@ Partial Class DBAdmin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(961, 572)
+        Me.ClientSize = New System.Drawing.Size(961, 611)
         Me.Controls.Add(Me.GroupBox9)
         Me.Controls.Add(Me.GroupBox8)
         Me.Controls.Add(Me.GroupBox7)
@@ -1670,5 +1779,14 @@ Partial Class DBAdmin
     Friend WithEvents chkDepartments As System.Windows.Forms.CheckBox
     Friend WithEvents chkClasses As System.Windows.Forms.CheckBox
     Friend WithEvents chkBuyers As System.Windows.Forms.CheckBox
-
+    Friend WithEvents chkBarcodes As System.Windows.Forms.CheckBox
+    Friend WithEvents btnBarcodes As System.Windows.Forms.Button
+    Friend WithEvents Label1 As System.Windows.Forms.Label
+    Friend WithEvents txtBarcodes As System.Windows.Forms.TextBox
+    Friend WithEvents chkOrders As CheckBox
+    Friend WithEvents btnOrders As Button
+    Friend WithEvents Label24 As Label
+    Friend WithEvents txtOrders As TextBox
+    Friend WithEvents txtOrdersRetail As TextBox
+    Friend WithEvents txtOrdersCost As TextBox
 End Class
