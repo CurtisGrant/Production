@@ -15,7 +15,7 @@ Module Module1
     Private stopWatch As Stopwatch
     Private totlQty, totlCost, totlRetail, totlMarkdown, diff As Decimal
     Private records As Integer
-    Private msg, xmlProcess As String
+    Private msg, thisprocess, xmlProcess As String
 
     Sub Main()
         ''Try
@@ -57,6 +57,8 @@ Module Module1
         Dim cnt As Int32 = 0
         Dim thisDate, thisEdate, thisSdate, clearDate, lastWeekseDate As Date
         Dim DayOfWeek As Integer
+
+
         Dim args As String() = Environment.GetCommandLineArgs()
         Dim txtArray() As String = args(1).Split(";")
         client = txtArray(0)
@@ -71,27 +73,30 @@ Module Module1
         cust = txtArray(9)
         xmlProcess = txtArray(10)
 
-        eDateTBL.Rows.Add(thisEdate)
-        lastWeekseDate = DateAdd(DateInterval.Day, -7, thisEdate)
+
+
+
+        ''eDateTBL.Rows.Add(thisEdate)
+        ''lastWeekseDate = DateAdd(DateInterval.Day, -7, thisEdate)
 
 
 
         ''client = "TCM"
-        '' ''server = "alrm6hn0ql.database.windows.net,1433"
+        '' ''''server = "alrm6hn0ql.database.windows.net,1433"
         ''server = "LP-CURTIS"
         ''dbase = "TCM"
         ''xmlPath = "c:\RetailClarity\XMLs\TCM"
-        '' ''xmlPath = "\\LPS2-2\RetailClarity\PARGIF\XMLs\Build"
-        ''thisSdate = "8/13/2017"
-        ''thisEdate = "8/19/2017"
+        '' ''''xmlPath = "\\LPS2-2\RetailClarity\PARGIF\XMLs\Build"
+        ''thisSdate = "9/3/2017"
+        ''thisEdate = "9/9/2017"
         ''lastWeekseDate = DateAdd(DateInterval.Day, -7, thisEdate)
         ''sqlUserId = "sa"
         ''sqlPassword = "PGadm01!"
         ''rcErrorPath = "c:\RetailClarity\RCSystem\SYSFAIL"
         ''rcExePath = "c:\RetailClarity\EXEs"
         ''cust = "N"
-        ''eDateTBL.Rows.Add("8/19/2017")
-        ''xmlProcess = "BUYERS"
+        ''eDateTBL.Rows.Add("9/9/2017")
+        ''xmlProcess = "INVENTORY"
 
 
 
@@ -123,7 +128,9 @@ Module Module1
 
 
 
-        ''    GoTo 100
+        ''  GoTo 100
+
+
 
 
 
@@ -167,14 +174,14 @@ Module Module1
             If xmlProcess = "PREQDETAIL" Then Exit Sub
         End If
 
-        If xmlProcess = "INVENTORY" Or xmlProcess = "ALL" Then
+100:    If xmlProcess = "INVENTORY" Or xmlProcess = "ALL" Then
             Console.WriteLine("Processing " & client & " Inventory records")
             thePath = xmlPath & "\Inventory.xml"
             If FileSize(thePath) > 0 Then Call Process_Inventory(thePath, con, con2)
             If xmlProcess = "INVENTORY" Then Exit Sub
         End If
 
-        If xmlProcess = "POHEADER" Or xmlProcess = "ALL then" Then
+        If xmlProcess = "POHEADER" Or xmlProcess = "ALL" Then
             Console.WriteLine("Processing " & client & " Purchase Order Header")
             thePath = xmlPath & "\POHeader.xml"
             If FileSize(thePath) > 0 Then Call Process_POHeader(thePath, con, con2)
@@ -189,7 +196,7 @@ Module Module1
         End If
 
         If xmlProcess = "ADJUSTMENTS" Or xmlProcess = "ALL" Then
-            Console.WriteLine("Processing " & client & " Adjustment records")
+            Console.WriteLine("Processing Adjustments")
             thePath = xmlPath & "\Adjustment.xml"
             If FileSize(thePath) > 0 Then Call Process_Data(thePath, "ADJ", con, con2)
             If xmlProcess = "ADJUSTMENTS" Then Exit Sub
@@ -209,7 +216,7 @@ Module Module1
             If xmlProcess = "RECEIPTS" Then Exit Sub
         End If
 
-        If xmlProcess = "RETURN" Or xmlProcess = "ALL" Then
+        If xmlProcess = "RETURNS" Or xmlProcess = "ALL" Then
             Console.WriteLine("Process " & client & " Return records")
             thePath = xmlPath & "\Return.xml"
             If FileSize(thePath) > 0 Then Call Process_Data(thePath, "RTV", con, con2)
@@ -224,9 +231,6 @@ Module Module1
                     Call Process_Data(File, "Sold", con, con2)
                 Next
             End If
-
-            ''thePath = xmlPath & "\Sales.xml"
-            ''If FileSize(thePath) > 0 Then Call Process_Data(thePath, "Sold", con, con2)
             Call Merge_Tickets()
             If xmlProcess = "SALES" Then Exit Sub
         End If
@@ -325,7 +329,7 @@ Module Module1
                 con2.Open()
                 nextSdate = thisSdate
                 nextEdate = thisEdate
-
+                thisprocess = "XMLUpdate - Create Next Week's Inv Records"
                 sql = "DECLARE @sDate date = '" & nextSdate & "' " &
                     "DECLARE @eDate date = '" & nextEdate & "' " &
                     "DECLARE @lasteDate date = '" & lastWeekseDate & "' " &
@@ -341,8 +345,8 @@ Module Module1
                     "WHEN MATCHED THEN UPDATE SET t.Begin_OH = s.End_OH;"
                 cmd = New SqlCommand(sql, con2)
                 cmd.ExecuteNonQuery()
-                con2.Close()
 
+                thisprocess = "XMLUpdate - Set SysOH"
                 Console.WriteLine("Setting Sys_OH = End_OH")
                 sql = "UPDATE Item_Inv SET Sys_OH = End_OH WHERE eDate = '" & thisEdate & "'"
                 cmd = New SqlCommand(sql, con2)
@@ -356,7 +360,7 @@ Module Module1
             If con.State = ConnectionState.Open Then con.Close()
             If con2.State = ConnectionState.Open Then con2.Close()
             Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Create records for next week")
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
             MsgBox(ex.Message)
 
         End Try
@@ -366,7 +370,7 @@ Module Module1
             con3.Open()
             Dim title As String = "XMLUpdate"
             Dim message As String = "Nothing to update in Client_Weekly_Summary"
-            sql = "INSERT INTO Message (mDate, Title, Message) " & _
+            sql = "INSERT INTO Message (mDate, Title, Message) " &
                 "SELECT '" & Date.Now & "','" & title & "','" & message & "'"
             cmd = New SqlCommand(sql, con3)
             cmd.CommandTimeout = 120
@@ -417,6 +421,7 @@ Module Module1
             ctbl.Columns.Add("YrWks")
             Dim xmlFile As XmlReader
             Dim rw As DataRow
+            thisprocess = "XMLUpdate - Process Calendar - Read XML File"
             xmlFile = Xml.XmlReader.Create(thePath, New XmlReaderSettings())
             ds.ReadXml(xmlFile)
             If ((ds.Tables.Count > 0) AndAlso ds.Tables(0).Rows.Count > 0) Then
@@ -441,8 +446,9 @@ Module Module1
                     prdwk = CInt(period & week)
                     ' Console.WriteLine(prdwk)
                     If (period = 0 And week = 0) Or (period > 0 And week > 0) Then
-                        sql = "IF NOT EXISTS (SELECT * FROM Calendar WHERE sDate = '" & sdate & "' AND Prd_Id = " & period & " AND Week_Id = " & week & ") " & _
-                            "INSERT INTO Calendar (Year_Id, Prd_Id, Week_Id, sDate, eDate, YrPrd, YrWks, PrdWk) " & _
+                        thisprocess = "XMLUpdate - Process Calendar - Insert into Calendar"
+                        sql = "IF NOT EXISTS (SELECT * FROM Calendar WHERE sDate = '" & sdate & "' AND Prd_Id = " & period & " AND Week_Id = " & week & ") " &
+                            "INSERT INTO Calendar (Year_Id, Prd_Id, Week_Id, sDate, eDate, YrPrd, YrWks, PrdWk) " &
                             "SELECT " & year & "," & period & "," & week & ",'" & sdate & "','" & edate & "'," & yrprd & "," & yrwks & "," & prdwk
                         cmd = New SqlCommand(sql, con)
                         cmd.ExecuteNonQuery()
@@ -455,7 +461,7 @@ Module Module1
         Catch ex As Exception
             If con.State = ConnectionState.Open Then con.Close()
             Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Update Calendar")
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
         End Try
     End Sub
 
@@ -505,6 +511,7 @@ Module Module1
             dt2.Columns.Add("DIM3_DESCR")
             Dim xmlFile As XmlReader
             Dim rw As DataRow
+            thisprocess = "XMLUpdate - Process Items - Read XML File"
             xmlFile = Xml.XmlReader.Create(thePath, New XmlReaderSettings())
             ds.ReadXml(xmlFile)
             If ((ds.Tables.Count > 0) AndAlso ds.Tables(0).Rows.Count > 0) Then
@@ -607,6 +614,7 @@ Module Module1
                 Next
             End If
             Console.WriteLine("DELETE FROM ITEM_MASTER")
+            thisprocess = "XMLUpdate - Process Items - Delete from Item Master"
             con.Open()
             sql = "DELETE FROM Item_Master"
             cmd = New SqlCommand(sql, con)
@@ -615,6 +623,7 @@ Module Module1
             con.Close()
 
             Console.WriteLine("Bulk Insert into Item_Master")
+            thisprocess = "XMLUpdate - Bulk Insert into Item Master"
             Dim connection As SqlConnection = New SqlConnection(constr)
             Dim bulkCopy As SqlBulkCopy = New SqlBulkCopy(connection)
             connection.Open()
@@ -629,7 +638,7 @@ Module Module1
         Catch ex As Exception
             If con.State = ConnectionState.Open Then con.Close()
             Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Process Items")
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
             MsgBox(ex.Message)
         End Try
     End Sub
@@ -661,6 +670,7 @@ Module Module1
             dt.Columns.Add("Date")
             Dim xmlFile As XmlReader
             Dim row As DataRow
+            thisprocess = "XMLUpdate - Process Barcodes - Bulk Copy XML File"
             xmlFile = Xml.XmlReader.Create(thePath, New XmlReaderSettings())
             ds.ReadXml(xmlFile)
             If ((ds.Tables.Count > 0) AndAlso ds.Tables(0).Rows.Count > 0) Then
@@ -708,7 +718,7 @@ Module Module1
         Catch ex As Exception
             If con.State = ConnectionState.Open Then con.Close()
             Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Process Barcodes")
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
             MsgBox(ex.Message)
         End Try
     End Sub
@@ -716,33 +726,35 @@ Module Module1
     Private Sub Process_Inventory(ByVal thePath, con, con2)
         Try
             stopWatch.Start()
-            con.open()
+            con2.open()
+            thisprocess = "XMLUpdate - Process Inventory - Create temp Table"
             Dim sql As String
             sql = "IF OBJECT_ID('dbo._t1','U') IS NOT NULL DROP TABLE dbo._t1; "
-            cmd = New SqlCommand(sql, con)
+            cmd = New SqlCommand(sql, con2)
             cmd.ExecuteNonQuery()
-            sql = "CREATE TABLE [dbo].[_t1](" & _
-               "[Loc_Id] [varchar](20) NOT NULL," & _
-               "[Sku] [varchar](90) NOT NULL," & _
-               "[sDate] [date] NOT NULL," & _
-               "[eDate] [date] NOT NULL," & _
-               "[Avail] [decimal](18, 4) NULL," & _
-               "[Cost] [decimal](18,4) NULL," & _
-               "[Retail] [decimal](18,4) NULL," & _
-               "[YrWk] [int] NULL," & _
-               "[Begin_OH] [decimal](18, 4) NULL," & _
-               "[End_OH] [decimal](18, 4) NULL," & _
-               "[Committed] [decimal](18,4) NULL, " & _
-               "[Sys_OH] [decimal](18, 4) NULL," & _
-               "[Max_OH] [decimal](18, 4) NULL," & _
-               "[Item] [varchar](30) NOT NULL," & _
-               "[DIM1] [varchar](30) NULL," & _
-               "[DIM2] [varchar](30) NULL," & _
-               "[DIM3] [varchar](30) NULL) ON [PRIMARY]"
-            cmd = New SqlCommand(sql, con)
+            sql = "CREATE TABLE _t1(" &
+                   "[Loc_Id] [varchar](20) NOT NULL," &
+                   "[Sku] [varchar](90) NOT NULL," &
+                   "[sDate] [date] NOT NULL," &
+                   "[eDate] [date] NOT NULL," &
+                   "[Avail] [decimal](18, 4) NULL," &
+                   "[Cost] [decimal](18,4) NULL," &
+                   "[Retail] [decimal](18,4) NULL," &
+                   "[YrWk] [int] NULL," &
+                   "[Begin_OH] [decimal](18, 4) NULL," &
+                   "[End_OH] [decimal](18, 4) NULL," &
+                   "[Committed] [decimal](18,4) NULL, " &
+                   "[Sys_OH] [decimal](18, 4) NULL," &
+                   "[Max_OH] [decimal](18, 4) NULL," &
+                   "[Item] [varchar](30) NOT NULL," &
+                   "[DIM1] [varchar](30) NULL," &
+                   "[DIM2] [varchar](30) NULL," &
+                   "[DIM3] [varchar](30) NULL) ON [PRIMARY]"
+            cmd = New SqlCommand(sql, con2)
+            cmd.CommandTimeout = 480
             cmd.ExecuteNonQuery()
-            con.close()
 
+            thisprocess = "XMLUpdate - Process Inventory - Get sDate & eDate"
             Dim cnt As Int64 = 0
             Dim oTest As Object
             Dim onhand, avail, committed As Decimal
@@ -766,8 +778,7 @@ Module Module1
             End While
             con.close()
 
-            con.Open()
-            cmd.CommandTimeout = 960
+            thisprocess = "XMLUpdate - Process Inventory - Read XML File"
             Dim xmlFile As XmlReader
             xmlFile = Xml.XmlReader.Create(thePath, New XmlReaderSettings())
             ds.ReadXml(xmlFile)                                                                      '  bulk insert XML into dataset
@@ -813,14 +824,15 @@ Module Module1
                             End If
                         Else : dttime = DateAndTime.Now
                         End If
-                        sql = "INSERT INTO _t1 (Loc_Id, Sku, sDate, eDate, Avail, End_OH, " & _
-                             "Committed, Cost, Retail, YrWk, Item, DIM1, DIM2, DIM3) " & _
-                             "SELECT '" & loc & "','" & sku & "','" & thisSdate & "','" & thisEdate &
-                             "'," & avail & "," & onhand & "," & committed & "," & cost & "," &
-                             retail & ", YrWk ,'" & item & "','" & dim1 & "','" & dim2 & "','" &
-                             dim3 & "' FROM Calendar c JOIN Item_Master m ON m.Sku = '" & sku & "' WHERE eDate = '" & thisEdate & "' " & _
-                             "AND m.[Type] = 'I' AND Prd_Id > 0 AND Week_Id > 0"
-                        cmd = New SqlCommand(sql, con)
+                        thisprocess = "XMLUpdate - Process Inventory - Insert into temp Table"
+                        sql = "INSERT INTO _t1 (Loc_Id, Sku, sDate, eDate, Avail, End_OH, " &
+                                 "Committed, Cost, Retail, YrWk, Item, DIM1, DIM2, DIM3) " &
+                                 "SELECT '" & loc & "','" & sku & "','" & thisSdate & "','" & thisEdate &
+                                 "'," & avail & "," & onhand & "," & committed & "," & cost & "," &
+                                 retail & ", YrWk ,'" & item & "','" & dim1 & "','" & dim2 & "','" &
+                                 dim3 & "' FROM Calendar c JOIN Item_Master m ON m.Sku = '" & sku & "' WHERE eDate = '" & thisEdate & "' " &
+                                 "AND m.[Type] = 'I' AND Prd_Id > 0 AND Week_Id > 0"
+                        cmd = New SqlCommand(sql, con2)
                         cmd.CommandTimeout = 960
                         cmd.ExecuteNonQuery()
 
@@ -851,47 +863,49 @@ Module Module1
                     End If
                 Next
             End If
-            con.close()
+            con2.close()
 
+            Console.WriteLine("Set End_OH, Max_OH and Committed to 0")
             con.open()
+            thisprocess = "XMLUpdate - Process Inventory - Set Qty Fields to 0"
             sql = "UPDATE Item_Inv SET End_OH = 0, Max_OH = 0, Committed = 0 WHERE eDate = '" & thisEdate & "'"
             cmd = New SqlCommand(sql, con)
+            cmd.CommandTimeout = 480
             cmd.ExecuteNonQuery()
-            ''sql = "MERGE Item_Inv AS target USING _t1 AS source ON (source.Loc_Id = target.Loc_Id AND source.Sku = target.Sku " & _
-            ''        "AND source.eDate = target.eDate) " & _
-            ''        "WHEN NOT MATCHED BY TARGET THEN " & _
-            ''        "INSERT (Loc_Id, Sku, sDate, eDate, Cost, Retail, YrWk, OnHand, Begin_OH, End_OH, Committed, " & _
-            ''            "Max_OH, Item, DIM1, DIM2, DIM3) " & _
-            ''        "VALUES (source.Loc_Id, source.Sku, source.sDate, source.eDate, source.Cost, source.Retail, " & _
-            ''            "source.YrWk, source.OnHand, source.Begin_OH, source.End_OH, source.Committed, source.Max_OH, " & _
-            ''            "source.Item, source.DIM1, source.DIM2, source.DIM3) " & _
-            ''    "WHEN MATCHED THEN " & _
-            ''        "UPDATE SET target.OnHand = source.OnHand, target.Begin_OH = source.Begin_OH, " & _
-            ''        "target.End_OH = source.End_OH, target.Cost = source.Cost, target.Retail = source.retail, " & _
-            ''        "target.Max_OH = source.Max_OH, target.Yrwk = source.YrWk, target.Committed = source.Committed;"
-
-
-            ''  code below changed the source for End_OH to OnHand
-
-
-            sql = "MERGE Item_Inv AS target USING _t1 AS source ON (source.Loc_Id = target.Loc_Id AND source.Sku = target.Sku " & _
-                  "AND source.eDate = target.eDate) " & _
-                  "WHEN NOT MATCHED BY TARGET THEN " & _
-                  "INSERT (Loc_Id, Sku, sDate, eDate, Cost, Retail, YrWk, Avail, Begin_OH, End_OH, Committed, " & _
-                      "Max_OH, Item, DIM1, DIM2, DIM3) " & _
-                  "VALUES (source.Loc_Id, source.Sku, source.sDate, source.eDate, source.Cost, source.Retail, " & _
-                      "source.YrWk, source.Avail, source.Begin_OH, source.End_OH, source.Committed, source.Max_OH, " & _
-                      "source.Item, source.DIM1, source.DIM2, source.DIM3) " & _
-              "WHEN MATCHED THEN " & _
-                  "UPDATE SET target.Avail = source.Avail, target.Begin_OH = source.Begin_OH, " & _
-                  "target.End_OH = source.End_OH, target.Cost = source.Cost, target.Retail = source.retail, " & _
-                  "target.Max_OH = source.Max_OH, target.Yrwk = source.YrWk, target.Committed = source.Committed;"
+            thisprocess = "XMLUpdate - Process Inventory - Merge"
+            Console.WriteLine("Merge _t1 and Item_Inv")
+            sql = "MERGE Item_Inv AS target USING _t1 AS source ON (source.Loc_Id = target.Loc_Id AND source.Sku = target.Sku " &
+                      "AND source.eDate = target.eDate) " &
+                      "WHEN NOT MATCHED BY TARGET THEN " &
+                      "INSERT (Loc_Id, Sku, sDate, eDate, Cost, Retail, YrWk, Avail, Begin_OH, End_OH, Committed, " &
+                          "Max_OH, Item, DIM1, DIM2, DIM3) " &
+                      "VALUES (source.Loc_Id, source.Sku, source.sDate, source.eDate, source.Cost, source.Retail, " &
+                          "source.YrWk, source.Avail, source.Begin_OH, source.End_OH, source.Committed, source.Max_OH, " &
+                          "source.Item, source.DIM1, source.DIM2, source.DIM3) " &
+                      "WHEN MATCHED THEN " &
+                      "UPDATE SET target.Avail = source.Avail, target.Begin_OH = source.Begin_OH, " &
+                      "target.End_OH = source.End_OH, target.Cost = source.Cost, target.Retail = source.retail, " &
+                      "target.Max_OH = source.Max_OH, target.Yrwk = source.YrWk, target.Committed = source.Committed;"
             cmd = New SqlCommand(sql, con)
             cmd.CommandTimeout = 960
             cmd.ExecuteNonQuery()
-            sql = "IF EXISTS (SELECT * FROM sysobjects WHERE name = '_t1' AND xtype = 'U') DROP TABLE dbo._t1; "
+            thisprocess = "XMLUpdate - Process Inventory - Update Begin_OH"
+            Console.WriteLine("Update Begin_OH")
+            sql = "UPDATE i SET i.Begin_OH = CASE WHEN Begin_OH IS NULL THEN ISNULL(End_OH,0) " &
+                    "-ISNULL(ADJ, 0) " &
+                    "- ISNULL(RECVD,0) " &
+                    "- ISNULL(XFER,0) " &
+                    "+ ISNULL(RTV,0) " &
+                    "+ ISNULL((SELECT ISNULL(SUM(Sold),0) FROM Item_Sales s " &
+                    "WHERE s.Loc_Id = i.Loc_Id AND s.Sku = i.Sku AND s.eDate = i.eDate),0) END " &
+                    "FROM Item_Inv i WHERE i.eDate = '" & thisEdate & "'"
             cmd = New SqlCommand(sql, con)
-            '' cmd.ExecuteNonQuery()
+            cmd.CommandTimeout = 960
+            cmd.ExecuteNonQuery()
+            thisprocess = "XMLUpdate - Process Inventory - Drop temp Table"
+            Console.WriteLine("Drop _t1")
+            sql = "IF OBJECT_ID('dbo._t1','U') IS NOT NULL DROP TABLE dbo. _t1; "
+            cmd = New SqlCommand(sql, con)
             con.Close()
 
             Dim m As String = "Updated " & cnt & " records"
@@ -900,7 +914,7 @@ Module Module1
         Catch ex As Exception
             If con.State = ConnectionState.Open Then con.Close()
             Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Process Inventory")
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
         End Try
     End Sub
 
@@ -915,11 +929,13 @@ Module Module1
             Dim ds As DataSet = New DataSet
             Dim dt As DataTable = New DataTable
             Dim xmlFile As XmlReader
+            thisprocess = "XMLUpdate - Process PREQ Header - Read XML File"
             xmlFile = Xml.XmlReader.Create(thePath, New XmlReaderSettings())
             ds.ReadXml(xmlFile)
             If ((ds.Tables.Count > 0) AndAlso ds.Tables(0).Rows.Count > 0) Then
                 con.open()
                 con2.open()
+                thisprocess = "XMLUpdate - Process PREQ Header - Delet from Purchase_Request_Header"
                 sql = "DELETE FROM Purchase_Request_Header"
                 cmd = New SqlCommand(sql, con)
                 cmd.ExecuteNonQuery()
@@ -965,11 +981,12 @@ Module Module1
                         oTest = row("EXTRACT_DATE")
                         If IsDBNull(oTest) Then oTest = 0
                         extract = CDate(oTest)
-                        sql = "INSERT INTO Purchase_Request_Header(PREQ_NO, Batch_Id, Loc_Id, " & _
-                            "Vendor_Id, Buyer, Order_Date, Deliver_Date, Cancel_Date, Order_Total, " & _
-                            "Allocated, Merged, Last_Update) " & _
-                            "SELECT '" & preq & "','" & batch & "','" & loc & "','" & vend_no & "','" & _
-                            buyer & "','" & ord & "','" & del & "','" & can & "'," & totlCost & ",'" & _
+                        thisprocess = "XMLUpdate - Process PREQ Header - Insert into Purchase_Request_Header"
+                        sql = "INSERT INTO Purchase_Request_Header(PREQ_NO, Batch_Id, Loc_Id, " &
+                            "Vendor_Id, Buyer, Order_Date, Deliver_Date, Cancel_Date, Order_Total, " &
+                            "Allocated, Merged, Last_Update) " &
+                            "SELECT '" & preq & "','" & batch & "','" & loc & "','" & vend_no & "','" &
+                            buyer & "','" & ord & "','" & del & "','" & can & "'," & totlCost & ",'" &
                             alloc & "','" & mrg & "','" & Date.Today & "'"
                         cmd = New SqlCommand(sql, con2)
                         cmd.ExecuteNonQuery()
@@ -991,7 +1008,7 @@ Module Module1
         Catch ex As Exception
             If con.State = ConnectionState.Open Then con.Close()
             Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Process PREQ Header")
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
         End Try
     End Sub
 
@@ -1007,12 +1024,14 @@ Module Module1
             Dim extract As Date
             Dim ds As DataSet = New DataSet
             Dim dt As DataTable = New DataTable
+            thisprocess = "XMLUpdate - Process PREQ Detail - Read XML File"
             Dim xmlfile As XmlReader
             xmlfile = Xml.XmlReader.Create(thePath, New XmlReaderSettings())
             ds.ReadXml(xmlfile)
             If ((ds.Tables.Count > 0) AndAlso ds.Tables(0).Rows.Count > 0) Then
                 con.open()
                 con2.Open()
+                thisprocess = "XMLUpdate - Process PREQ Detail - Delete from Purchase_Request_Detail"
                 sql = "DELETE FROM Purchase_Request_Detail"
                 cmd = New SqlCommand(sql, con)
                 cmd.ExecuteNonQuery()
@@ -1055,10 +1074,11 @@ Module Module1
                         qty = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         totlQty += qty
                         totlCost += (qty * cost)
-                        sql = "INSERT INTO Purchase_Request_Detail(PREQ_NO, Seq_No, Sku, Description, " & _
-                            "Stock_Units, Numer, Denom, Cost, Item, DIM1, DIM2, DIM3, Qty) " & _
-                            "SELECT '" & preq & "'," & seq & ",'" & sku & "','" & desc & "','" & _
-                            uom & "'," & numer & "," & denom & "," & cost & ",'" & item & "','" & _
+                        thisprocess = "XMLUpdate - Process PREQ Detail - Insert into Purchase_Request_Detail"
+                        sql = "INSERT INTO Purchase_Request_Detail(PREQ_NO, Seq_No, Sku, Description, " &
+                            "Stock_Units, Numer, Denom, Cost, Item, DIM1, DIM2, DIM3, Qty) " &
+                            "SELECT '" & preq & "'," & seq & ",'" & sku & "','" & desc & "','" &
+                            uom & "'," & numer & "," & denom & "," & cost & ",'" & item & "','" &
                             dim1 & "','" & dim2 & "','" & dim3 & "'," & qty & " "
                         cmd = New SqlCommand(sql, con2)
                         cmd.ExecuteNonQuery()
@@ -1090,7 +1110,7 @@ Module Module1
         Catch ex As Exception
             If con.State = ConnectionState.Open Then con.Close()
             Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Process PREQ Detail")
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
         End Try
     End Sub
 
@@ -1105,15 +1125,19 @@ Module Module1
             Dim datetime As DateTime
             Dim ds As DataSet = New DataSet
             Dim dt As DataTable = New DataTable
+            thisprocess = "XMLUpdate - Process PO Header - Read XML File"
             Dim xmlFile As XmlReader
             Dim row As DataRow
             xmlFile = Xml.XmlReader.Create(thePath, New XmlReaderSettings())
             ds.ReadXml(xmlFile)
             If ((ds.Tables.Count > 0) AndAlso ds.Tables(0).Rows.Count > 0) Then
                 con.open()
+                thisprocess = "XMLUpdate - Process PO Detail - Delete from PO_Header"
                 sql = "DELETE FROM PO_Header"
                 cmd = New SqlCommand(sql, con)
                 cmd.ExecuteNonQuery()
+                Console.WriteLine("Deleted everything in PO_Header")
+                thisprocess = "XMLUpdate - Process PO Header - Read XML File"
                 dt = ds.Tables(0)
                 For Each row In dt.Rows
                     oTest = row("PO")
@@ -1162,9 +1186,10 @@ Module Module1
                         End If
                         oTest = row("EXTRACT_DATE")
                         If Not IsDBNull(oTest) And Not IsNothing(oTest) Then datetime = CDate(oTest) Else datetime = Nothing
-                        sql = "IF NOT EXISTS (SELECT PO_NO FROM PO_Header WHERE PO_NO = '" & po & "') " & _
-                            "INSERT INTO PO_Header (Loc_Id, PO_NO, Order_Date, Due_Date, Cancel_Date, Vendor_Id, Buyer, Status, " & _
-                            "Amount, Recvd_Cost, Lines, Ord_Qty, Open_Lines, Open_Amt) " & _
+                        thisprocess = "XMLUpdate - Process PO Header - Insert into PO_Header"
+                        sql = "IF NOT EXISTS (SELECT PO_NO FROM PO_Header WHERE PO_NO = '" & po & "') " &
+                            "INSERT INTO PO_Header (Loc_Id, PO_NO, Order_Date, Due_Date, Cancel_Date, Vendor_Id, Buyer, Status, " &
+                            "Amount, Recvd_Cost, Lines, Ord_Qty, Open_Lines, Open_Amt) " &
                             "SELECT '" & store & "','" & po & "','" & ordDate & "','" & dueDate & "','" & canDate & "','" &
                             vendor & "','" & buyer & "','" & stat & "', " & amt & ", " & recvd_cost & ", " & lines & ", " &
                             ord_qty & ", " & open_lines & ", " & open_amt
@@ -1187,7 +1212,7 @@ Module Module1
         Catch ex As Exception
             If con.State = ConnectionState.Open Then con.Close()
             Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Process POHeader")
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
         End Try
     End Sub
 
@@ -1211,10 +1236,12 @@ Module Module1
             Dim loDate As Date = "2012-01-01"
             Dim thisDate As Date = Date.Today
             Dim xmlFile As XmlReader
+            thisprocess = "XMLUpdate - Process PO Detail - Read XML File"
             Dim row As DataRow
             xmlFile = Xml.XmlReader.Create(thepath, New XmlReaderSettings())
             ds.ReadXml(xmlFile)                                                                  '  bulk insert XML into dataset
             If ((ds.Tables.Count > 0) AndAlso ds.Tables(0).Rows.Count > 0) Then
+                thisprocess = "XMLUpdate - Process PO Detail - Delete from PO_Detail"
                 sql = "DELETE FROM PO_Detail"
                 con.open()
                 cmd = New SqlCommand(sql, con)
@@ -1269,36 +1296,26 @@ Module Module1
                         'stat = row("STATUS")
                         extractDate = row("EXTRACT_DATE")
                         If lastDate <> "" Then
-                            sql = "IF NOT EXISTS (SELECT PO_NO FROM PO_Detail WHERE PO_NO = '" & po & "' " & _
-                                "AND Sku = '" & item & "' AND Seq_No = " & seq & ") " & _
-                                "INSERT INTO PO_Detail (Loc_Id, PO_NO, Seq_No, Sku, Qty_Ordered, Qty_Recvd, Qty_Due, " & _
-                                "Cost, Retail, Last_Recvd_Date, Item, DIM1, DIM2, DIM3) " & _
+                            thisprocess = "XMLUpdate - Process PO Detail - Insert into PO_Detail"
+                            sql = "IF NOT EXISTS (SELECT PO_NO FROM PO_Detail WHERE PO_NO = '" & po & "' " &
+                                "AND Sku = '" & item & "' AND Seq_No = " & seq & ") " &
+                                "INSERT INTO PO_Detail (Loc_Id, PO_NO, Seq_No, Sku, Qty_Ordered, Qty_Recvd, Qty_Due, " &
+                                "Cost, Retail, Last_Recvd_Date, Item, DIM1, DIM2, DIM3) " &
                                 "SELECT '" & loc & "','" & po & "'," & seq & ",'" & item & "'," & oqty & "," & rqty & "," &
-                                eqty & "," & cost & "," & retail & ",'" & lastDate & "',Item, DIM1, DIM2, DIM3 FROM Item_Master " & _
+                                eqty & "," & cost & "," & retail & ",'" & lastDate & "',Item, DIM1, DIM2, DIM3 FROM Item_Master " &
                                 "WHERE Sku = '" & item & "'"
                         Else
-                            sql = " IF NOT EXISTS (SELECT PO_NO FROM PO_Detail WHERE PO_NO = '" & po & "' " & _
-                                "AND Sku = '" & item & "' AND Seq_No = " & seq & ") " & _
-                                "INSERT INTO PO_Detail (Loc_Id, PO_NO, Seq_No, Sku, Qty_Ordered, Qty_Recvd, Qty_Due, " & _
-                                "Cost, Retail, Last_Recvd_Date, Item, DIM1, DIM2, DIM3) " & _
+                            sql = " IF NOT EXISTS (SELECT PO_NO FROM PO_Detail WHERE PO_NO = '" & po & "' " &
+                                "AND Sku = '" & item & "' AND Seq_No = " & seq & ") " &
+                                "INSERT INTO PO_Detail (Loc_Id, PO_NO, Seq_No, Sku, Qty_Ordered, Qty_Recvd, Qty_Due, " &
+                                "Cost, Retail, Last_Recvd_Date, Item, DIM1, DIM2, DIM3) " &
                                 "SELECT '" & loc & "','" & po & "'," & seq & ",'" & item & "'," & oqty & "," & rqty & "," &
-                                eqty & "," & cost & "," & retail & ", NULL, Item, DIM1, DIM2, DIM3 FROM Item_Master " & _
+                                eqty & "," & cost & "," & retail & ", NULL, Item, DIM1, DIM2, DIM3 FROM Item_Master " &
                                 "WHERE Sku = '" & item & "'"
                         End If
-
-
-
-
-                        'If po = "1-41789" And item = "596477-2" Then
-                        '    Console.WriteLine(sql)
-                        '    Console.ReadLine()
-                        'End If
-
-
-
                         cmd = New SqlCommand(sql, con)
+                        cmd.CommandTimeout = 480
                         cmd.ExecuteNonQuery()
-                        ''End If
                     Else
                         oTest = row("ORD_QTY")
                         If IsNumeric(oTest) Then oqty = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
@@ -1344,7 +1361,7 @@ Module Module1
         Catch ex As Exception
             If con.State = ConnectionState.Open Then con.Close()
             Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Process PODetail")
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
         End Try
     End Sub
 
@@ -1355,7 +1372,7 @@ Module Module1
             Dim cnt As Int32 = 0
             Dim oTest As Object
             Dim isPhysical As Boolean = False
-            Dim id, sku, item, dim1, dim2, dim3, store, loc, dept, buyer, clss, sql, cust, tkt, reason,
+            Dim id, sku, item, dim1, dim2, dim3, store, loc, dept, buyer, clss, sql, cust, tkt, reason, transtype,
                 coupon, typ, nam, ttype, ordtype, whsl, station, drawer, sales_rep, userid, sale_type As String
             Dim seq As Int32
             Dim cost, retail, mkdn, tCost, tRetail, tMkdn, qty, tQty As Decimal
@@ -1372,6 +1389,7 @@ Module Module1
             Dim row As DataRow
             If theField = "UnpostedSales" Then
                 con.open()
+                thisprocess = "XMLUpdate - Process Date - Delete from Unposted_Sales"
                 sql = "DELETE FROM Unposted_Sales"
                 cmd = New SqlCommand(sql, con)
                 cmd.ExecuteNonQuery()
@@ -1379,6 +1397,7 @@ Module Module1
             End If
             If InStr(thePath, "Physical") > 0 Then isPhysical = True
             xmlFile = Xml.XmlReader.Create(thePath, New XmlReaderSettings())
+            thisprocess = "XMLUpdate - Process Data - Read " & theField & " XML File"
             ds.ReadXml(xmlFile)                                                                  '  bulk insert XML into dataset
             If ((ds.Tables.Count > 0) AndAlso ds.Tables(0).Rows.Count > 0) Then
                 totlQty = 0
@@ -1434,8 +1453,8 @@ Module Module1
                             If IsNumeric(oTest) Then retail = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         End If
                         totlQty += qty
-                        totlCost += (qty * cost)
-                        totlRetail += (qty * retail)
+                        totlCost += Decimal.Round((qty * cost), 4, MidpointRounding.AwayFromZero)
+                        totlRetail += Decimal.Round((qty * retail), 4, MidpointRounding.AwayFromZero)
                         oTest = row("TRANS_DATE")
                         If oTest = "0" Then oTest = "1900-01-01 00:00:00"
 
@@ -1483,6 +1502,14 @@ Module Module1
                                 sale_type = "T"
                                 If ordtype = "WHOLESALE" Then whsl = "Y"
                             Case "Order"
+                                oTest = row("STR_ID")
+                                If IsDBNull(oTest) Or IsNothing(oTest) Then store = "UNKNOWN" Else store = CStr(oTest)
+                                oTest = row("DEPT")
+                                If Not IsDBNull(oTest) And Not IsNothing(oTest) Then dept = CStr(oTest) Else dept = "UNKNOWN"
+                                oTest = row("TKT_NO")
+                                If IsDBNull(oTest) Or IsNothing(oTest) Then tkt = "UNKNOWN" Else tkt = CStr(oTest)
+                                oTest = row("TKT_DATE")
+                                tktDate = CDate(oTest)
                                 oTest = row("STATION")
                                 If IsDBNull(oTest) Then station = "UNKNOWN" Else station = CStr(oTest)
                                 oTest = row("DRAWER")
@@ -1491,7 +1518,7 @@ Module Module1
                                 If Not IsDBNull(oTest) And Not IsNothing(oTest) And oTest <> "" Then mkdn = CDec(oTest) Else mkdn = 0
                                 totlMarkdown += mkdn
                                 oTest = row("MKDN_REASON")
-                                If Not IsDBNull(oTest) Then reason = CStr(oTest)
+                                If Not IsDBNull(oTest) Then reason = CStr(oTest) Else reason = ""
                                 oTest = row("COUPON_CODE")
                                 If Not IsDBNull(oTest) Then coupon = CStr(oTest)
                                 oTest = row("DEPT")
@@ -1504,34 +1531,37 @@ Module Module1
                                 If Not IsDBNull(oTest) Then cust = CStr(oTest) Else cust = "UNKNOWN"
                                 oTest = row("SALES_REP")
                                 If Not IsDBNull(oTest) Then sales_rep = CStr(oTest) Else sales_rep = ""
+                                oTest = row("ORD_TYPE")
+                                ordtype = CStr(oTest)
                                 sale_type = "O"
                             Case Else
                                 mkdn = 0
-                                store = ""
-                                dept = ""
-                                buyer = ""
-                                clss = ""
-                                reason = ""
-                                coupon = ""
-                                cust = ""
-                                tkt = ""
-                                ordtype = ""
-                                userid = ""
-                                sales_rep = ""
-                                station = ""
-                                drawer = ""
-                                sale_type = ""
                         End Select
 
+                        oTest = row("TRANS_DATE")
+                        If oTest = "0" Then oTest = "1900-01-01 00:00:00"
+
+                        If CDate(oTest) < loDate Then GoTo 10
+
+                        If Not IsDBNull(oTest) And Not IsNothing(oTest) And oTest <> "" Then
+                            transDate = DateTime.Parse(oTest)
+                        Else : transDate = "1900-01-01 00:00:00"
+                        End If
+
                         oTest = row("EXTRACT_DATE")
-                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then extractDate = oTest
+                        If oTest = "0" Then oTest = "1900-01-01 00:00:00"
+                        If Not IsDBNull(oTest) And Not IsNothing(oTest) And oTest <> "" Then
+                            extractDate = DateTime.Parse(oTest)
+                        Else : extractDate = "1900-01-01 00:00:00"
+                        End If
 
                         Dim itexists As Boolean = Check_Log(con2, id, seq, loc, sku, transDate, store)
                         If Not itexists Then
-                            tqty += qty
-                            tcost += (qty * cost)
-                            tretail += (qty * retail)
+                            tQty += qty
+                            tCost += (qty * cost)
+                            tRetail += (qty * retail)
                             tMkdn += mkdn
+                            thisprocess = "XMLUpdate - Process Data - Get eDate"
                             If con2.state = ConnectionState.Closed Then con2.open()
                             sql = "SELECT eDate FROM Calendar WHERE '" & CDate(transDate) & "' BETWEEN sDate AND eDate AND Week_ID > 0"
                             cmd = New SqlCommand(sql, con2)
@@ -1546,6 +1576,9 @@ Module Module1
                             If IsNothing(row) Then
                                 eDateTBL.Rows.Add(eDate)                 ' Add date to eDateTBL if it isn't already there
                             End If
+
+                            If theField = "Order" Then transtype = "Sold" Else transtype = theField
+
                             If qty <> 0 Then                             ' Don't do anything unless qty <> 0
                                 Call Update_Tables(store, loc, eDate, sku, qty, retail, cost, mkdn, theField, dept, buyer, clss, "", whsl, con2)
                                 datetimenow = DateAndTime.Now
@@ -1557,10 +1590,12 @@ Module Module1
                                     "MKDN, TRANS_DATE, [TYPE], POST_DATE, DEPT, BUYER, CLASS, EXTRACT_DATE, CUST_NO, TKT_NO, MKDN_REASON, " &
                                     "COUPON_CODE, ITEM, DIM1, DIM2, DIM3, ORD_TYPE, TKT_DATE, SALES_REP, USER_ID, STATION, DRAWER, SALE_TYPE) " &
                                     "SELECT '" & id & "', " & seq & ", '" & store & "', '" & sku & "','" & loc & "'," &
-                                    qty & "," & cost & "," & retail & ", " & mkdn & ",'" & transDate & "','" & theField & "','" & datetimenow & "','" &
+                                    qty & "," & cost & "," & retail & ", " & mkdn & ",'" & transDate & "','" & transtype & "','" & datetimenow & "','" &
                                     dept & "','" & buyer & "','" & clss & "', '" & extractDate & "','" & cust & "','" & tkt & "','" &
                                     reason & "','" & coupon & "','" & item & "','" & dim1 & "','" & dim2 & "','" & dim3 & "','" & ordtype & "','" &
                                     tktDate & "','" & sales_rep & "','" & userid & "','" & station & "','" & drawer & "','" & sale_type & "'"
+
+                                thisprocess = "XMLUpdate - Process Data - Insert into Daily_Transaction_Log - " & sql & ""
                                 cmd = New SqlCommand(sql, con)
                                 cmd.CommandTimeout = 120
                                 cmd.ExecuteNonQuery()
@@ -1608,7 +1643,7 @@ Module Module1
         Catch ex As Exception
             If con.State = ConnectionState.Open Then con.Close()
             Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Process Data " & theField)
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
             MsgBox(ex.Message)
         End Try
 
@@ -1619,10 +1654,11 @@ Module Module1
             Dim reslt As Boolean = False
             If con2.State = ConnectionState.Open Then con2.Close()
             con2.open()
-            Dim sql As String = "SELECT TRANS_ID FROM Daily_Transaction_Log WHERE TRANS_ID = '" & id & "' " & _
-                "AND SEQUENCE_NO = " & seq & " AND LOCATION = '" & location & "' AND SKU = '" & sku & "' " & _
+            Dim sql As String = "SELECT TRANS_ID FROM Daily_Transaction_Log WHERE TRANS_ID = '" & id & "' " &
+                "AND SEQUENCE_NO = " & seq & " AND LOCATION = '" & location & "' AND SKU = '" & sku & "' " &
                 "AND TRANS_DATE = '" & dte & "'"
             If store <> "" Then sql &= " AND STORE = '" & store & "'"
+            thisprocess = "XMLUpdate - Check_Log - " & sql & ""
             Dim cmd As SqlCommand = New SqlCommand(sql, con2)
             Dim rdr As SqlDataReader = cmd.ExecuteReader
             While rdr.Read
@@ -1637,7 +1673,7 @@ Module Module1
         Catch ex As Exception
             If con2.State = ConnectionState.Open Then con2.Close()
             Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Check Log")
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
         End Try
     End Function
 
@@ -1696,6 +1732,7 @@ Module Module1
                     "FROM Item_Inv AS d " &
                         "WHERE Loc_Id = '" & Trim(location) & "' AND Sku = '" & Trim(item) & "' AND eDate = '" & thisEdate & "'"
             End If
+            thisprocess = "XMLUpdate - Update Tables - " & sql & ""
             cmd = New SqlCommand(sql, con2)
             cmd.CommandTimeout = 120
             cmd.ExecuteNonQuery()
@@ -1708,7 +1745,7 @@ Module Module1
             If con.State = ConnectionState.Open Then con.Close()
             If con2.State = ConnectionState.Open Then con2.Close()
             Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Update Tables " & theField)
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
             MsgBox(ex.Message)
         End Try
     End Sub
@@ -1727,7 +1764,7 @@ Module Module1
             Dim thisUser = System.Environment.UserName
             xmlFile = Xml.XmlReader.Create(thePath, New XmlReaderSettings())
             ds.ReadXml(xmlFile)
-
+            thisprocess = "XMLUpdate - Process Other Data - Read XML File " & thePath & ""
             If ((ds.Tables.Count > 0) AndAlso ds.Tables(0).Rows.Count > 0) Then
                 dt = ds.Tables(0)
                 For Each row In dt.Rows
@@ -1746,21 +1783,21 @@ Module Module1
                             If theTable = "Classes" Then
                                 oTest = row("Dept")
                                 If Not IsDBNull(oTest) And Not IsNothing(oTest) Then dept = oTest Else dept = ""
-                                sql = "IF NOT EXISTS (SELECT ID FROM Classes WHERE ID = '" & id & "' AND Dept = '" & dept & "') " & _
-                                    "INSERT INTO Classes (ID, Dept, Description, Orig_Date, Status) " & _
-                                    "SELECT '" & id & "','" & dept & "','" & descr & "','" & CDate(Date.Today) & "','Active' " & _
-                                    "ELSE " & _
-                                    "UPDATE Classes SET Description = '" & descr & "', Dept = '" & dept & "', Extract_Date = '" & eDate & "' " & _
+                                sql = "IF NOT EXISTS (SELECT ID FROM Classes WHERE ID = '" & id & "' AND Dept = '" & dept & "') " &
+                                    "INSERT INTO Classes (ID, Dept, Description, Orig_Date, Status) " &
+                                    "SELECT '" & id & "','" & dept & "','" & descr & "','" & CDate(Date.Today) & "','Active' " &
+                                    "ELSE " &
+                                    "UPDATE Classes SET Description = '" & descr & "', Dept = '" & dept & "', Extract_Date = '" & eDate & "' " &
                                     "WHERE ID = '" & id & "' AND Dept = '" & dept & "'"
                             Else
-                                sql = "IF NOT EXISTS (SELECT ID FROM " & theTable & " WHERE ID = '" & id & "') " & _
-                                    "INSERT INTO " & theTable & " (ID, Description, Orig_Date, Status) " & _
-                                    "SELECT '" & id & "','" & descr & "','" & CDate(Date.Today) & "','Active' " & _
-                                    "ELSE " & _
-                                    "UPDATE " & theTable & " SET Description = '" & descr & "', Extract_Date = '" & eDate & "' " & _
+                                sql = "IF NOT EXISTS (SELECT ID FROM " & theTable & " WHERE ID = '" & id & "') " &
+                                    "INSERT INTO " & theTable & " (ID, Description, Orig_Date, Status) " &
+                                    "SELECT '" & id & "','" & descr & "','" & CDate(Date.Today) & "','Active' " &
+                                    "ELSE " &
+                                    "UPDATE " & theTable & " SET Description = '" & descr & "', Extract_Date = '" & eDate & "' " &
                                     "WHERE ID = '" & id & "' "
                             End If
-                            ''Console.WriteLine(sql)
+                            thisprocess = "XMLUpdate - Process Other Data - " & sql & ""
                             con.open()
                             cmd = New SqlCommand(sql, con)
                             cmd.CommandTimeout = 120
@@ -1772,7 +1809,7 @@ Module Module1
                         If records <> cnt Then
                             msg = "Expected " & records & " Received " & cnt
                             Dim el As New XMLUpdate.ErrorLogger
-                            el.WriteToErrorLog(msg, "Records Received Mismatch", "Process " & theTable)
+                            el.WriteToErrorLog(msg, "Records Received Mismatch", thisprocess)
                         End If
                     End If
                 Next
@@ -1786,9 +1823,10 @@ Module Module1
 
             '                           Insert a record for buyer OTHER if we don't already have one
             ''If theTable = "Buyers" Then
+            thisprocess = "XMLUpdate - Process Other Data - Fix Buyers"
             con.open()
-            sql = "IF NOT EXISTS (SELECT * FROM Buyers WHERE ID = 'OTHER') " & _
-           "INSERT INTO Buyers (ID, Description, Orig_Date) " & _
+            sql = "IF NOT EXISTS (SELECT * FROM Buyers WHERE ID = 'OTHER') " &
+           "INSERT INTO Buyers (ID, Description, Orig_Date) " &
            "SELECT 'OTHER','MISCELLANEOUS BUYER','" & CDate(Date.Today) & "'"
             cmd = New SqlCommand(sql, con)
             cmd.CommandTimeout = 120
@@ -1803,7 +1841,7 @@ Module Module1
             If con.State = ConnectionState.Open Then con.Close()
             If con2.State = ConnectionState.Open Then con2.Close()
             Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Process Other Data " & theTable)
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
             MsgBox(ex.Message)
 
         End Try
@@ -1820,6 +1858,7 @@ Module Module1
             Dim seq As Integer
             thePath = xmlPath & "\Coupons.xml"
             Dim xmlFile As XmlReader
+            thisprocess = "XMLUpdate - Process Coupons - Read XML File"
             xmlFile = Xml.XmlReader.Create(thePath, New XmlReaderSettings())
             ds.ReadXml(xmlFile)
             If ((ds.Tables.Count > 0) AndAlso ds.Tables(0).Rows.Count > 0) Then
@@ -1834,8 +1873,10 @@ Module Module1
                     If Not IsNothing(oTest) And oTest <> "" Then code = CStr(oTest)
                     oTest = row("SEQ_NO")
                     If IsNumeric(oTest) Then seq = CInt(oTest) Else seq = 0
-                    sql = "UPDATE Daily_Transaction_Log SET COUPON_CODE = '" & code & "' " & _
+                    sql = "UPDATE Daily_Transaction_Log SET COUPON_CODE = '" & code & "' " &
                         "WHERE TRANS_ID = '" & id & "' AND SEQUENCE_NO = " & seq & ""
+
+                    thisprocess = "XMLUpdate - Process Coupons - " & sql & ""
                     cmd = New SqlCommand(sql, con)
                     cmd.ExecuteNonQuery()
                 Next
@@ -1845,7 +1886,7 @@ Module Module1
         Catch ex As Exception
             If con.State = ConnectionState.Open Then con.Close()
             Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Process Coupons")
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
             MsgBox(ex.Message)
         End Try
     End Sub
@@ -1853,19 +1894,20 @@ Module Module1
     Private Sub Merge_Tickets()
         Try
             Console.WriteLine("Updating Tickets table")
+            thisprocess = "XMLUpdate - Merge Tickets"
             con.Open()
-            sql = "DECLARE @maxDate AS Date " & _
-                "SET @maxDate = (SELECT MAX(Date) FROM Tickets) " & _
-                "SET @maxDate = CASE WHEN @maxDate IS NULL THEN '1900-01-01' END " & _
-                "SELECT CONVERT(varchar(10),STORE) AS Str_Id, CONVERT(varchar(30),TRANS_ID) AS Ticket_No, " & _
-                "CONVERT(varchar(30),CUST_NO) AS Cust_No, CONVERT(date,TRANS_DATE) AS 'Date', " & _
-                "ISNULL(SUM(QTY * RETAIL),0) as Amt, COUNT(*) AS Items INTO #t1 FROM Daily_Transaction_Log " & _
-                "WHERE TYPE = 'Sold' AND TRANS_DATE >= @maxDate GROUP BY STORE, TRANS_ID, Cust_No, TRANS_DATE " & _
-                "MERGE Tickets AS t " & _
-                "USING #t1 AS s " & _
-                "ON (t.Str_Id = s.Str_Id AND t.Ticket_No = s.Ticket_No AND t.Cust_No = s.Cust_No AND t.Date = s.Date) " & _
-                "WHEN NOT MATCHED BY Target " & _
-                "THEN INSERT (Ticket_No, Str_Id, Cust_No, Date, Amt, Items) " & _
+            sql = "DECLARE @maxDate AS Date " &
+                "SET @maxDate = (SELECT MAX(Date) FROM Tickets) " &
+                "SET @maxDate = CASE WHEN @maxDate IS NULL THEN '1900-01-01' END " &
+                "SELECT CONVERT(varchar(10),STORE) AS Str_Id, CONVERT(varchar(30),TRANS_ID) AS Ticket_No, " &
+                "CONVERT(varchar(30),CUST_NO) AS Cust_No, CONVERT(date,TRANS_DATE) AS 'Date', " &
+                "ISNULL(SUM(QTY * RETAIL),0) as Amt, COUNT(*) AS Items INTO #t1 FROM Daily_Transaction_Log " &
+                "WHERE TYPE = 'Sold' AND TRANS_DATE >= @maxDate GROUP BY STORE, TRANS_ID, Cust_No, TRANS_DATE " &
+                "MERGE Tickets AS t " &
+                "USING #t1 AS s " &
+                "ON (t.Str_Id = s.Str_Id AND t.Ticket_No = s.Ticket_No AND t.Cust_No = s.Cust_No AND t.Date = s.Date) " &
+                "WHEN NOT MATCHED BY Target " &
+                "THEN INSERT (Ticket_No, Str_Id, Cust_No, Date, Amt, Items) " &
                 "VALUES (s.Ticket_No, s.Str_Id, s.Cust_No, s.Date, s.Amt, s.Items);"
             cmd = New SqlCommand(sql, con)
             cmd.ExecuteNonQuery()
@@ -1876,7 +1918,7 @@ Module Module1
             If con.State = ConnectionState.Open Then con.Close()
             If con2.State = ConnectionState.Open Then con2.Close()
             Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Merge_Ticket")
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
             MsgBox(ex.Message)
         End Try
     End Sub
@@ -1886,6 +1928,7 @@ Module Module1
             Dim stopwatch As New Stopwatch
             stopwatch.Start()
             Console.WriteLine("Updating Max_OH")
+            thisprocess = "XMLUpdate - Set Max On Hand - Select Items"
             If con.State = ConnectionState.Open Then con.Close()
             If con2.State = ConnectionState.Open Then con2.Close()
             If con3.State = ConnectionState.Open Then con3.Close()
@@ -1896,10 +1939,10 @@ Module Module1
             Dim edate As Date
             con.Open()
             con2.Open()
-            sql = "SELECT Loc_Id, i.Sku, eDate, End_OH INTO #t1 FROM Item_Inv i WHERE eDate = '" & thisDate & "' " & _
-               "SELECT Loc_Id, Sku, eDate, SUM(ISNULL(Sold,0)) AS Sold INTO #t2 FROM Item_Sales " & _
-               "WHERE eDate = '" & thisDate & "' GROUP BY Loc_Id, Sku, eDate " & _
-               "SELECT t1. Loc_Id, t1.Sku, t1.eDate, t1.End_OH, ISNULL(t2.Sold,0) AS Sold FROM #t1 t1 " & _
+            sql = "SELECT Loc_Id, i.Sku, eDate, End_OH INTO #t1 FROM Item_Inv i WHERE eDate = '" & thisDate & "' " &
+               "SELECT Loc_Id, Sku, eDate, SUM(ISNULL(Sold,0)) AS Sold INTO #t2 FROM Item_Sales " &
+               "WHERE eDate = '" & thisDate & "' GROUP BY Loc_Id, Sku, eDate " &
+               "SELECT t1. Loc_Id, t1.Sku, t1.eDate, t1.End_OH, ISNULL(t2.Sold,0) AS Sold FROM #t1 t1 " &
                "LEFT JOIN #t2 t2 ON t2.Loc_Id = t1.Loc_Id AND t2.Sku = t1.Sku AND t1.eDate = t2.eDate"
             cmd = New SqlCommand(sql, con)
             cmd.CommandTimeout = 960
@@ -1908,7 +1951,7 @@ Module Module1
                 cnt += 1
                 If cnt Mod 1000 = 0 Then Console.WriteLine(cnt)
                 oTest = rdr("End_OH")
-                If IsDBNull(oTest) Then End_OH = 0 Else End_OH = CDec(oTest)
+                If IsDBNull(oTest) Then end_OH = 0 Else end_OH = CDec(oTest)
                 oTest = rdr("Sku")
                 If IsDBNull(oTest) Then sku = "" Else sku = Replace(oTest, "'", "''")
                 oTest = rdr("Loc_Id")
@@ -1925,6 +1968,7 @@ Module Module1
                 If maxx < 0 Then maxx = 0
                 sql = "UPDATE Item_Inv SET Max_OH = " & maxx & " WHERE Loc_Id = '" & location & "' AND Sku = '" &
                     sku & "' AND eDate = '" & thisDate & "'"
+                thisprocess = "XMLUpdate - Set Max On Hand - " & sql & ""
                 cmd = New SqlCommand(sql, con2)
                 cmd.ExecuteNonQuery()
             End While
@@ -1937,44 +1981,60 @@ Module Module1
             If con.State = ConnectionState.Open Then con.Close()
             If con2.State = ConnectionState.Open Then con2.Close()
             Dim el As New XMLUpdate.ErrorLogger
-            el.WriteToErrorLog(ex.Message, ex.StackTrace, "Set Max_OH")
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
         End Try
     End Sub
 
     Private Sub Update_Process_Log(ByRef modul As String, ByRef process As String, ByRef m As String, ByRef stat As String)
-        stopWatch.Stop()
-        Dim ts As TimeSpan = stopWatch.Elapsed
-        Dim et As String = String.Format("{0:00}:{1:00}:{2:00}:{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10)
-        Dim pgm As String = "XMLUpdate"
-        con.Open()
-        sql = "INSERT INTO Process_Log (Date, Program, Module, Process, Message, Status, Duration) " & _
-            "SELECT '" & Date.Now & "','" & pgm & "','" & modul & "','" & process & "','" & m & "','" & stat & "','" & et & "'"
-        cmd = New SqlCommand(sql, con)
-        cmd.CommandTimeout = 120
-        cmd.ExecuteNonQuery()
-        con.Close()
+        Try
+            stopWatch.Stop()
+            Dim ts As TimeSpan = stopWatch.Elapsed
+            Dim et As String = String.Format("{0:00}:{1:00}:{2:00}:{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10)
+            Dim pgm As String = "XMLUpdate"
+            con.Open()
+            sql = "INSERT INTO Process_Log (Date, Program, Module, Process, Message, Status, Duration) " &
+                "SELECT '" & Date.Now & "','" & pgm & "','" & modul & "','" & process & "','" & m & "','" & stat & "','" & et & "'"
+            thisprocess = "XMLUpdate - Update Process Log - " & sql & ""
+            cmd = New SqlCommand(sql, con)
+            cmd.CommandTimeout = 120
+            cmd.ExecuteNonQuery()
+            con.Close()
+        Catch ex As Exception
+            If con.State = ConnectionState.Open Then con.Close()
+            If con2.State = ConnectionState.Open Then con2.Close()
+            Dim el As New XMLUpdate.ErrorLogger
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
+        End Try
     End Sub
 
     Private Sub Update_Store_Table()
-        con.Open()
-        con2.Open()
-        sql = "SELECT DISTINCT Str_ID FROM Item_Sales"
-        cmd = New SqlCommand(sql, con)
-        rdr = cmd.ExecuteReader
-        While rdr.Read
-            oTest = rdr("Str_ID")
-            If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
-                sql = "IF NOT EXISTS (SELECT * FROM Stores WHERE ID = '" & CStr(oTest) & "') " &
-                    "INSERT INTO Stores(ID, Description, Status, Last_Change_Date, Last_Change_User) " &
-                    "SELECT '" & CStr(oTest) & "','" & CStr(oTest) & "','Active','" & Date.Today & "','RC'"
-                cmd = New SqlCommand(sql, con2)
-                cmd.ExecuteNonQuery()
-            End If
-        End While
-        con.Close()
-        con2.Close()
-        Dim m As String = ""
-        Call Update_Process_Log("1", "Update Stores for Wholesale", m, "")
+        Try
+            con.Open()
+            con2.Open()
+            sql = "SELECT DISTINCT Str_ID FROM Item_Sales"
+            cmd = New SqlCommand(sql, con)
+            rdr = cmd.ExecuteReader
+            While rdr.Read
+                oTest = rdr("Str_ID")
+                If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
+                    sql = "IF NOT EXISTS (SELECT * FROM Stores WHERE ID = '" & CStr(oTest) & "') " &
+                        "INSERT INTO Stores(ID, Description, Status, Last_Change_Date, Last_Change_User) " &
+                        "SELECT '" & CStr(oTest) & "','" & CStr(oTest) & "','Active','" & Date.Today & "','RC'"
+                    thisprocess = "XMLUpdate - Update Store Table - " & sql & ""
+                    cmd = New SqlCommand(sql, con2)
+                    cmd.ExecuteNonQuery()
+                End If
+            End While
+            con.Close()
+            con2.Close()
+            Dim m As String = ""
+            Call Update_Process_Log("1", "Update Stores for Wholesale", m, "")
+        Catch ex As Exception
+            If con.State = ConnectionState.Open Then con.Close()
+            If con2.State = ConnectionState.Open Then con2.Close()
+            Dim el As New XMLUpdate.ErrorLogger
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
+        End Try
     End Sub
 
     Private Function FileSize(ByVal fileName As String)

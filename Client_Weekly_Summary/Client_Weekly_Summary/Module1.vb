@@ -61,13 +61,13 @@ Module Module1
         End Try
 
 
-        ''client = "TCM"
-        ''server = "ATL-SQL14"
-        ''dbase = "TCM"
-        ''xmlPath = "c:\retailclarity\xmls\tcm"
-        ''sqlUserId = "RCSQLADMIN"
-        ''sqlPassword = "Adv@nc3d525!"
-        ''dateStr = "8/12/2017"
+        ''client = "PARGIF"
+        ''server = "LP-CURTIS"
+        ''dbase = "PARGIF"
+        ''xmlPath = "c:\retailclarity\xmls\PARGIF"
+        ''sqlUserId = "sa"
+        ''sqlPassword = "PGadm01!!"
+        ''dateStr = "8/19/2017"
         ''errorLog = "c:\retailclarity\errors"
 
 
@@ -463,7 +463,9 @@ Module Module1
                 Dim el As New Client_Weekly_Summary.ErrorLogger
                 el.WriteToErrorLog(ex.Message, ex.StackTrace, "Client_Weekly_Summary, Sales")
             End Try
+            '----------------------------------------------------------------------------------------------------------------------------------
             '---------------------------------------------------------- Sales Plan ------------------------------------------------------------
+            '----------------------------------------------------------------------------------------------------------------------------------
             Try
                 If Has_Sales_Plan Then
                     stopWatch.Start()
@@ -471,6 +473,8 @@ Module Module1
                     Dim year, period, week, yrprd, prdwk As Integer
                     Dim planamt, planmkdn As Decimal
                     Dim sdate, edate As Date
+                    Dim loc As String
+                    Dim oTest As Object
                     con.Open()
                     sql = "UPDATE Sales_Summary SET Plan_Sales = 0, Plan_Mkdn = 0 WHERE eDate >= '" & End_Date & "' "
                     cmd = New SqlCommand(sql, con)
@@ -479,7 +483,7 @@ Module Module1
                     con.Close()
 
                     con.Open()
-                    sql = "SELECT c.Plan_Year AS Year_Id, c.Str_Id, c.Prd_Id, s.Week_Id, cl.sDate, cl.eDate, cl.YrPrd, PrdWk, " & _
+                    sql = "SELECT c.Plan_Year AS Year_Id, c.Str_Id, s.Inv_Loc, c.Prd_Id, s.Week_Id, cl.sDate, cl.eDate, cl.YrPrd, PrdWk, " & _
                         "c.Dept, c.Buyer, c.Class, ISNULL(s.AMT * c.Pct * b.Pct,0) AS PlanAmt, " & _
                         "ISNULL(s.AMT * c.Pct * b.Pct,0) * ISNULL(s.Mkdn_Pct,0) AS PlanMkdn FROM Class_Pct c " & _
                         "LEFT JOIN Buyer_Pct b ON b.Plan_Year = c.Plan_Year AND b.Str_Id = c.Str_Id AND b.Prd_Id = c.Prd_Id " & _
@@ -488,16 +492,21 @@ Module Module1
                         "AND s.Prd_Id = c.Prd_Id " & _
                         "LEFT JOIN Calendar cl ON cl.Year_Id = s.Year_Id AND cl.Prd_Id = s.Prd_Id AND cl.PrdWk = s.Week_Id " & _
                         "AND cl.PrdWk > 0 " & _
+                        "LEFT JOIN Stores s ON s.ID = c.Str_Id " & _
                         "WHERE cl.eDate >= '" & End_Date & "' AND s.Status = 'Active'"
                     cmd = New SqlCommand(sql, con)
                     cmd.CommandTimeout = 120
                     rdr = cmd.ExecuteReader
                     cnt = 0
+                    con2.Open()
                     While rdr.Read
                         cnt += 1
                         If cnt Mod 1000 = 0 Then Console.WriteLine("Updated Plan_Sales for " & cnt & " records")
                         year = rdr("Year_Id")
                         store = rdr("Str_Id")
+                        oTest = rdr("Inv_loc")
+                        If IsDBNull(oTest) Then oTest = store
+                        loc = CStr(oTest)
                         period = rdr("Prd_Id")
                         week = rdr("Week_Id")
                         sdate = rdr("sDate")
@@ -510,23 +519,22 @@ Module Module1
                         planamt = rdr("PlanAmt")
                         planmkdn = rdr("PlanMkdn")
                         sql = "IF NOT EXISTS (SELECT Plan_Sales FROM Sales_Summary WHERE Year_Id = " & year & " " & _
-                            "AND Str_Id = '" & store & "' AND Prd_Id = " & period & " AND Week_Id = " & week & " " & _
-                            "AND Dept = '" & dept & "' AND Buyer = '" & buyer & "' AND Class = '" & clss & "') " & _
-                            "INSERT INTO Sales_Summary (Str_Id, Year_Id, Prd_Id, Week_Id, Dept, Buyer, Class, sDate, eDate, " & _
+                            "AND Str_Id = '" & store & "' AND Loc_Id = '" & loc & "' AND AND Prd_Id = " & period & " " & _
+                            "AND Week_Id = " & week & " AND Dept = '" & dept & "' AND Buyer = '" & buyer & "' AND Class = '" & clss & "') " & _
+                            "INSERT INTO Sales_Summary (Str_Id, Loc_Id, Year_Id, Prd_Id, Week_Id, Dept, Buyer, Class, sDate, eDate, " & _
                                 "YrPrd, Week_Num, Plan_Sales, Plan_Mkdn) " & _
-                            "SELECT '" & store & "'," & year & "," & period & "," & prdwk & ",'" & dept & "','" & buyer & "','" &
+                            "SELECT '" & store & "','" & loc & "','" & year & "," & period & "," & prdwk & ",'" & dept & "','" & buyer & "','" &
                             clss & "','" & sdate & "','" & edate & "'," & yrprd & "," & week & "," & planamt & "," & planmkdn & " " & _
                             "ELSE " & _
                             "UPDATE Sales_Summary SET Plan_Sales = " & planamt & ", Plan_Mkdn = " & planmkdn & " " & _
-                            "WHERE Str_Id = '" & store & "' AND Year_Id = " & year & " AND Prd_Id = " & period & " " & _
+                            "WHERE Str_Id = '" & store & "' AND Loc_Id = '" & loc & "' AND Year_Id = " & year & " AND Prd_Id = " & period & " " & _
                             "AND Week_Id = " & week & " AND Dept = '" & dept & "' AND Buyer = '" & buyer & "' AND Class = '" & clss & "' "
-                        con2.Open()
                         cmd = New SqlCommand(sql, con2)
                         cmd.CommandTimeout = 120
                         cmd.ExecuteNonQuery()
-                        con2.Close()
                     End While
                     con.Close()
+                    con2.Close()
 
                     Call Update_Process_Log("2", "Plan Sales", "", "")
 
@@ -546,7 +554,7 @@ Module Module1
 
                         Console.WriteLine("Updating Plan_Inv_Retail for " & client & " week " & nextWeek)
 
-                        sql = "UPDATE Sales_summary SET Sales_summary.Plan_Inv_Retail = ( " & _
+                        sql = "UPDATE Sales_summary SET Sales_Summary.Plan_Inv_Retail = ( " & _
                             "SELECT SUM(ISNULL(o2.Plan_Sales,0)) + SUM(ISNULL(o2.Plan_Mkdn,0)) FROM Sales_summary AS o2 " & _
                             "WHERE o2.Str_Id = Sales_summary.Str_Id AND o2.Dept = Sales_summary.Dept " & _
                             "AND o2.Buyer = Sales_summary.Buyer AND o2.Class = Sales_summary.Class " & _
@@ -613,7 +621,6 @@ Module Module1
                     Dim planSales As Int32 = 0
                     Dim numWeeks As Int16
                     Dim eDatex As Date
-                    Dim oTest As Object
                     con.Open()
                     sql = "Select Loc_Id, Dept, Buyer, Class, eDate, Act_Inv_Retail FROM Inv_Summary " & _
                         "WHERE Act_Inv_Retail > 0 AND eDate >= '" & Begin_Date & "' AND eDate <= '" & End_Date & "' " & _
@@ -669,7 +676,9 @@ Module Module1
                 Dim el As New Client_Weekly_Summary.ErrorLogger
                 el.WriteToErrorLog(ex.Message, ex.StackTrace, "Client_Weekly_Summary, Update Plan Week On Hand")
             End Try
-
+            '-------------------------------------------------------------------------------------------------------------------------------------
+            '-------------------------------------------------- End Sales Plan Code --------------------------------------------------------------
+            '-------------------------------------------------------------------------------------------------------------------------------------
             Try
 
                 con = New SqlConnection(rcConString)
@@ -686,27 +695,6 @@ Module Module1
                 el.WriteToErrorLog(ex.Message, ex.StackTrace, "Client_Weekly_Summary, Update Client_Master")
             End Try
             Console.WriteLine("Client_Weekly_Summary complete!")
-
-            ''    Try
-            ''        thisdate = Date.Today
-            ''        Dim dayofweek As Integer = thisdate.DayOfWeek
-            ''        If dayofweek = 6 Then                                                    ' Saturday
-            ''            Dim p As New ProcessStartInfo
-            ''            p.FileName = rcExePath & "\ScoreItems.exe"
-            ''            p.Arguments = "" & client & "," & server & "," & dbase & "," & sqlUserId & "," & sqlPassword
-            ''            p.UseShellExecute = True
-            ''            p.WindowStyle = ProcessWindowStyle.Normal
-            ''            Dim proc As Process = Process.Start(p)
-            ''            Process.Start(rcExePath & "\ScoreItems.exe")                        ' Scoring is set up to run on Saturday's only
-            ''            Call Process_Optional_Modules()
-            ''        End If
-
-            ''    Catch ex As Exception
-            ''        Dim theMessage As String = ex.Message
-            ''        Console.WriteLine(ex.Message)
-            ''        Dim el As New Client_Weekly_Summary.ErrorLogger
-            ''        el.WriteToErrorLog(ex.Message, ex.StackTrace, "Client_Weekly_Summary, Call Scoring")
-            ''    End Try
         Next
         '
         '                                                           Process Optional Modules

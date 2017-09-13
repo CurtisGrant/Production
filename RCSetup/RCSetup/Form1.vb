@@ -197,8 +197,7 @@ Public Class DBAdmin
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
-        ''theFile = "\Buyers.xml"
-        ''Call Load_Data_Table(theFile, "Buyers", "Buyer", "Name")
+        proc.WaitForExit()
 
         con.Open()
         sql = "SELECT COUNT(*) cnt FROM Buyers"
@@ -227,9 +226,9 @@ Public Class DBAdmin
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         cnt = 0
-        ''theFile = "\Classes.xml"
-        ''Call Load_Data_Table(theFile, "Classes", "Class", "ClassDescr")
         con.Open()
         sql = "SELECT COUNT(*) cnt FROM Classes"
         cmd = New SqlCommand(sql, con)
@@ -256,9 +255,9 @@ Public Class DBAdmin
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         cnt = 0
-        'theFile = "\Departments.xml"
-        'Call Load_Data_Table(theFile, "Departments", "Dept", "Department")
         con.Open()
         sql = "SELECT COUNT(*) cnt FROM Departments"
         cmd = New SqlCommand(sql, con)
@@ -285,9 +284,9 @@ Public Class DBAdmin
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         cnt = 0
-        ''theFile = "\Locations.xml"
-        ''Call Load_Data_Table(theFile, "Locations", "Loc", "Location")
         con.Open()
         sql = "SELECT COUNT(*) cnt FROM Locations"
         cmd = New SqlCommand(sql, con)
@@ -326,9 +325,9 @@ Public Class DBAdmin
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         cnt = 0
-        ''theFile = "\ProductLines.xml"
-        ''Call Load_Data_Table(theFile, "ProductLines", "PLine", "ProductLine")
         con.Open()
         sql = "SELECT COUNT(*) cnt FROM ProductLines"
         cmd = New SqlCommand(sql, con)
@@ -355,9 +354,9 @@ Public Class DBAdmin
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         cnt = 0
-        ''theFile = "\Seasons.xml"
-        ''Call Load_Data_Table(theFile, "Seasons", "Season", "SeasonDescr")
         con.Open()
         sql = "SELECT COUNT(*) cnt FROM Seasons"
         cmd = New SqlCommand(sql, con)
@@ -384,9 +383,9 @@ Public Class DBAdmin
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         cnt = 0
-        ''theFile = "\Stores.xml"
-        ''Call Load_Data_Table(theFile, "Stores", "Str_Id", "Store")
         txtStores.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
         con.Open()
         sql = "SELECT COUNT(*) cnt FROM Stores"
@@ -414,9 +413,9 @@ Public Class DBAdmin
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         cnt = 0
-        'theFile = "\Vendors.xml"
-        'Call Load_Data_Table(theFile, "Vendors", "Vendor_Id", "Vendor")
         con.Open()
         sql = "SELECT COUNT(*) cnt FROM Vendors"
         cmd = New SqlCommand(sql, con)
@@ -443,10 +442,10 @@ Public Class DBAdmin
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         cnt = 0
         Dim thisDate As Date = CDate(Date.Today)
-        ''theFile = "\Items.xml"
-        ''Call Process_Items(theFile)
         con.Open()
         sql = "SELECT COUNT(*) cnt FROM Item_Master"
         cmd = New SqlCommand(sql, con)
@@ -469,10 +468,10 @@ Public Class DBAdmin
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         cnt = 0
         Dim thisDate As Date = CDate(Date.Today)
-        ''theFile = "\Barcodes.xml"
-        ''Call Process_Barcodes(theFile)
         con.Open()
         sql = "SELECT COUNT(*) cnt FROM Item_Barcodes"
         cmd = New SqlCommand(sql, con)
@@ -508,14 +507,13 @@ Public Class DBAdmin
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         Dim cost As Decimal = 0
         Dim retail As Decimal = 0
-
         cnt = 0
-        ''theFile = "\Inventory.xml"
-        ''Call Process_Inventory(theFile)
         con.Open()
-        sql = "SELECT COUNT(*) cnt, SUM(ISNULL(End_OH,0) * ISNULL(Cost,0)) cost, SUM(ISNULL(End_OH,0) * ( ISNULL(Retail,0)) retail FROM Item_Inv"
+        sql = "SELECT COUNT(*) cnt, SUM(ISNULL(End_OH,0) * ISNULL(Cost,0)) cost, SUM(ISNULL(End_OH,0) * ISNULL(Retail,0)) retail FROM Item_Inv"
         cmd = New SqlCommand(sql, con)
         rdr = cmd.ExecuteReader
         While rdr.Read
@@ -528,135 +526,137 @@ Public Class DBAdmin
         txtInvRecords.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
         txtInvCost.Text = cost.ToString("0,0", CultureInfo.InvariantCulture)
         txtInvRetail.Text = retail.ToString("0,0", CultureInfo.InvariantCulture)
+        Me.Refresh()
+
         stopwatch = New Stopwatch
         stopwatch.Start()
 
-        Dim endDate As Date = CDate(txteDate.Text)
-        Dim fromDate As Date = CDate(txtsDate.Text)
+        ''Dim endDate As Date = CDate(txteDate.Text)
+        ''Dim fromDate As Date = CDate(txtsDate.Text)
 
-        con2.Open()
-        sql = "SELECT CASE WHEN WHOLESALE = 'Y' THEN l.STORE+'-WHSL' ELSE l.STORE END AS STORE, l.LOCATION, " & _
-            "cl.sDate, cl.eDate, l.SKU, l.QTY, l.COST, l.RETAIL, l.QTY * l.COST extCost, l.QTY * l.RETAIL extRetail, " & _
-            "l.MKDN, cl.YrWk, cl.Year_Id, cl.Week_Id, l.ITEM, l.DIM1, l.DIM2, l.DIM3 INTO #t1 FROM Daily_Transaction_Log l " & _
-            "JOIN Calendar cl ON l.TRANS_DATE BETWEEN cl.sDate AND cl.eDate and cl.Week_Id > 0 " & _
-            "WHERE l.[TYPE] = 'Sold' " & _
-            "INSERT INTO Item_Sales(Str_Id, Loc_Id, Sku, sDate, eDate, Sold, Avg_Cost, Retail_Price, Sales_Cost, " & _
-            "Sales_retail, Markdown, YrWk, Year, Wk, Item, DIM1, DIM2, DIM3) " & _
-            "SELECT STORE, LOCATION, SKU, sDate, eDate, SUM(QTY), AVG(COST), AVG(RETAIL), SUM(extCost), SUM(extRETAIL), SUM(MKDN), " & _
-            "YrWk, Year_Id, Week_Id, ITEM, DIM1, DIM2, DIM3 FROM #t1 " & _
-            "GROUP BY STORE, LOCATION, SKU, sDate, eDate, YrWk, Year_Id, Week_Id, ITEM, DIM1, DIM2, DIM3"
-        cmd = New SqlCommand(sql, con2)
-        cmd.CommandTimeout = 960
-        cmd.ExecuteNonQuery()
-        con2.Close()
-        '                        Insert a record for every date there's an inventory changing transaction
-        con2.Open()
-        sql = "INSERT INTO Item_Inv(Loc_Id, Sku, sDate, eDate, Cost, Retail, YrWk, OnHand, Item, DIM1, DIM2, DIM3) " & _
-            "SELECT LOCATION, l.SKU, c.sDate, c.eDate, Avg(COST), Avg(Retail), c.YrWk, CONVERT(Decimal(18,4),0), m.ITEM, " & _
-            "m.DIM1, m.DIM2, m.DIM3 FROM Daily_Transaction_Log l " & _
-            "LEFT JOIN Item_Master m ON m.SKU = l.SKU " & _
-            "JOIN Calendar c ON CONVERT(Date,TRANS_DATE) BETWEEN c .sDate AND c.eDate AND c.Week_Id > 0 " & _
-            "WHERE m.[TYPOE] = 'I' AND CONVERT(Date,TRANS_DATE) BETWEEN '" & fromDate & "' AND '" & endDate & "' " & _
-            "GROUP BY LOCATION, l.SKU, c.sDate, c.eDate, c.YrWk, m.Item, m.DIM1, m.DIM2, m.DIM3"
-        sql = "SELECT DISTINCT DATEPART(year,eDate) FROM Item_Sales"
-        cmd = New SqlCommand(sql, con2)
-        rdr = cmd.ExecuteReader
-        Dim yr As Integer
-        While rdr.Read
-            yr = rdr(0)
+        ''con2.Open()
+        ''sql = "SELECT CASE WHEN ORD_TYPE = 'WHOLESALE' THEN l.STORE+'-WHSL' ELSE l.STORE END AS STORE, l.LOCATION, " &
+        ''    "cl.sDate, cl.eDate, l.SKU, l.QTY, l.COST, l.RETAIL, l.QTY * l.COST extCost, l.QTY * l.RETAIL extRetail, " &
+        ''    "l.MKDN, cl.YrWk, cl.Year_Id, cl.Week_Id, l.ITEM, l.DIM1, l.DIM2, l.DIM3 INTO #t1 FROM Daily_Transaction_Log l " &
+        ''    "JOIN Calendar cl ON l.TRANS_DATE BETWEEN cl.sDate AND cl.eDate and cl.Week_Id > 0 " &
+        ''    "WHERE l.[TYPE] = 'Sold' " &
+        ''    "INSERT INTO Item_Sales(Str_Id, Loc_Id, Sku, sDate, eDate, Sold, Avg_Cost, Retail_Price, Sales_Cost, " &
+        ''    "Sales_retail, Markdown, YrWk, Year, Wk, Item, DIM1, DIM2, DIM3) " &
+        ''    "SELECT STORE, LOCATION, SKU, sDate, eDate, SUM(QTY), AVG(COST), AVG(RETAIL), SUM(extCost), SUM(extRETAIL), SUM(MKDN), " &
+        ''    "YrWk, Year_Id, Week_Id, ITEM, DIM1, DIM2, DIM3 FROM #t1 " &
+        ''    "GROUP BY STORE, LOCATION, SKU, sDate, eDate, YrWk, Year_Id, Week_Id, ITEM, DIM1, DIM2, DIM3"
+        ''cmd = New SqlCommand(sql, con2)
+        ''cmd.CommandTimeout = 960
+        ''cmd.ExecuteNonQuery()
+        ''con2.Close()
+        ''''                       Insert a record for every date there's an inventory changing transaction
+        ''con2.Open()
+        ''sql = "INSERT INTO Item_Inv(Loc_Id, Sku, sDate, eDate, Cost, Retail, YrWk, OnHand, Item, DIM1, DIM2, DIM3) " & _
+        ''    "SELECT LOCATION, l.SKU, c.sDate, c.eDate, Avg(COST), Avg(Retail), c.YrWk, CONVERT(Decimal(18,4),0), m.ITEM, " & _
+        ''    "m.DIM1, m.DIM2, m.DIM3 FROM Daily_Transaction_Log l " & _
+        ''    "LEFT JOIN Item_Master m ON m.SKU = l.SKU " & _
+        ''    "JOIN Calendar c ON CONVERT(Date,TRANS_DATE) BETWEEN c .sDate AND c.eDate AND c.Week_Id > 0 " & _
+        ''    "WHERE m.[TYPOE] = 'I' AND CONVERT(Date,TRANS_DATE) BETWEEN '" & fromDate & "' AND '" & endDate & "' " & _
+        ''    "GROUP BY LOCATION, l.SKU, c.sDate, c.eDate, c.YrWk, m.Item, m.DIM1, m.DIM2, m.DIM3"
+        ''sql = "SELECT DISTINCT DATEPART(year,eDate) FROM Item_Sales"
+        ''cmd = New SqlCommand(sql, con2)
+        ''rdr = cmd.ExecuteReader
+        ''Dim yr As Integer
+        ''While rdr.Read
+        ''    yr = rdr(0)
 
-            ' Now, update Item_Inv with qty and amounts for each of the transaction types
+        ''    ' Now, update Item_Inv with qty and amounts for each of the transaction types
 
-            txtprogress.Text = "Updating Adjustments for " & yr
-            Me.Refresh()
-            con.Open()                        ' Update ADJ
-            sql = "SELECT LOCATION, SKU, c.eDate, SUM(ISNULL(QTY,0)) AS Qty, AVG(COST) AS Cost, AVG(RETAIL) AS Retail " & _
-                "INTO #t1 FROM Daily_Transaction_Log AS l " & _
-                "LEFT JOIN Calendar AS c ON CONVERT(Date,TRANS_DATE) BETWEEN c.sDate AND c.eDate AND c.Week_Id > 0 AND TYPE = 'ADJ' " & _
-                "AND DATEPART(yy,c.eDate) = " & yr & " AND ISNULL(QTY,0) <> 0 " & _
-                "GROUP BY LOCATION, SKU, eDate"
-            cmd = New SqlCommand(sql, con)
-            cmd.ExecuteNonQuery()
-            sql = "UPDATE d SET ADJ = Qty, d.Cost = t.Cost, d.Retail = t.Retail FROM Item_Inv d " & _
-                "JOIN #t1 t ON t.LOCATION = d.Loc_Id AND t.Sku = d.Sku AND t.eDate = d.eDate"
-            cmd = New SqlCommand(sql, con)
-            cmd.ExecuteNonQuery()
-            con.Close()
+        ''    txtprogress.Text = "Updating Adjustments for " & yr
+        ''    Me.Refresh()
+        ''    con.Open()                        ' Update ADJ
+        ''    sql = "SELECT LOCATION, SKU, c.eDate, SUM(ISNULL(QTY,0)) AS Qty, AVG(COST) AS Cost, AVG(RETAIL) AS Retail " & _
+        ''        "INTO #t1 FROM Daily_Transaction_Log AS l " & _
+        ''        "LEFT JOIN Calendar AS c ON CONVERT(Date,TRANS_DATE) BETWEEN c.sDate AND c.eDate AND c.Week_Id > 0 AND TYPE = 'ADJ' " & _
+        ''        "AND DATEPART(yy,c.eDate) = " & yr & " AND ISNULL(QTY,0) <> 0 " & _
+        ''        "GROUP BY LOCATION, SKU, eDate"
+        ''    cmd = New SqlCommand(sql, con)
+        ''    cmd.ExecuteNonQuery()
+        ''    sql = "UPDATE d SET ADJ = Qty, d.Cost = t.Cost, d.Retail = t.Retail FROM Item_Inv d " & _
+        ''        "JOIN #t1 t ON t.LOCATION = d.Loc_Id AND t.Sku = d.Sku AND t.eDate = d.eDate"
+        ''    cmd = New SqlCommand(sql, con)
+        ''    cmd.ExecuteNonQuery()
+        ''    con.Close()
 
-            txtprogress.Text = "Updating Received for " & yr
-            Me.Refresh()
-            con.Open()                            ' Update RECVD
-            sql = "SELECT LOCATION, SKU, c.eDate, SUM(ISNULL(QTY,0)) AS Qty, AVG(COST) AS Cost, AVG(RETAIL) AS Retail " & _
-                "INTO #t1 FROM Daily_Transaction_Log AS l " & _
-                "LEFT JOIN Calendar AS c ON CONVERT(Date,TRANS_DATE,0) BETWEEN c.sDate AND c.eDate AND c.Week_Id > 0 " & _
-                "WHERE TYPE = 'RECVD' AND DATEPART(yy,c.eDate) = " & yr & " AND ISNULL(QTY,0) <> 0 " & _
-                "GROUP BY LOCATION, SKU, eDate"
-            cmd = New SqlCommand(sql, con)
-            cmd.CommandTimeout = 120
-            cmd.ExecuteNonQuery()
-            sql = "UPDATE d SET RECVD = Qty, d.Cost = t.Cost, d.Retail = t.Retail FROM Item_Inv d " & _
-                "JOIN #t1 t ON t.LOCATION = d.Loc_Id AND t.SKU = d.Sku AND t.eDate = d.eDate"
-            cmd = New SqlCommand(sql, con)
-            cmd.ExecuteNonQuery()
-            con.Close()
+        ''    txtprogress.Text = "Updating Received for " & yr
+        ''    Me.Refresh()
+        ''    con.Open()                            ' Update RECVD
+        ''    sql = "SELECT LOCATION, SKU, c.eDate, SUM(ISNULL(QTY,0)) AS Qty, AVG(COST) AS Cost, AVG(RETAIL) AS Retail " & _
+        ''        "INTO #t1 FROM Daily_Transaction_Log AS l " & _
+        ''        "LEFT JOIN Calendar AS c ON CONVERT(Date,TRANS_DATE,0) BETWEEN c.sDate AND c.eDate AND c.Week_Id > 0 " & _
+        ''        "WHERE TYPE = 'RECVD' AND DATEPART(yy,c.eDate) = " & yr & " AND ISNULL(QTY,0) <> 0 " & _
+        ''        "GROUP BY LOCATION, SKU, eDate"
+        ''    cmd = New SqlCommand(sql, con)
+        ''    cmd.CommandTimeout = 120
+        ''    cmd.ExecuteNonQuery()
+        ''    sql = "UPDATE d SET RECVD = Qty, d.Cost = t.Cost, d.Retail = t.Retail FROM Item_Inv d " & _
+        ''        "JOIN #t1 t ON t.LOCATION = d.Loc_Id AND t.SKU = d.Sku AND t.eDate = d.eDate"
+        ''    cmd = New SqlCommand(sql, con)
+        ''    cmd.ExecuteNonQuery()
+        ''    con.Close()
 
-            txtprogress.Text = "updating Returns for " & yr
-            Me.Refresh()
-            con.Open()                         ' Update RTV
-            sql = "SELECT LOCATION, SKU, c.eDate, SUM(ISNULL(QTY,0)) AS Qty, AVG(COST) AS Cost, AVG(RETAIL) AS Retail " & _
-                "INTO #t1 FROM Daily_Transaction_Log AS l " & _
-                "LEFT JOIN Calendar AS c ON CONVERT(Date,TRANS_DATE) BETWEEN c.sDate AND c.eDate AND c.Week_Id > 0 " & _
-                "WHERE TYPE = 'RTV' AND DATEPART(yy,c.eDate) = " & yr & " AND ISNULL(QTY,0) <> 0 " & _
-                "GROUP BY LOCATION, SKU, eDate"
-            cmd = New SqlCommand(sql, con)
-            cmd.ExecuteNonQuery()
-            sql = "UPDATE d SET RTV = Qty, d.Cost = t.Cost, d.Retail = t.Retail FROM Item_Inv d " & _
-                "JOIN #t1 t ON t.LOCATION = d.Loc_Id AND t.SKU = d.Sku AND t.eDate = d.eDate"
-            cmd = New SqlCommand(sql, con)
-            cmd.ExecuteNonQuery()
-            con.Close()
+        ''    txtprogress.Text = "updating Returns for " & yr
+        ''    Me.Refresh()
+        ''    con.Open()                         ' Update RTV
+        ''    sql = "SELECT LOCATION, SKU, c.eDate, SUM(ISNULL(QTY,0)) AS Qty, AVG(COST) AS Cost, AVG(RETAIL) AS Retail " & _
+        ''        "INTO #t1 FROM Daily_Transaction_Log AS l " & _
+        ''        "LEFT JOIN Calendar AS c ON CONVERT(Date,TRANS_DATE) BETWEEN c.sDate AND c.eDate AND c.Week_Id > 0 " & _
+        ''        "WHERE TYPE = 'RTV' AND DATEPART(yy,c.eDate) = " & yr & " AND ISNULL(QTY,0) <> 0 " & _
+        ''        "GROUP BY LOCATION, SKU, eDate"
+        ''    cmd = New SqlCommand(sql, con)
+        ''    cmd.ExecuteNonQuery()
+        ''    sql = "UPDATE d SET RTV = Qty, d.Cost = t.Cost, d.Retail = t.Retail FROM Item_Inv d " & _
+        ''        "JOIN #t1 t ON t.LOCATION = d.Loc_Id AND t.SKU = d.Sku AND t.eDate = d.eDate"
+        ''    cmd = New SqlCommand(sql, con)
+        ''    cmd.ExecuteNonQuery()
+        ''    con.Close()
 
-            txtprogress.Text = "Updating Sales for " & yr
-            Me.Refresh()
-            con.Open()                              ' Update Sales
-            sql = "SELECT STORE, LOCATION, SKU, eDate, SUM(ISNULL(QTY,0)) AS Qty, AVG(COST) AS Cost, AVG(RETAIL) AS Retail, " & _
-                "SUM(ISNULL(QTY,0) * ISNULL(COST,0)) AS Sales_Cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) AS Sales_Retail, " & _
-                "SUM(MKDN) AS Mkdn " & _
-                "INTO #t1 FROM Daily_Transaction_Log AS l " & _
-                "LEFT JOIN Calendar AS c ON CONVERT(Date,TRANS_DATE) BETWEEN sDate AND eDate AND Week_Id > 0 " & _
-                "WHERE TYPE = 'Sold' AND DATEPART(yy,c.eDate) = " & yr & " AND ISNULL(QTY,0) <> 0 " & _
-                "GROUP BY STORE, LOCATION, SKU, eDate"
-            cmd = New SqlCommand(sql, con)
-            cmd.CommandTimeout = 120
-            cmd.ExecuteNonQuery()
-            sql = "UPDATE d SET Sold = Qty, Avg_Cost = Cost, Retail_Price = Retail, d.Sales_Cost = t.Sales_Cost, " & _
-                "d.Sales_Retail = t.Sales_Retail, d.Markdown = t.mkdn FROM Item_Sales d " & _
-                "JOIN #t1 t ON t.STORE = d.Str_Id AND t.LOCATION = d.Loc_Id AND t.SKU = d.Sku AND t.eDate = d.eDate"
-            cmd = New SqlCommand(sql, con)
-            cmd.CommandTimeout = 120
-            cmd.ExecuteNonQuery()
-            con.Close()
+        ''    txtprogress.Text = "Updating Sales for " & yr
+        ''    Me.Refresh()
+        ''    con.Open()                              ' Update Sales
+        ''    sql = "SELECT STORE, LOCATION, SKU, eDate, SUM(ISNULL(QTY,0)) AS Qty, AVG(COST) AS Cost, AVG(RETAIL) AS Retail, " & _
+        ''        "SUM(ISNULL(QTY,0) * ISNULL(COST,0)) AS Sales_Cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) AS Sales_Retail, " & _
+        ''        "SUM(MKDN) AS Mkdn " & _
+        ''        "INTO #t1 FROM Daily_Transaction_Log AS l " & _
+        ''        "LEFT JOIN Calendar AS c ON CONVERT(Date,TRANS_DATE) BETWEEN sDate AND eDate AND Week_Id > 0 " & _
+        ''        "WHERE TYPE = 'Sold' AND DATEPART(yy,c.eDate) = " & yr & " AND ISNULL(QTY,0) <> 0 " & _
+        ''        "GROUP BY STORE, LOCATION, SKU, eDate"
+        ''    cmd = New SqlCommand(sql, con)
+        ''    cmd.CommandTimeout = 120
+        ''    cmd.ExecuteNonQuery()
+        ''    sql = "UPDATE d SET Sold = Qty, Avg_Cost = Cost, Retail_Price = Retail, d.Sales_Cost = t.Sales_Cost, " & _
+        ''        "d.Sales_Retail = t.Sales_Retail, d.Markdown = t.mkdn FROM Item_Sales d " & _
+        ''        "JOIN #t1 t ON t.STORE = d.Str_Id AND t.LOCATION = d.Loc_Id AND t.SKU = d.Sku AND t.eDate = d.eDate"
+        ''    cmd = New SqlCommand(sql, con)
+        ''    cmd.CommandTimeout = 120
+        ''    cmd.ExecuteNonQuery()
+        ''    con.Close()
 
-            txtprogress.Text = "Updating Transfers for " & yr
-            Me.Refresh()
-            con.Open()                         ' Update Transfers
-            sql = "SELECT LOCATION, SKU, c.eDate, SUM(ISNULL(QTY,0)) AS Qty, AVG(COST) AS Cost, AVG(RETAIL) AS Retail " & _
-                "INTO #t1 FROM Daily_Transaction_Log AS l " & _
-                "LEFT JOIN Calendar AS c ON CONVERT(Date,TRANS_DATE) BETWEEN c.sDate AND c.eDate AND c.Week_Id > 0 " & _
-                "WHERE TYPE = 'XFER' AND DATEPART(yy,c.eDate) = " & yr & " AND ISNULL(QTY,0) <> 0 " & _
-                "GROUP BY LOCATION, SKU, eDate"
-            cmd = New SqlCommand(sql, con)
-            cmd.CommandTimeout = 120
-            cmd.ExecuteNonQuery()
-            sql = "UPDATE d SET XFER = Qty, d.Cost = t.Cost, d.Retail = t.Retail FROM Item_Inv d " & _
-                "JOIN #t1 t ON t.LOCATION = d.Loc_Id AND t.SKU = d.Sku AND t.eDate = d.eDate"
-            cmd = New SqlCommand(sql, con)
-            cmd.CommandTimeout = 120
-            cmd.ExecuteNonQuery()
-            con.Close()
-            
-        End While
-        con2.Close()
+        ''    txtprogress.Text = "Updating Transfers for " & yr
+        ''    Me.Refresh()
+        ''    con.Open()                         ' Update Transfers
+        ''    sql = "SELECT LOCATION, SKU, c.eDate, SUM(ISNULL(QTY,0)) AS Qty, AVG(COST) AS Cost, AVG(RETAIL) AS Retail " & _
+        ''        "INTO #t1 FROM Daily_Transaction_Log AS l " & _
+        ''        "LEFT JOIN Calendar AS c ON CONVERT(Date,TRANS_DATE) BETWEEN c.sDate AND c.eDate AND c.Week_Id > 0 " & _
+        ''        "WHERE TYPE = 'XFER' AND DATEPART(yy,c.eDate) = " & yr & " AND ISNULL(QTY,0) <> 0 " & _
+        ''        "GROUP BY LOCATION, SKU, eDate"
+        ''    cmd = New SqlCommand(sql, con)
+        ''    cmd.CommandTimeout = 120
+        ''    cmd.ExecuteNonQuery()
+        ''    sql = "UPDATE d SET XFER = Qty, d.Cost = t.Cost, d.Retail = t.Retail FROM Item_Inv d " & _
+        ''        "JOIN #t1 t ON t.LOCATION = d.Loc_Id AND t.SKU = d.Sku AND t.eDate = d.eDate"
+        ''    cmd = New SqlCommand(sql, con)
+        ''    cmd.CommandTimeout = 120
+        ''    cmd.ExecuteNonQuery()
+        ''    con.Close()
+
+        ''End While
+        ''con2.Close()
 12:
 
 
@@ -692,11 +692,14 @@ Public Class DBAdmin
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         Dim cost As Decimal = 0
         Dim retail As Decimal = 0
         cnt = 0
         con.Open()
-        sql = "SELECT COUNT(*) cnt, SUM(ISNULL(QTY,0) * ISNULL(COST,0)) cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) retail " &
+        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(ISNULL(QTY,0) * ISNULL(COST,0)),0) cost, " &
+            "ISNULL(SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)),0) retail " &
             "FROM Daily_Transaction_Log WHERE [TYPE] = 'ADJ'"
         cmd = New SqlCommand(sql, con)
         rdr = cmd.ExecuteReader
@@ -731,6 +734,8 @@ Public Class DBAdmin
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         Dim cost As Decimal = 0
         Dim retail As Decimal = 0
         cnt = 0
@@ -767,15 +772,17 @@ Public Class DBAdmin
         End If
         Dim p As New ProcessStartInfo
         p.FileName = exePath & "\XMLUpdate.exe"
-        p.Arguments = arguments & ";RECEIVED"
+        p.Arguments = arguments & ";RECEIPTS"
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         Dim cost As Decimal = 0
         Dim retail As Decimal = 0
         cnt = 0
         con.Open()
-        sql = "SELECT COUNT(*) cnt, SUM(ISNULL(QTY,0) * ISNULL(COST,0)) cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) retail " &
+        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(ISNULL(QTY,0) * ISNULL(COST,0)),0) cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) retail " &
             "FROM Daily_Transaction_Log WHERE [TYPE] = 'RECVD'"
         cmd = New SqlCommand(sql, con)
         rdr = cmd.ExecuteReader
@@ -807,15 +814,17 @@ Public Class DBAdmin
         End If
         Dim p As New ProcessStartInfo
         p.FileName = exePath & "\XMLUpdate.exe"
-        p.Arguments = arguments & ";RETURNED"
+        p.Arguments = arguments & ";RETURNS"
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         Dim cost As Decimal = 0
         Dim retail As Decimal = 0
         cnt = 0
         con.Open()
-        sql = "SELECT COUNT(*) cnt, SUM(ISNULL(QTY,0) * ISNULL(COST,0)) cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) retail " &
+        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(ISNULL(QTY,0) * ISNULL(COST,0)),0) cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) retail " &
             "FROM Daily_Transaction_Log WHERE [TYPE] = 'RTV'"
         cmd = New SqlCommand(sql, con)
         rdr = cmd.ExecuteReader
@@ -852,6 +861,8 @@ Public Class DBAdmin
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         Dim cost As Decimal = 0
         Dim retail As Decimal = 0
         cnt = 0
@@ -892,6 +903,8 @@ Public Class DBAdmin
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         Dim cost As Decimal = 0
         Dim retail As Decimal = 0
         cnt = 0
@@ -925,15 +938,17 @@ Public Class DBAdmin
         End If
         Dim p As New ProcessStartInfo
         p.FileName = exePath & "\XMLUpdate.exe"
-        p.Arguments = arguments & ";SALES"
+        p.Arguments = arguments & ";TRANSFERS"
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         Dim cost As Decimal = 0
         Dim retail As Decimal = 0
         cnt = 0
         con.Open()
-        sql = "SELECT COUNT(*) cnt, SUM(ISNULL(QTY,0) * ISNULL(COST,0)) cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) retail " &
+        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(ISNULL(QTY,0) * ISNULL(COST,0)),0) cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) retail " &
             "FROM Daily_Transaction_Log WHERE [TYPE] = 'XFER'"
         cmd = New SqlCommand(sql, con)
         rdr = cmd.ExecuteReader
@@ -976,6 +991,8 @@ Public Class DBAdmin
         p2.UseShellExecute = True
         p2.WindowStyle = ProcessWindowStyle.Normal
         Dim proc2 As Process = Process.Start(p2)
+        proc2.WaitForExit()
+
         Dim cost As Decimal = 0
         Dim retail As Decimal = 0
         cnt = 0
@@ -989,7 +1006,9 @@ Public Class DBAdmin
             retail = rdr("retail")
         End While
         con.Close()
-        ''Call Process_POs()
+        txtPO.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
+        txtPOCost.Text = cost.ToString("0,0", CultureInfo.InvariantCulture)
+        txtPORetail.Text = retail.ToString("0,0", CultureInfo.InvariantCulture)
         txtprogress.Text = ""
         btnLoadPReq.Enabled = True
         Me.Refresh()
@@ -1010,26 +1029,32 @@ Public Class DBAdmin
         p.UseShellExecute = True
         p.WindowStyle = ProcessWindowStyle.Normal
         Dim proc As Process = Process.Start(p)
+        proc.WaitForExit()
+
         Dim p2 As New ProcessStartInfo
         p2.FileName = exePath & "\XMLUpdate.exe"
         p2.Arguments = arguments & ";PREQDETAIL"
         p2.UseShellExecute = True
         p2.WindowStyle = ProcessWindowStyle.Normal
         Dim proc2 As Process = Process.Start(p2)
+        proc.WaitForExit()
+
         Dim cost As Decimal = 0
         Dim retail As Decimal = 0
         cnt = 0
         con.Open()
-        sql = "SELECT COUNT(*) cnt, SUM(ISNULL(COST,0)) cost, SUM(ISNULL(RETAIL,0)) retail FROM Purchase_Request_Detail"
+        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(COST),0) cost FROM Purchase_Request_Detail"
         cmd = New SqlCommand(sql, con)
         rdr = cmd.ExecuteReader
         While rdr.Read
             cnt = rdr("cnt")
             cost = rdr("cost")
-            retail = rdr("retail")
+            ''retail = rdr("retail")
         End While
         con.Close()
-        ''Call Process_Preqs()
+        txtPReq.Text = cnt.ToString("0,0", CultureInfo.InvariantCulture)
+        txtPReqCost.Text = cost.ToString("0,0", CultureInfo.InvariantCulture)
+        txtPReqRetail.Text = retail.ToString("0,0", CultureInfo.InvariantCulture)
         txtprogress.Text = ""
         Me.Refresh()
         btnInv.Enabled = True
@@ -2272,7 +2297,7 @@ Public Class DBAdmin
     Private Sub btnAddWeeklyRecords_Click(sender As Object, e As EventArgs) Handles btnAddWeeklyRecords.Click
         Try
             Call Connect_Database()
-            txtprogress.Text = "Creating Inventory records for weeks with inventory changing transactions. "
+            txtprogress.Text = "Creating Inventory records for weeks with inventory ON HAND. "
             Me.Refresh()
 
             Dim cnt As Integer = 0
@@ -2293,80 +2318,76 @@ Public Class DBAdmin
             stopwatch.Start()
             con = New SqlConnection(conString)
             con2 = New SqlConnection(conString)
-            txtprogress.Text = "Merging Item_Inv with transactions from Daily_Transaction_Log"
 
+            ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+            ' ALL THE STUFF BETWEEN HERE AND 60: WAS DONE IN XMLUpdate WHEN IT WAS CALLED FOR EACH TRANSACTION TYPE
+            ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
+            ''con.Open()
+            ''sql = "IF OBJECT_ID('tempDB.dbo.#xfer','U') IS NOT NULL DROP TABLE #xfer; " & _
+            ''    "IF OBJECT_ID('tempDB.dbo.#adj','U') IS NOT NULL DROP TABLE #adj; " & _
+            ''    "IF OBJECT_ID('tempDB.dbo.#rtv','U') IS NOT NULL DROP TABLE #rtv; " & _
+            ''    "IF OBJECT_ID('tempDB.dbo.#rcvd','U') IS NOT NULL DROP TABLE #rcvd; " & _
+            ''    "IF OBJECT_ID('tempDB.dbo.#sold','U') IS NOT NULL DROP TABLE #sold; " & _
+            ''    "IF OBJECT_ID('tempDB.dbo.#inv','U') IS NOT NULL DROP TABLE #inv; " & _
+            ''    "DECLARE @fromDate date = '" & BuildStartDate & "' " & _
+            ''    "DECLARE @thruDate date = '" & BuildEndDate & "' " & _
+            ''    "select * into #inv from item_inv where edate = @thrudate " & _
+            ''    "delete from item_inv " & _
+            ''    "insert into Item_Inv(loc_id, sku, sdate, edate, cost, retail, yrwk, end_oh, item, dim1, dim2, dim3) " & _
+            ''    "select location, l.sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, " & _
+            ''    "convert(decimal(18,4),0) qty, l.item, l.dim1, l.dim2, l.dim3 from Daily_Transaction_Log l " & _
+            ''    "join calendar c on convert(date,trans_date) between sdate and edate and week_id > 0 " & _
+            ''    "join item_master m on m.sku = l.sku " & _
+            ''    "where m.[type]='I' and convert(date,trans_date) between @fromDate and @thruDate " & _
+            ''    "group by location, l.sku, sdate, edate, yrwk, l.item, l.dim1, l.dim2, l.dim3 " & _
+            ''    "select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) XFER, " & _
+            ''    "Item into #xfer from Daily_Transaction_Log l " & _
+            ''    "join calendar c on convert(date,trans_date) between c.sdate and c.edate and c.week_id > 0 " & _
+            ''    "where [type]='xfer' and convert(date,trans_date) between @fromDate and @thruDate " & _
+            ''    "group by location, sku, sdate, edate, Yrwk, Item " & _
+            ''    "update i set i.xfer=t.xfer from item_inv i " & _
+            ''    "join #xfer t on t.location=i.loc_id and t.sku=i.sku and t.edate=i.edate " & _
+            ''    "select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) ADJ, " & _
+            ''    "Item into #adj from Daily_Transaction_Log l " & _
+            ''    "join calendar c on convert(date,trans_date) between c.sdate and c.edate and c.week_id > 0 " & _
+            ''    "where [type]='adj' and convert(date,trans_date) between @fromDate and @thruDate " & _
+            ''    "group by location, sku, sdate, edate, Yrwk, Item " & _
+            ''    "update i set i.adj=t.adj from item_inv i " & _
+            ''    "join #adj t on t.location=i.loc_id and t.sku=i.sku and t.edate=i.edate " & _
+            ''    "select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) RTV, " & _
+            ''    "Item into #rtv from Daily_Transaction_Log l " & _
+            ''    "join calendar c on convert(date,trans_date) between c.sdate and c.edate and c.week_id > 0 " & _
+            ''    "where [type]='rtv' and convert(date,trans_date) between @fromDate and @thruDate " & _
+            ''    "group by location, sku, sdate, edate, Yrwk,Item " & _
+            ''    "update i set i.rtv=t.rtv from item_inv i " & _
+            ''    "join #rtv t on t.location=i.loc_id and t.sku=i.sku and t.edate=i.edate " & _
+            ''    "select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) RECVD, " & _
+            ''    "Item into #rcvd from Daily_Transaction_Log l " & _
+            ''    "join calendar c on convert(date,trans_date) between c.sdate and c.edate and c.week_id > 0 " & _
+            ''    "where [type]='recvd' and convert(date,trans_date) between @fromDate and @thruDate " & _
+            ''    "group by location, sku, sdate, edate, Yrwk, Item " & _
+            ''    "update i set i.recvd=t.recvd from item_inv i " & _
+            ''    "join #rcvd t on t.location=i.loc_id and t.sku=i.sku and t.edate=i.edate " & _
+            ''    "select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) SOLD, " & _
+            ''    "Item into #sold from Daily_Transaction_Log l " & _
+            ''    "join calendar c on convert(date,trans_date) between c.sdate and c.edate and c.week_id > 0 " & _
+            ''    "where [type]='Sold' and convert(date,trans_date) between @fromDate and @thruDate " & _
+            ''    "group by location, sku, sdate, edate, Yrwk, Item " & _
+            ''    "update i set i.sold=t.sold from item_inv i " & _
+            ''    "join #sold t on t.location=i.loc_id and t.sku=i.sku and t.edate=i.edate " & _
+            ''    "merge item_inv t using #inv s " & _
+            ''    "on t.loc_id=s.loc_id and t.sku=s.sku and t.edate=s.edate and t.item=s.item " & _
+            ''    "when not matched by target " & _
+            ''    "then insert(loc_id, sku, sdate, edate, cost, retail, yrwk, end_oh, item) " & _
+            ''    "values(s.loc_id, s.sku, s.sdate, s.edate, s.cost, s.retail, s.yrwk, s.end_oh, s.item) " & _
+            ''    "when matched then update set t.end_oh=s.end_oh; "
+            ''cmd = New SqlCommand(sql, con)
+            ''cmd.CommandTimeout = 960
+            ''cmd.ExecuteNonQuery()
+            ''con.Close()
 
-            ''           GoTo 60
-
-
-
-
-            con.Open()
-            sql = "IF OBJECT_ID('tempDB.dbo.#xfer','U') IS NOT NULL DROP TABLE #xfer; " & _
-                "IF OBJECT_ID('tempDB.dbo.#adj','U') IS NOT NULL DROP TABLE #adj; " & _
-                "IF OBJECT_ID('tempDB.dbo.#rtv','U') IS NOT NULL DROP TABLE #rtv; " & _
-                "IF OBJECT_ID('tempDB.dbo.#rcvd','U') IS NOT NULL DROP TABLE #rcvd; " & _
-                "IF OBJECT_ID('tempDB.dbo.#sold','U') IS NOT NULL DROP TABLE #sold; " & _
-                "IF OBJECT_ID('tempDB.dbo.#inv','U') IS NOT NULL DROP TABLE #inv; " & _
-                "DECLARE @fromDate date = '" & BuildStartDate & "' " & _
-                "DECLARE @thruDate date = '" & BuildEndDate & "' " & _
-                "select * into #inv from item_inv where edate = @thrudate " & _
-                "delete from item_inv " & _
-                "insert into Item_Inv(loc_id, sku, sdate, edate, cost, retail, yrwk, end_oh, item, dim1, dim2, dim3) " & _
-                "select location, l.sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, " & _
-                "convert(decimal(18,4),0) qty, l.item, l.dim1, l.dim2, l.dim3 from Daily_Transaction_Log l " & _
-                "join calendar c on convert(date,trans_date) between sdate and edate and week_id > 0 " & _
-                "join item_master m on m.sku = l.sku " & _
-                "where m.[type]='I' and convert(date,trans_date) between @fromDate and @thruDate " & _
-                "group by location, l.sku, sdate, edate, yrwk, l.item, l.dim1, l.dim2, l.dim3 " & _
-                "select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) XFER, " & _
-                "Item into #xfer from Daily_Transaction_Log l " & _
-                "join calendar c on convert(date,trans_date) between c.sdate and c.edate and c.week_id > 0 " & _
-                "where [type]='xfer' and convert(date,trans_date) between @fromDate and @thruDate " & _
-                "group by location, sku, sdate, edate, Yrwk, Item " & _
-                "update i set i.xfer=t.xfer from item_inv i " & _
-                "join #xfer t on t.location=i.loc_id and t.sku=i.sku and t.edate=i.edate " & _
-                "select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) ADJ, " & _
-                "Item into #adj from Daily_Transaction_Log l " & _
-                "join calendar c on convert(date,trans_date) between c.sdate and c.edate and c.week_id > 0 " & _
-                "where [type]='adj' and convert(date,trans_date) between @fromDate and @thruDate " & _
-                "group by location, sku, sdate, edate, Yrwk, Item " & _
-                "update i set i.adj=t.adj from item_inv i " & _
-                "join #adj t on t.location=i.loc_id and t.sku=i.sku and t.edate=i.edate " & _
-                "select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) RTV, " & _
-                "Item into #rtv from Daily_Transaction_Log l " & _
-                "join calendar c on convert(date,trans_date) between c.sdate and c.edate and c.week_id > 0 " & _
-                "where [type]='rtv' and convert(date,trans_date) between @fromDate and @thruDate " & _
-                "group by location, sku, sdate, edate, Yrwk,Item " & _
-                "update i set i.rtv=t.rtv from item_inv i " & _
-                "join #rtv t on t.location=i.loc_id and t.sku=i.sku and t.edate=i.edate " & _
-                "select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) RECVD, " & _
-                "Item into #rcvd from Daily_Transaction_Log l " & _
-                "join calendar c on convert(date,trans_date) between c.sdate and c.edate and c.week_id > 0 " & _
-                "where [type]='recvd' and convert(date,trans_date) between @fromDate and @thruDate " & _
-                "group by location, sku, sdate, edate, Yrwk, Item " & _
-                "update i set i.recvd=t.recvd from item_inv i " & _
-                "join #rcvd t on t.location=i.loc_id and t.sku=i.sku and t.edate=i.edate " & _
-                "select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) SOLD, " & _
-                "Item into #sold from Daily_Transaction_Log l " & _
-                "join calendar c on convert(date,trans_date) between c.sdate and c.edate and c.week_id > 0 " & _
-                "where [type]='Sold' and convert(date,trans_date) between @fromDate and @thruDate " & _
-                "group by location, sku, sdate, edate, Yrwk, Item " & _
-                "update i set i.sold=t.sold from item_inv i " & _
-                "join #sold t on t.location=i.loc_id and t.sku=i.sku and t.edate=i.edate " & _
-                "merge item_inv t using #inv s " & _
-                "on t.loc_id=s.loc_id and t.sku=s.sku and t.edate=s.edate and t.item=s.item " & _
-                "when not matched by target " & _
-                "then insert(loc_id, sku, sdate, edate, cost, retail, yrwk, end_oh, item) " & _
-                "values(s.loc_id, s.sku, s.sdate, s.edate, s.cost, s.retail, s.yrwk, s.end_oh, s.item) " & _
-                "when matched then update set t.end_oh=s.end_oh; "
-            cmd = New SqlCommand(sql, con)
-            cmd.CommandTimeout = 960
-            cmd.ExecuteNonQuery()
-            con.Close()
-
-60:         Console.WriteLine("Selecting Skus")
+60:
             con.Open()
             con2.Open()
             sql = "SELECT i.Loc_Id, i.Sku, i.sDate, i.eDate, ISNULL(Cost,0) AS Cost, ISNULL(Retail,0) AS Retail, c.YrWk, " & _
@@ -2378,11 +2399,16 @@ Public Class DBAdmin
                 "WHERE Type = 'I' AND i.eDate BETWEEN '" & BuildStartDate & "' AND '" & BuildEndDate & "' " & _
                 "ORDER BY i.Loc_Id, i.Sku, eDate DESC"
             cmd = New SqlCommand(sql, con)
-            cmd.CommandTimeout = 480
+            cmd.CommandTimeout = 960
             rdr = cmd.ExecuteReader
             While rdr.Read
                 location = rdr("Loc_Id")
                 sku = rdr("Sku")
+                cnt += 1
+                If cnt Mod 1000 = 0 Then
+                    txtprogress.Text = cnt & " " & location & " " & sku
+                    Me.Refresh()
+                End If
                 sdate = rdr("sDate")
                 edate = rdr("eDate")
                 oTest = rdr("Begin_OH")
@@ -2414,11 +2440,6 @@ Public Class DBAdmin
                 If Not IsDBNull(oTest) Then dim2 = CStr(oTest) Else dim2 = Nothing
                 oTest = rdr("DIM3")
                 If Not IsDBNull(oTest) Then dim3 = CStr(oTest) Else dim3 = Nothing
-                cnt += 1
-                If cnt Mod 1000 = 0 Then
-                    txtprogress.Text = cnt & " " & location & " " & sku
-                    Me.Refresh()
-                End If
                 test = xfer + adj + recvd + rtv
 
                 If location <> prevLocation Then
@@ -3289,6 +3310,7 @@ righthere:
             p.UseShellExecute = True
             p.WindowStyle = ProcessWindowStyle.Normal
             Dim proc As Process = Process.Start(p)
+            proc.WaitForExit()
         Else
             MessageBox.Show("Move ItemForecast.exe to " & exePath & " and try again", "ERROR! EXE WAS NOT FOUND")
         End If

@@ -96,7 +96,7 @@ Module Module1
 
 
 
-        '' GoTo 100
+        ''  GoTo 100
 
 
 
@@ -1697,7 +1697,7 @@ Module Module1
             If cpCon.State = ConnectionState.Open Then cpCon.Close()
         End Try
 
-100:    Try
+        Try
             StopWatch = New Stopwatch
             StopWatch.Start()
             Console.WriteLine("Extracting Adjustment data")
@@ -2170,9 +2170,10 @@ Module Module1
                 "DIM1 varchar(30) NULL, DIM2 varchar(30) NULL, DIM3 varchar(30) NULL, LOCATION varchar(10), DRAWER varchar(10) NULL,  " &
                 "QTY decimal(18,4) NULL, COST decimal(18,4) NULL, RETAIL decimal(18,4) NULL, TKT_DT datetime, MARKDOWN decimal(18,4) NULL, " &
                 "MKDN_REASON varchar(30) NULL,COUPON_CODE varchar(30) NULL, DEPT varchar(10) NULL, CLASS varchar(10) NULL, " &
-                "BUYER varchar(10) NULL, CUST_NO varchar(30) NULL,TKT_NO varchar(30) NULL, USER_ID varchar(10) NULL, SALES_REP varchar(10) NULL) " &
+                "BUYER varchar(10) NULL, CUST_NO varchar(30) NULL,TKT_NO varchar(30) NULL, USER_ID varchar(10) NULL, " & _
+                "SALES_REP varchar(10) NULL, STATION varchar(10) NULL) " &
                 "INSERT INTO #tt1 (BUS_DATE, TRANS_ID,SEQ_NO, STORE, ITEM, DIM1, DIM2, DIM3, LOCATION, DRAWER, QTY, COST, RETAIL, TKT_DT, " &
-                "MARKDOWN, MKDN_REASON, COUPON_CODE, DEPT, CLASS, BUYER, CUST_NO, TKT_NO, USER_ID, SALES_REP) " &
+                "MARKDOWN, MKDN_REASON, COUPON_CODE, DEPT, CLASS, BUYER, CUST_NO, TKT_NO, USER_ID, SALES_REP, STATION) " &
                 "SELECT ISNULL(h.BUS_DAT,'1/1/1900'), ISNULL(h.DOC_ID,'NA') AS TRANS_ID, ISNULL(l.LIN_SEQ_NO,0) AS SEQ_NO, " &
                 "ISNULL(l.STR_ID,'NA') STORE, ISNULL(l.ITEM_NO,'NA') AS ITEM, c.DIM_1_UPR, " &
                 "c.DIM_2_UPR, c.DIM_3_UPR, l.STK_LOC_ID AS LOCATION, DRW_ID AS DRAWER,  " &
@@ -2180,7 +2181,7 @@ Module Module1
                 "ISNULL(l.PRC,0) - ISNULL(l.LIN_DISC_AMT,0) AS RETAIL,  h.TKT_DT, " & _
                 "(ISNULL(l.PRC_1,0) - ISNULL(l.PRC,0) + ISNULL(l.LIN_DISC_AMT,0)) AS MARKDOWN, " & _
                 "l.PRC_OVRD_REAS, NULL, ISNULL(l.CATEG_COD,'NA') AS DEPT, ISNULL(l.SUBCAT_COD,'NA') AS CLASS, " &
-                "ISNULL(pv.LST_ORD_BUYER,'OTHER') AS BUYER, CUST_NO, h.TKT_NO, USR_ID, l.SLS_REP FROM VI_PS_TKT_HIST_LIN AS l " &
+                "ISNULL(pv.LST_ORD_BUYER,'OTHER') AS BUYER, CUST_NO, h.TKT_NO, USR_ID, l.SLS_REP, l.STA_ID FROM VI_PS_TKT_HIST_LIN AS l " &
                 "JOIN VI_PS_TKT_HIST h ON h.DOC_ID = l.DOC_ID AND h.BUS_DAT = l.BUS_DAT " &
                 "LEFT JOIN VI_PS_TKT_HIST_LIN_CELL c ON c.DOC_ID = h.DOC_ID AND c.BUS_DAT = h.BUS_DAT AND c.LIN_SEQ_NO = l.LIN_SEQ_NO " &
                 "LEFT JOIN PO_VEND_ITEM pv ON pv.VEND_NO = l.ITEM_VEND_NO AND pv.ITEM_NO = l.ITEM_NO " &
@@ -2189,7 +2190,7 @@ Module Module1
             cmd.CommandTimeout = 48
             cmd.ExecuteNonQuery()
             sql = "SELECT BUS_DATE, TRANS_ID,SEQ_NO, STORE, ITEM, DIM1, DIM2, DIM3, LOCATION, DRAWER, STORE, QTY, COST, RETAIL, TKT_DT, " &
-                "MARKDOWN, MKDN_REASON, COUPON_CODE, DEPT, CLASS, BUYER, t.CUST_NO, TKT_NO, CATEG_COD, USER_ID, SALES_REP FROM #tt1 t " &
+                "MARKDOWN, MKDN_REASON, COUPON_CODE, DEPT, CLASS, BUYER, t.CUST_NO, TKT_NO, CATEG_COD, USER_ID, SALES_REP, STATION FROM #tt1 t " &
                 "LEFT JOIN AR_CUST c ON c.CUST_NO = t.CUST_NO"
 
             cmd = New SqlCommand(sql, cpCon)
@@ -2224,6 +2225,7 @@ Module Module1
                     xmlWriter.WriteElementString("WHOLESALE", "")
                     xmlWriter.WriteElementString("USER_ID", "")
                     xmlWriter.WriteElementString("SALES_REP", "")
+                    xmlWriter.WriteElementString("STATION", "")
                     xmlWriter.WriteElementString("EXTRACT_DATE", Date.Now)
                     xmlWriter.WriteEndElement()
                     xmlWriter.WriteEndElement()
@@ -2283,10 +2285,6 @@ Module Module1
                 xmlWriter.WriteElementString("QTY", qty)
                 oTest = rdr("COST")
                 If IsDBNull(oTest) Then cost = 0 Else cost = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
-                ''If cost = 0 Then
-                ''    oTest = rdr("AVG_COST")
-                ''    If Not IsDBNull(oTest) Then cost = CDec(oTest)
-                ''End If
                 totlCost += (qty * cost)
                 xmlWriter.WriteElementString("COST", cost)
                 oTest = rdr("RETAIL")
@@ -2325,17 +2323,20 @@ Module Module1
                 oTest = rdr("CATEG_COD")
                 If IsDBNull(oTest) Then oTest = "NA"
                 xmlWriter.WriteElementString("ORD_TYPE", Replace(oTest, "'", "''"))
-                If oTest = "WHOLESALE" Then
-                    xmlWriter.WriteElementString("WHOLESALE", "Y")
-                Else
-                    xmlWriter.WriteElementString("WHOLESALE", "N")
-                End If
+                ''If oTest = "WHOLESALE" Then
+                ''    xmlWriter.WriteElementString("WHOLESALE", "Y")
+                ''Else
+                ''    xmlWriter.WriteElementString("WHOLESALE", "N")
+                ''End If
                 oTest = rdr("USER_ID")
                 If IsDBNull(oTest) Then oTest = "UNKNOWN"
                 xmlWriter.WriteElementString("USER_ID", Replace(oTest, "'", "''"))
                 oTest = rdr("SALES_REP")
                 If IsDBNull(oTest) Then oTest = "UNKNOWN"
                 xmlWriter.WriteElementString("SALES_REP", Replace(oTest, "'", "''"))
+                oTest = rdr("STATION")
+                If IsDBNull(oTest) Then oTest = "UNKNOWN"
+                xmlWriter.WriteElementString("STATION", oTest)
                 xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
                 xmlWriter.WriteEndElement()
             End While
@@ -2385,7 +2386,7 @@ Module Module1
             If cpCon.State = ConnectionState.Open Then cpCon.Close()
         End Try
 
-        Try
+100:    Try
             StopWatch = New Stopwatch
             StopWatch.Start()
             cnt = 0
@@ -2409,32 +2410,34 @@ Module Module1
             xmlWriter.WriteStartElement("Orders")
             sql = "CREATE TABLE #dtl (TRANS_ID varchar(30), SEQ_NO int, STORE varchar(10), ITEM varchar(30),  DIM1 varchar(30) NULL, " &
                 "DIM2 varchar(30) NULL, DIM3 varchar(30) NULL, LOCATION varchar(10), STATION varchar(30), DRAWER varchar(10) NULL, " &
-                "QTY decimal(18,4) NULL, COST decimal(18,4) NULL, RETAIL decimal(18,4) NULL, DATE datetime, MARKDOWN decimal(18,4) NULL,  " &
+                "QTY decimal(18,4) NULL, COST decimal(18,4) NULL, RETAIL decimal(18,4) NULL, DATE date, MARKDOWN decimal(18,4) NULL,  " &
                 "MKDN_REASON varchar(30) NULL, COUPON_CODE varchar(30) NULL, DEPT varchar(10) NULL, CLASS varchar(10) NULL, " &
-                "BUYER varchar(10) NULL, TKT_NO varchar(30) NULL, VENDOR varchar(30)) " &
+                "BUYER varchar(10) NULL, TKT_NO varchar(30) NULL, VENDOR varchar(30), SALES_REP varchar(10), CUST_NO varchar(15), " & _
+                "ORD_TYPE varchar(10), TKT_DATE datetime) " &
                 "INSERT INTO #dtl (TRANS_ID, SEQ_NO, STORE, ITEM, DIM1, DIM2, DIM3, LOCATION, STATION, DRAWER, QTY, COST, RETAIL, DATE, " &
-                "MARKDOWN, MKDN_REASON, COUPON_CODE, DEPT, CLASS, BUYER, TKT_NO, VENDOR) " &
+                "MARKDOWN, MKDN_REASON, COUPON_CODE, DEPT, CLASS, BUYER, TKT_NO, VENDOR, SALES_REP, CUST_NO, ORD_TYPE, TKT_DATE) " &
                 "SELECT ISNULL(l.DOC_ID,'NA') AS TRANS_ID, ISNULL(l.LIN_SEQ_NO,0) AS SEQ_NO,  ISNULL(l.STR_ID,'NA') STR_ID, " &
                 "ISNULL(l.ITEM_NO,'NA') ITEM, ISNULL(c.DIM_1_UPR,'*') DIM1, ISNULL(c.DIM_2_UPR,'*') DIM2, ISNULL(c.DIM_3_UPR,'*') DIM3,  " &
                 "ISNULL(l.STK_LOC_ID,'') LOCATION, ISNULL(h.STA_ID,'NA'), 'NA' DRAWER, " &
                 "CASE WHEN c.QTY_SOLD IS NULL THEN ISNULL(l.QTY_SOLD,0) ELSE ISNULL(c.QTY_SOLD,0) END QTY,  ISNULL(i.AVG_COST,0) COST, " &
-                "ISNULL(l.PRC,0) - ISNULL(l.LIN_DISC_AMT,0) RETAIL, ISNULL(h.TKT_DT,'1/1/1900') DATE, " & _
+                "ISNULL(l.PRC,0) - ISNULL(l.LIN_DISC_AMT,0) RETAIL, ISNULL(h.BUS_DAT,'1/1/1900') DATE, " & _
                 "(ISNULL(l.PRC_1,0) - ISNULL(l.PRC,0) + ISNULL(l.LIN_DISC_AMT,0)) MARKDOWN,  " &
                 "ISNULL(PRC_OVRD_REAS,'') MKDN_REASON, CONVERT(varchar(30),'') COUPON_CODE, ISNULL(l.CATEG_COD,'NA') DEPT, " &
                 "ISNULL(l.SUBCAT_COD,'NA') CLASS,  ISNULL(pv.LST_ORD_BUYER,'OTHER') BUYER, ISNULL(l.TKT_NO,'') TKT_NO, " &
-                "ISNULL(i.ITEM_VEND_NO,'') VENDOR_ID FROM VI_PS_ORD_HIST_LIN AS l " &
+                "ISNULL(i.ITEM_VEND_NO,'') VENDOR_ID, ISNULL(h.SLS_REP,'NA'), ISNULL(h.CUST_NO,'NA'), " & _
+                "ISNULL(h.DOC_TYP,'UNKNOWN'), ISNULL(h.TKT_DT,'1-1-1900') FROM VI_PS_ORD_HIST_LIN AS l " &
                 "INNER JOIN VI_PS_ORD_HIST AS h ON h.DOC_ID = l.DOC_ID " &
                 "LEFT JOIN PO_VEND_ITEM AS pv ON pv.ITEM_NO = l.ITEM_NO AND pv.VEND_NO = l.ITEM_VEND_NO " &
-                "LEFT JOIN VI_IM_ITEM_WITH_INV i ON i.ITEM_NO = l.ITEM_NO " &
+                "LEFT JOIN VI_IM_ITEM_WITH_INV i ON i.ITEM_NO = l.ITEM_NO AND i.LOC_ID = l.STK_LOC_ID " &
                 "LEFT JOIN VI_PS_ORD_HIST_LIN_CELL c ON c.DOC_ID = l.DOC_ID AND c.LIN_SEQ_NO = l.LIN_SEQ_NO " &
                 "LEFT JOIN VI_AR_CUST_WITH_ADDRESS ca ON ca.CUST_NO = h.CUST_NO " &
-                "WHERE h.TKT_DT >= '" & minSALdate & "' AND h.DOC_TYP IN ('O','T') AND NOT EXISTS (SELECT * FROM VI_PS_DOC_AUDIT_LOG a " &
+                "WHERE h.TKT_DAT >= '" & minORDdate & "' AND NOT EXISTS (SELECT * FROM VI_PS_DOC_AUDIT_LOG a " &
                     "WHERE a.DOC_ID = l.DOC_ID And a.DOC_TYP = 'V')  " &
                 "SELECT DOC_ID, LIN_SEQ_NO, PROMPT_ALPHA_1 INTO #us2 FROM VI_PS_DOC_LIN WHERE PROMPT_COD_1 = 'MKTG_CODE' " &
                 "UPDATE t1 SET t1.COUPON_CODE = PROMPT_ALPHA_1 FROM #dtl t1 " &
                 "JOIN #us2 t2 ON t2.DOC_ID = t1.TRANS_ID AND t2.LIN_SEQ_NO = SEQ_NO " &
                 "SELECT TRANS_ID, SEQ_NO, STORE, ITEM, DIM1, DIM2, DIM3, LOCATION, STATION, DRAWER, QTY, COST, RETAIL, DATE, MARKDOWN, " &
-                "MKDN_REASON,  COUPON_CODE, DEPT, CLASS, BUYER, TKT_NO FROM #dtl WHERE QTY > 0"
+                "MKDN_REASON,  COUPON_CODE, DEPT, CLASS, BUYER, TKT_NO, SALES_REP, CUST_NO, ORD_TYPE, TKT_DATE FROM #dtl WHERE QTY > 0"
             cmd = New SqlCommand(sql, cpCon)
             rdr = cmd.ExecuteReader
             While rdr.Read
@@ -2520,6 +2523,14 @@ Module Module1
                 oTest = rdr("TKT_NO")
                 xmlWriter.WriteElementString("TKT_NO", oTest)
                 xmlWriter.WriteElementString("VENDOR_ID", oTest)
+                oTest = rdr("SALES_REP")
+                xmlWriter.WriteElementString("SALES_REP", CStr(oTest))
+                oTest = rdr("CUST_NO")
+                xmlWriter.WriteElementString("CUST_NO", CStr(oTest))
+                oTest = rdr("ORD_TYPE")
+                xmlWriter.WriteElementString("ORD_TYPE", CStr(oTest))
+                oTest = rdr("TKT_DATE")
+                xmlWriter.WriteElementString("TKT_DATE", oTest)
                 totlQty += qty
                 totlCost += (qty * cost)
                 totlRetail += (qty * retail)
@@ -2551,6 +2562,9 @@ Module Module1
             xmlWriter.WriteElementString("BUYER", "")
             xmlWriter.WriteElementString("TKT_NO", "")
             xmlWriter.WriteElementString("VENDOR_ID", "")
+            xmlWriter.WriteElementString("SALES_REP", "")
+            xmlWriter.WriteElementString("CUST_NO", "")
+            xmlWriter.WriteElementString("TKT_DATE", "")
             xmlWriter.WriteElementString("EXTRACT_DATE", Date.Today)
             xmlWriter.WriteEndElement()
             xmlWriter.WriteEndElement()

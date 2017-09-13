@@ -191,11 +191,11 @@ Module Module1
             sql = "IF OBJECT_ID('tempdb.#t1','U') IS NOT NULL DROP TABLE #t1; " &
                 "CREATE TABLE #t1(transId varchar(30), seqNo integer, strId varchar(20), locId varchar(20), sku varchar(90), " &
                 "tdate datetime, qty decimal(18,4), cost decimal(18,4), retail decimal(18,4), mkdn decimal(18,4), reason varchar(30), " &
-                "coupon varchar(30), edte datetime)"
+                "coupon varchar(30), edte datetime, transtype varchar(10), linetype varchar(10))"
             cmd = New SqlCommand(sql, con)
             cmd.ExecuteNonQuery()
 
-            Dim transId, strId, locId, sku, coupon, reason As String
+            Dim transId, strId, locId, sku, coupon, reason, transtype, linetype As String
             Dim qty, cost, retail, mkdn As Decimal
             Dim seqNo As Integer
             Dim tdate, edte As DateTime
@@ -238,9 +238,15 @@ Module Module1
                         If IsDBNull(oTest) Then coupon = "UNKNOWN" Else coupon = CStr(oTest)
                         oTest = row("EXTRACT_DATE")
                         If IsDBNull(oTest) Then edte = "1/1/1900" Else edte = CDate(oTest)
-                        sql = "INSERT INTO #t1(transId, seqNo, strId, locId, sku, tdate, qty, cost, retail, mkdn, reason, coupon, edte) " &
+                        oTest = row("TRANS_TYPE")
+                        If IsDBNull(oTest) Or IsNothing(oTest) Then transtype = "" Else transtype = CStr(oTest)
+                        oTest = row("LINE_TYPE")
+                        If IsDBNull(oTest) Or IsNothing(oTest) Then linetype = "" Else linetype = CStr(oTest)
+                        sql = "INSERT INTO #t1(transId, seqNo, strId, locId, sku, tdate, qty, cost, retail, mkdn, reason, coupon, edte," & _
+                            "transtype, linetype) " &
                             "SELECT '" & transId & "'," & seqNo & ",'" & strId & "','" & locId & "','" & sku & "','" & tdate & "'," &
-                            qty & "," & cost & "," & retail & "," & mkdn & ",'" & reason & "','" & coupon & "','" & edte & "'"
+                            qty & "," & cost & "," & retail & "," & mkdn & ",'" & reason & "','" & coupon & "','" & edte & "','" &
+                            transtype & "','" & linetype & "'"
                         cmd = New SqlCommand(sql, con)
                         cmd.ExecuteNonQuery()
                     End If
@@ -248,10 +254,10 @@ Module Module1
                 sql = "MERGE UnpostedSalesDTL AS t USING #t1 AS s ON s.transId = t.TRANS_ID AND s.seqNo = t.SEQ_NO " &
                         "AND s.tDate = t.TRANS_DATE AND s.strId = t.STR_ID AND s.locId = t.LOC_ID AND s.sku = t.SKU " &
                     "WHEN NOT MATCHED BY TARGET THEN " &
-                        "INSERT(TRANS_ID, SEQ_NO, STR_ID, LOC_ID, SKU, TRANS_DATE, QTY, COST, RETAIL, MARKDOWN, MKDN_REASON, " &
-                            "COUPON_CODE, EXTRACT_DATE) " &
-                        "VALUES (s.transId, s.seqNo, s.strId, s.locId, s.sku, s.tdate, s.qty, s.cost, s.retail, s.mkdn, s.reason, " &
-                            "s.coupon, s.edte) " &
+                        "INSERT(TRANS_ID, TRANS_TYPE, SEQ_NO, STR_ID, LOC_ID, SKU, TRANS_DATE, QTY, COST, RETAIL, MARKDOWN, MKDN_REASON, " &
+                            "COUPON_CODE, EXTRACT_DATE, LINE_TYPE) " &
+                        "VALUES (s.transId, s.transtype, s.seqNo, s.strId, s.locId, s.sku, s.tdate, s.qty, s.cost, s.retail, s.mkdn, s.reason, " &
+                            "s.coupon, s.edte, s.linetype) " &
                     "WHEN MATCHED THEN " &
                         "UPDATE SET t.QTY = s.qty, t.COST = s.cost, t.RETAIL = s.retail, t.MARKDOWN = s.mkdn " &
                     "WHEN NOT MATCHED BY SOURCE THEN DELETE;"

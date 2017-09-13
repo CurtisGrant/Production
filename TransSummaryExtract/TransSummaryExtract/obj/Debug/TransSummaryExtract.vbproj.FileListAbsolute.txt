@@ -7,3 +7,12 @@ C:\Projects\DEMO\TransSummaryExtract\TransSummaryExtract\obj\Debug\TransSummaryE
 C:\Projects\DEMO\TransSummaryExtract\TransSummaryExtract\obj\Debug\TransSummaryExtract.exe
 C:\Projects\DEMO\TransSummaryExtract\TransSummaryExtract\obj\Debug\TransSummaryExtract.xml
 C:\Projects\DEMO\TransSummaryExtract\TransSummaryExtract\obj\Debug\TransSummaryExtract.pdb
+C:\Projects\Production\TransSummaryExtract\TransSummaryExtract\bin\Debug\TransSummaryExtract.exe.config
+C:\Projects\Production\TransSummaryExtract\TransSummaryExtract\obj\Debug\TransSummaryExtract.exe
+C:\Projects\Production\TransSummaryExtract\TransSummaryExtract\obj\Debug\TransSummaryExtract.xml
+C:\Projects\Production\TransSummaryExtract\TransSummaryExtract\obj\Debug\TransSummaryExtract.pdb
+C:\Projects\Production\TransSummaryExtract\TransSummaryExtract\bin\Debug\TransSummaryExtract.exe
+C:\Projects\Production\TransSummaryExtract\TransSummaryExtract\bin\Debug\TransSummaryExtract.pdb
+C:\Projects\Production\TransSummaryExtract\TransSummaryExtract\bin\Debug\TransSummaryExtract.xml
+C:\Projects\Production\TransSummaryExtract\TransSummaryExtract\obj\Debug\TransSummaryExtract.Resources.resources
+C:\Projects\Production\TransSummaryExtract\TransSummaryExtract\obj\Debug\TransSummaryExtract.vbproj.GenerateResource.Cache

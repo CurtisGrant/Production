@@ -627,7 +627,6 @@ Partial Class DBAdmin
         '
         'btnSales
         '
-        Me.btnSales.Enabled = False
         Me.btnSales.Location = New System.Drawing.Point(351, 166)
         Me.btnSales.Name = "btnSales"
         Me.btnSales.Size = New System.Drawing.Size(104, 23)
@@ -654,7 +653,6 @@ Partial Class DBAdmin
         '
         'btnRecv
         '
-        Me.btnRecv.Enabled = False
         Me.btnRecv.Location = New System.Drawing.Point(351, 88)
         Me.btnRecv.Name = "btnRecv"
         Me.btnRecv.Size = New System.Drawing.Size(104, 23)

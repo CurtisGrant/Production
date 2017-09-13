@@ -2,17 +2,17 @@
 Imports System.IO
 Imports System.Xml
 Module Module1
-    Private con, rccon As SqlConnection
+    Private con, rccon, rccon2 As SqlConnection
     Private cmd As SqlCommand
     Private rdr As SqlDataReader
     Private client, conString, sql, err, errorPath, xmlPath, thePath, fileName As String
+    Private rcServer, rcConString, rcExePath, rcPassword As String
     Private oTest, oTest2 As Object
     Private thisEdate As Date
     Private infoReader As System.IO.FileInfo
 
     Sub Main()
         Dim xmlReader As XmlTextReader = New XmlTextReader("c:\RetailClarity\RCCLIENT.xml")
-        Dim rcServer, rcConString, rcExePath, rcPassword As String
         Dim server, dbase, userid, password As String
         Dim program, process As String
         Dim fld As String = ""
@@ -51,6 +51,7 @@ Module Module1
         clientTbl.Columns.Add("SalesPlan", GetType(System.String))
         rcConString = "Server=" & rcServer & ";Initial Catalog=RCClient;Integrated Security=True"
         rccon = New SqlConnection(rcConString)
+        rccon2 = New SqlConnection(rcConString)
         rccon.Open()
         sql = "SELECT Client_Id, [Database], Server, SQLUserId, SQLPassword, XMLs, errorLog, Item4Cast, Marketing, SalesPlan " & _
             "FROM CLIENT_MASTER WHERE Status = 'Active' ORDER BY Client_Id"
@@ -80,7 +81,7 @@ Module Module1
             password = clientRow("Password")
             xmlPath = clientRow("XMLPath")
             errorPath = clientRow("errorLog")
-            conString = "Server=" & server & ";Initial Catalog=" & dbase & ";Integrated Security=True"
+            conString = "Server=" & server & ";Initial Catalog=" & dbase & ";User ID=" & userid & ";Password=" & password & ""
             tbl = New DataTable
             Dim column = New DataColumn()
             column.DataType = System.Type.GetType("System.String")
@@ -110,7 +111,7 @@ Module Module1
                 Call Write_Error(err)
             End If
             '
-            '                 Check for an error log in the  ERRORS folder
+            '                 Check for an error log in the ERRORS folder
             '
             errLog = errorPath & "\errLog.txt"
             If System.IO.File.Exists(errLog) Then
@@ -118,10 +119,9 @@ Module Module1
                 Call Write_Error(err)
             End If
 
-            rccon.Open()
+            rccon2.Open()
             sql = "SELECT Program, Module, Process, DOW, XMLFile FROM Client_Processes WHERE Client_Id = '" & client & "' "
-
-            cmd = New SqlCommand(sql, rccon)
+            cmd = New SqlCommand(sql, rccon2)
             rdr = cmd.ExecuteReader
             While rdr.Read
                 row = tbl.NewRow
@@ -151,7 +151,7 @@ Module Module1
                 End If
                 tbl.Rows.Add(row)
             End While
-            rccon.Close()
+            rccon2.Close()
 
             con = New SqlConnection(conString)
             con.Open()
@@ -198,37 +198,49 @@ Module Module1
                     End If
                 End If
             Next
+            ''If allIsGood = False Then
+            ''    err = "DAILY UPDATE was INCOMPLETE - CHECK ERROR AND PROCESS LOGS"
+            ''    Call Write_Error(err)
+            ''Else
+            ''    Console.WriteLine("ALL IS GOOD")
+            ''End If
 
-            con.Open()
-            sql = "SELECT ISNULL(SUM(End_OH * Retail),0) AS OnHand FROM Item_Inv WHERE eDate = '" & thisEdate & "'"
-            cmd = New SqlCommand(sql, con)
-            rdr = cmd.ExecuteReader
-            While rdr.Read
-                oTest = rdr("OnHand")
-                If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
-                    If rdr("OnHand") < 2000000 Then
-                        err = "Inventory may be off. Current On Hand at retail is only " & Format(CDec(rdr("OnHand")), "$###,###,###.00")
-                        Call Write_Error(err)
-                    End If
-                End If
-            End While
-            con.Close()
+            ''con.Open()
+            ''sql = "SELECT ISNULL(SUM(End_OH * Retail),0) AS OnHand FROM Item_Inv WHERE eDate = '" & thisEdate & "'"
+            ''cmd = New SqlCommand(sql, con)
+            ''rdr = cmd.ExecuteReader
+            ''While rdr.Read
+            ''    oTest = rdr("OnHand")
+            ''    If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
+            ''        If rdr("OnHand") < 2000000 Then
+            ''            err = "Inventory may be off. Current On Hand at retail is only " & Format(CDec(rdr("OnHand")), "$###,###,###.00")
+            ''            Call Write_Error(err)
+            ''        End If
+            ''    End If
+            ''End While
+            ''con.Close()
         Next
-        
+        rccon.Close()
     End Sub
 
     Private Sub Write_Error(ByVal err As String)
-        If My.Computer.FileSystem.FileExists(errorPath & "\failure.txt") Then
-            Dim fs1 As FileStream = New FileStream(errorPath & "\failure.txt", FileMode.Append, FileAccess.Write)
+        If My.Computer.FileSystem.FileExists(errorPath & "\ErrorLog.txt") Then
+            Dim fs1 As FileStream = New FileStream(errorPath & "\ErrorLog.txt", FileMode.Append, FileAccess.Write)
             Dim s1 As StreamWriter = New StreamWriter(fs1)
             s1.WriteLine(client & " " & err)
             s1.Close()
             fs1.Close()
         Else
-            Using sw As StreamWriter = File.CreateText(errorPath & "\failure.txt")
+            Using sw As StreamWriter = File.CreateText(errorPath & "\ErrorLog.txt")
                 sw.WriteLine(err)
             End Using
         End If
+        If rccon.State = ConnectionState.Closed Then rccon.Open()
+        sql = "INSERT INTO ErrorLog(Client_Id, Date, Error) " & _
+            "SELECT '" & client & "','" & Date.Now & "','" & err & "'"
+        cmd = New SqlCommand(sql, rccon)
+        cmd.ExecuteNonQuery()
+        rccon.Close()
     End Sub
 
 End Module

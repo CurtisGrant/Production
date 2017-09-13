@@ -16,12 +16,13 @@ Public Class ErrorLogger
             System.IO.Directory.CreateDirectory(rcErrorPath)
         End If
 
-        'rcCon.Open()
-        'sql = "INSERT INTO ErrorLog(Client_Id, Date, Error) " & _
-        '    "SELECT '" & client & "','" & Date.Now & "','" & msg & "'"
-        'cmd = New SqlCommand(sql, rcCon)
-        'cmd.ExecuteNonQuery()
-        'rcCon.Close()
+        msg = Replace(msg, "'", "")
+        rcCon.Open()
+        sql = "INSERT INTO ErrorLog(Client_Id, Date, Error) " & _
+            "SELECT '" & client & "','" & Date.Now & "','" & msg & "'"
+        cmd = New SqlCommand(sql, rcCon)
+        cmd.ExecuteNonQuery()
+        rcCon.Close()
 
         Dim fs1 As FileStream = New FileStream(rcErrorPath & "\errlog.txt", FileMode.Append, FileAccess.Write)
         Dim s1 As StreamWriter = New StreamWriter(fs1)
@@ -44,6 +45,6 @@ Public Class ErrorLogger
                 sw.WriteLine(Err)
             End Using
         End If
-
+        Threading.Thread.Sleep(3000)
     End Sub
 End Class

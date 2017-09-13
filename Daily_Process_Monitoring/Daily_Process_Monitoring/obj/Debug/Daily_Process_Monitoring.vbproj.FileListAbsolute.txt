@@ -16,3 +16,12 @@ C:\Projects\DEMO\Daily_Process_Monitoring\Daily_Process_Monitoring\bin\Debug\Dai
 C:\Projects\DEMO\Daily_Process_Monitoring\Daily_Process_Monitoring\bin\Debug\Daily_Process_Monitoring.xml
 C:\Projects\DEMO\Daily_Process_Monitoring\Daily_Process_Monitoring\obj\Debug\Daily_Process_Monitoring.Resources.resources
 C:\Projects\DEMO\Daily_Process_Monitoring\Daily_Process_Monitoring\obj\Debug\Daily_Process_Monitoring.vbproj.GenerateResource.Cache
+C:\Projects\Production\Daily_Process_Monitoring\Daily_Process_Monitoring\bin\Debug\Daily_Process_Monitoring.exe.config
+C:\Projects\Production\Daily_Process_Monitoring\Daily_Process_Monitoring\obj\Debug\Daily_Process_Monitoring.exe
+C:\Projects\Production\Daily_Process_Monitoring\Daily_Process_Monitoring\obj\Debug\Daily_Process_Monitoring.xml
+C:\Projects\Production\Daily_Process_Monitoring\Daily_Process_Monitoring\obj\Debug\Daily_Process_Monitoring.pdb
+C:\Projects\Production\Daily_Process_Monitoring\Daily_Process_Monitoring\bin\Debug\Daily_Process_Monitoring.exe
+C:\Projects\Production\Daily_Process_Monitoring\Daily_Process_Monitoring\bin\Debug\Daily_Process_Monitoring.pdb
+C:\Projects\Production\Daily_Process_Monitoring\Daily_Process_Monitoring\bin\Debug\Daily_Process_Monitoring.xml
+C:\Projects\Production\Daily_Process_Monitoring\Daily_Process_Monitoring\obj\Debug\Daily_Process_Monitoring.Resources.resources
+C:\Projects\Production\Daily_Process_Monitoring\Daily_Process_Monitoring\obj\Debug\Daily_Process_Monitoring.vbproj.GenerateResource.Cache
