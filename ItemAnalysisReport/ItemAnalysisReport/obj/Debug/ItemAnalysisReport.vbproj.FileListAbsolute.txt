@@ -18,3 +18,8 @@ C:\Projects\DEMO\ItemAnalysisReport\ItemAnalysisReport\obj\Debug\ItemAnalysisRep
 C:\Projects\DEMO\ItemAnalysisReport\ItemAnalysisReport\obj\Debug\ItemAnalysisReport.exe
 C:\Projects\DEMO\ItemAnalysisReport\ItemAnalysisReport\obj\Debug\ItemAnalysisReport.xml
 C:\Projects\DEMO\ItemAnalysisReport\ItemAnalysisReport\obj\Debug\ItemAnalysisReport.pdb
+C:\Projects\Production\ItemAnalysisReport\ItemAnalysisReport\bin\Debug\ItemAnalysisReport.exe.config
+C:\Projects\Production\ItemAnalysisReport\ItemAnalysisReport\obj\Debug\ItemAnalysisReport.vbproj.ResolveComReference.cache
+C:\Projects\Production\ItemAnalysisReport\ItemAnalysisReport\obj\Debug\ItemAnalysisReport.exe
+C:\Projects\Production\ItemAnalysisReport\ItemAnalysisReport\obj\Debug\ItemAnalysisReport.xml
+C:\Projects\Production\ItemAnalysisReport\ItemAnalysisReport\obj\Debug\ItemAnalysisReport.pdb

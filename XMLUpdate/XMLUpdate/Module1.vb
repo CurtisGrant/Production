@@ -2051,7 +2051,11 @@ Module Module1
             Dim hoursDiff = DateDiff(DateInterval.Hour, fileDate, Date.Now)
             If hoursDiff > 26 Then
                 Dim el As New XMLUpdate.ErrorLogger
-                el.WriteToErrorLog(fileName & " IS OLDER THAN 24 HOURS", "", "Check File Datetime")
+                If fileName = "errlog.txt" Then
+                    System.IO.File.Delete(fileName)
+                Else
+                    el.WriteToErrorLog(fileName & " IS OLDER THAN 24 HOURS", "", "Check File Datetime")
+                End If
             End If
         Else
             If fileName <> xmlPath & "\ErrLog.txt" Then
