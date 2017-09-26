@@ -21,6 +21,7 @@ Public Class ErrorLogger
         sql = "INSERT INTO ErrorLog(Client_Id, Date, Error) " & _
             "SELECT '" & client & "','" & Date.Now & "','" & msg & "'"
         cmd = New SqlCommand(sql, rcCon)
+        cmd.CommandTimeout = 480
         cmd.ExecuteNonQuery()
         rcCon.Close()
 

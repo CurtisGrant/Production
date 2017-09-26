@@ -61,7 +61,7 @@ Module Module1
             path = xmlPath & "\errlog.txt"
             If System.IO.File.Exists(path) Then System.IO.File.Delete(path)
 
-            conString = "Server=" & cpServer & ";Initial Catalog=" & cpDatabase & ";Integrated Security=True;Connection Timeout=30;"
+            conString = "Server=" & cpServer & ";Initial Catalog=" & cpDatabase & ";Integrated Security=SSPI;Connection Timeout=60;"
         Catch ex As Exception
             Dim el As New CounterPointUnpostedSalesExtract.ErrorLogger
             el.WriteToErrorLog(ex.Message, ex.StackTrace, "Inital set up")
@@ -82,14 +82,16 @@ Module Module1
             thisSdate = Date.Today.AddDays(0 - Date.Today.DayOfWeek)
             minSALdate = DateAdd(DateInterval.Day, SALwks * -14, thisSdate)
             Console.WriteLine("Extracting Unposted Sales")
-            theProcess = "Get Header Data"
-            cpCon.Open()
+            theProcess = "Set up XML writer for Header Data"
             path = xmlPath & "\UnpostedSalesHDR.xml"
             xmlWriter = New XmlTextWriter(path, System.Text.Encoding.UTF8)
             xmlWriter.WriteStartDocument(True)
             xmlWriter.Formatting = Formatting.Indented
             xmlWriter.Indentation = 5
             xmlWriter.WriteStartElement("UnpostedSale")
+            theProcess = "Open sql connection for header data"
+            cpCon.Open()
+            theProcess = "Select header data from database"
             sql = "CREATE TABLE #hdr (TRANS_ID varchar(30), STORE varchar(10), LOCATION varchar(10), STATION varchar(10) NULL, " &
                 "DRAWER varchar(10) NULL, DATE datetime, CUST_NO varchar(30) NULL, CUST_TYPE varchar(10) NULL, DOC_TYPE varchar(10) NULL, " &
                 "TKT_NO varchar(30) NULL, SALES_REP varchar(30), SHIP_COUNTRY varchar(30), AMOUNT_DUE Decimal(18, 4), TERMS varchar(30), " &
@@ -108,6 +110,7 @@ Module Module1
                 "AMOUNT_DUE, TERMS, AMOUNT_APPLIED, STATUS, ORDER_TOTAL FROM #hdr"
             cmd = New SqlCommand(sql, cpCon)
             cmd.CommandTimeout = 960
+            theProcess = "Read sql data for headers"
             rdr = cmd.ExecuteReader
             While rdr.Read
                 cnt += 1
@@ -156,20 +159,22 @@ Module Module1
                 xmlWriter.WriteElementString("EXTRACT_DATE", Date.Today)
                 xmlWriter.WriteEndElement()
             End While
+            theProcess = "Close sql connection and XML writer for header"
             cpCon.Close()
             xmlWriter.WriteEndElement()
-            'xmlWriter.WriteEndElement()
             xmlWriter.WriteEndDocument()
             xmlWriter.Close()
 
-            theProcess = "Get Detail Data"
+            theProcess = "Open sql connection for detail data"
             cpCon.Open()
+            theProcess = "Set up XML writer for detail data"
             path = xmlPath & "\UnpostedSalesDTL.xml"
             xmlWriter = New XmlTextWriter(path, System.Text.Encoding.UTF8)
             xmlWriter.WriteStartDocument(True)
             xmlWriter.Formatting = Formatting.Indented
             xmlWriter.Indentation = 5
             xmlWriter.WriteStartElement("UnpostedSale")
+            theProcess = "Select detail data from database"
             sql = "CREATE TABLE #dtl (TRANS_ID varchar(30), SEQ_NO int, STORE varchar(10), LOCATION varchar(10), QTY decimal(18,4) NULL, " &
                 "ITEM varchar(30), DIM1 varchar(30), DIM2 varchar(30), dim3 varchar(30), COST decimal(18,4) NULL, RETAIL decimal(18,4) NULL, " & _
                 "DATE datetime, MARKDOWN decimal(18,4) NULL, MKDN_REASON varchar(30) NULL, COUPON_CODE varchar(30) NULL, " &
@@ -194,6 +199,7 @@ Module Module1
                 "CONVERT(Decimal(18,4),(QTY * MARKDOWN)) MARKDOWN, MKDN_REASON,  COUPON_CODE, TKT_NO, TRANS_TYPE, LINE_TYPE FROM #dtl"
             cmd = New SqlCommand(sql, cpCon)
             cmd.CommandTimeout = 960
+            theProcess = "Read sql data for detail records"
             rdr = cmd.ExecuteReader
             While rdr.Read
                 cnt += 1
@@ -266,8 +272,9 @@ Module Module1
                 xmlWriter.WriteElementString("EXTRACT_DATE", Date.Today)
                 xmlWriter.WriteEndElement()
             End While
+            theProcess = "Close sql connection for detail data"
             cpCon.Close()
-
+            theProcess = "Write total row to XML file"
             xmlWriter.WriteStartElement("SALE")
             xmlWriter.WriteElementString("TRANS_ID", "")
             xmlWriter.WriteElementString("SEQ_NO", "")

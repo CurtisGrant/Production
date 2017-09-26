@@ -139,6 +139,7 @@ Module Module1
             rCon.Open()
             sql = "UPDATE Client_Master SET Last_XML_Update = NULL WHERE Client_ID = '" & client & "'"
             cmd = New SqlCommand(sql, rCon)
+            cmd.CommandTimeout = 480
             cmd.ExecuteNonQuery()
             rCon.Close()
             Console.WriteLine("Processing Calendar")
@@ -344,6 +345,7 @@ Module Module1
                     "VALUES(s.Loc_Id, s.Sku, s.sDate, s.eDate, s.Cost, s.Retail, s.YrWk, s.Avail, s.End_OH, s.End_OH, s.Item, s.DIM1, s.DIM2, s.DIM3) " &
                     "WHEN MATCHED THEN UPDATE SET t.Begin_OH = s.End_OH;"
                 cmd = New SqlCommand(sql, con2)
+                cmd.CommandTimeout = 480
                 cmd.ExecuteNonQuery()
 
                 thisprocess = "XMLUpdate - Set SysOH"
@@ -373,7 +375,7 @@ Module Module1
             sql = "INSERT INTO Message (mDate, Title, Message) " &
                 "SELECT '" & Date.Now & "','" & title & "','" & message & "'"
             cmd = New SqlCommand(sql, con3)
-            cmd.CommandTimeout = 120
+            cmd.CommandTimeout = 480
             cmd.ExecuteNonQuery()
             con3.Close()
         Else
@@ -400,7 +402,7 @@ Module Module1
         con.Open()
         sql = "UPDATE Client_Master SET Last_XML_Update = '" & Date.Now & "', Contact = " & cnt & " WHERE Client_Id = '" & client & "'"
         cmd = New SqlCommand(sql, con)
-        cmd.CommandTimeout = 120
+        cmd.CommandTimeout = 480
         cmd.ExecuteNonQuery()
         con.Close()
     End Sub
@@ -451,6 +453,7 @@ Module Module1
                             "INSERT INTO Calendar (Year_Id, Prd_Id, Week_Id, sDate, eDate, YrPrd, YrWks, PrdWk) " &
                             "SELECT " & year & "," & period & "," & week & ",'" & sdate & "','" & edate & "'," & yrprd & "," & yrwks & "," & prdwk
                         cmd = New SqlCommand(sql, con)
+                        cmd.CommandTimeout = 480
                         cmd.ExecuteNonQuery()
                     End If
                 Next
@@ -731,6 +734,7 @@ Module Module1
             Dim sql As String
             sql = "IF OBJECT_ID('dbo._t1','U') IS NOT NULL DROP TABLE dbo._t1; "
             cmd = New SqlCommand(sql, con2)
+            cmd.CommandTimeout = 480
             cmd.ExecuteNonQuery()
             sql = "CREATE TABLE _t1(" &
                    "[Loc_Id] [varchar](20) NOT NULL," &
@@ -935,9 +939,10 @@ Module Module1
             If ((ds.Tables.Count > 0) AndAlso ds.Tables(0).Rows.Count > 0) Then
                 con.open()
                 con2.open()
-                thisprocess = "XMLUpdate - Process PREQ Header - Delet from Purchase_Request_Header"
+                thisprocess = "XMLUpdate - Process PREQ Header - Delete from Purchase_Request_Header"
                 sql = "DELETE FROM Purchase_Request_Header"
                 cmd = New SqlCommand(sql, con)
+                cmd.CommandTimeout = 480
                 cmd.ExecuteNonQuery()
                 dt = ds.Tables(0)
                 For Each row In dt.Rows
@@ -989,6 +994,7 @@ Module Module1
                             buyer & "','" & ord & "','" & del & "','" & can & "'," & totlCost & ",'" &
                             alloc & "','" & mrg & "','" & Date.Today & "'"
                         cmd = New SqlCommand(sql, con2)
+                        cmd.CommandTimeout = 480
                         cmd.ExecuteNonQuery()
                     Else
                         oTest = row("ORDER_TOTAL")
@@ -1034,6 +1040,7 @@ Module Module1
                 thisprocess = "XMLUpdate - Process PREQ Detail - Delete from Purchase_Request_Detail"
                 sql = "DELETE FROM Purchase_Request_Detail"
                 cmd = New SqlCommand(sql, con)
+                cmd.CommandTimeout = 480
                 cmd.ExecuteNonQuery()
                 dt = ds.Tables(0)
                 For Each row As DataRow In dt.Rows
@@ -1081,6 +1088,7 @@ Module Module1
                             uom & "'," & numer & "," & denom & "," & cost & ",'" & item & "','" &
                             dim1 & "','" & dim2 & "','" & dim3 & "'," & qty & " "
                         cmd = New SqlCommand(sql, con2)
+                        cmd.CommandTimeout = 480
                         cmd.ExecuteNonQuery()
                     Else
                         oTest = row("COST")
@@ -1135,6 +1143,7 @@ Module Module1
                 thisprocess = "XMLUpdate - Process PO Detail - Delete from PO_Header"
                 sql = "DELETE FROM PO_Header"
                 cmd = New SqlCommand(sql, con)
+                cmd.CommandTimeout = 480
                 cmd.ExecuteNonQuery()
                 Console.WriteLine("Deleted everything in PO_Header")
                 thisprocess = "XMLUpdate - Process PO Header - Read XML File"
@@ -1194,6 +1203,7 @@ Module Module1
                             vendor & "','" & buyer & "','" & stat & "', " & amt & ", " & recvd_cost & ", " & lines & ", " &
                             ord_qty & ", " & open_lines & ", " & open_amt
                         cmd = New SqlCommand(sql, con)
+                        cmd.CommandTimeout = 480
                         cmd.ExecuteNonQuery()
                     Else
                         oTest = row("ORDERDATE")
@@ -1245,6 +1255,7 @@ Module Module1
                 sql = "DELETE FROM PO_Detail"
                 con.open()
                 cmd = New SqlCommand(sql, con)
+                cmd.CommandTimeout = 480
                 cmd.ExecuteNonQuery()
                 dt = ds.Tables(0)
                 tqty = 0
@@ -1392,6 +1403,7 @@ Module Module1
                 thisprocess = "XMLUpdate - Process Date - Delete from Unposted_Sales"
                 sql = "DELETE FROM Unposted_Sales"
                 cmd = New SqlCommand(sql, con)
+                cmd.CommandTimeout = 480
                 cmd.ExecuteNonQuery()
                 con.close()
             End If
@@ -1597,7 +1609,7 @@ Module Module1
 
                                 thisprocess = "XMLUpdate - Process Data - Insert into Daily_Transaction_Log - " & sql & ""
                                 cmd = New SqlCommand(sql, con)
-                                cmd.CommandTimeout = 120
+                                cmd.CommandTimeout = 480
                                 cmd.ExecuteNonQuery()
 
                             End If
@@ -1734,7 +1746,7 @@ Module Module1
             End If
             thisprocess = "XMLUpdate - Update Tables - " & sql & ""
             cmd = New SqlCommand(sql, con2)
-            cmd.CommandTimeout = 120
+            cmd.CommandTimeout = 480
             cmd.ExecuteNonQuery()
             con2.close()
             ''
@@ -1800,7 +1812,7 @@ Module Module1
                             thisprocess = "XMLUpdate - Process Other Data - " & sql & ""
                             con.open()
                             cmd = New SqlCommand(sql, con)
-                            cmd.CommandTimeout = 120
+                            cmd.CommandTimeout = 480
                             cmd.ExecuteNonQuery()
                             con.close()
                         End If
@@ -1817,7 +1829,7 @@ Module Module1
 
             con.open()
             cmd = New SqlCommand(sql, con)
-            cmd.CommandTimeout = 120
+            cmd.CommandTimeout = 480
             cmd.ExecuteNonQuery()
             con.close()
 
@@ -1829,7 +1841,7 @@ Module Module1
            "INSERT INTO Buyers (ID, Description, Orig_Date) " &
            "SELECT 'OTHER','MISCELLANEOUS BUYER','" & CDate(Date.Today) & "'"
             cmd = New SqlCommand(sql, con)
-            cmd.CommandTimeout = 120
+            cmd.CommandTimeout = 480
             cmd.ExecuteNonQuery()
             con.close()
             ''End If
@@ -1878,6 +1890,7 @@ Module Module1
 
                     thisprocess = "XMLUpdate - Process Coupons - " & sql & ""
                     cmd = New SqlCommand(sql, con)
+                    cmd.CommandTimeout = 480
                     cmd.ExecuteNonQuery()
                 Next
                 con.Close()
@@ -1910,6 +1923,7 @@ Module Module1
                 "THEN INSERT (Ticket_No, Str_Id, Cust_No, Date, Amt, Items) " &
                 "VALUES (s.Ticket_No, s.Str_Id, s.Cust_No, s.Date, s.Amt, s.Items);"
             cmd = New SqlCommand(sql, con)
+            cmd.CommandTimeout = 480
             cmd.ExecuteNonQuery()
             con.Close()
             Dim m As String = ""
@@ -1970,6 +1984,7 @@ Module Module1
                     sku & "' AND eDate = '" & thisDate & "'"
                 thisprocess = "XMLUpdate - Set Max On Hand - " & sql & ""
                 cmd = New SqlCommand(sql, con2)
+                cmd.CommandTimeout = 480
                 cmd.ExecuteNonQuery()
             End While
             con.Close()
@@ -1996,7 +2011,7 @@ Module Module1
                 "SELECT '" & Date.Now & "','" & pgm & "','" & modul & "','" & process & "','" & m & "','" & stat & "','" & et & "'"
             thisprocess = "XMLUpdate - Update Process Log - " & sql & ""
             cmd = New SqlCommand(sql, con)
-            cmd.CommandTimeout = 120
+            cmd.CommandTimeout = 480
             cmd.ExecuteNonQuery()
             con.Close()
         Catch ex As Exception
@@ -2022,6 +2037,7 @@ Module Module1
                         "SELECT '" & CStr(oTest) & "','" & CStr(oTest) & "','Active','" & Date.Today & "','RC'"
                     thisprocess = "XMLUpdate - Update Store Table - " & sql & ""
                     cmd = New SqlCommand(sql, con2)
+                    cmd.CommandTimeout = 480
                     cmd.ExecuteNonQuery()
                 End If
             End While
