@@ -1,6 +1,0 @@
-﻿<asp:GridView runat="server" Font-Name="Arial" />
-<asp:GridView runat="server" SkinID="Professional" Font-Name="Verdana"
-                Font-Size="10pt" Cellpadding="4"
-            HeaderStyle-BackColor="#444444"
-            HeaderStyle-ForeColor="White"
-                AlternatingRowStyle-BackColor="#dddddd" />

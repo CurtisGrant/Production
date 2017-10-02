@@ -89,6 +89,8 @@ Module Module1
 
 
 
+        Console.WriteLine(conString)
+        Console.ReadLine()
 
 
 
@@ -139,7 +141,11 @@ Module Module1
                 "SELECT ID, DESCR FROM #t1"
             cmd = New SqlCommand(sql, cpCon)
 
-            If Err.Number <> 0 Then Console.WriteLine(Err.Number)
+            If Err.Number <> 0 Then
+                Console.WriteLine(Err.Number)
+                Console.ReadLine()
+            End If
+
 
             rdr = cmd.ExecuteReader
             While rdr.Read

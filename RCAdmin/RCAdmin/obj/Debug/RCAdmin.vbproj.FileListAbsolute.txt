@@ -66,3 +66,7 @@ C:\Projects\DEMO\RCAdmin\RCAdmin\obj\Debug\RCAdmin.Weeks.resources
 C:\Projects\DEMO\RCAdmin\RCAdmin\obj\Debug\RCAdmin.WeeksOnHand.resources
 C:\Projects\DEMO\RCAdmin\RCAdmin\obj\Debug\RCAdmin.WeeksOnHand_OLD.resources
 C:\Projects\DEMO\RCAdmin\RCAdmin\obj\Debug\RCAdmin.vbproj.GenerateResource.Cache
+C:\Projects\Production\RCAdmin\RCAdmin\bin\Debug\RCAdmin.exe.config
+C:\Projects\Production\RCAdmin\RCAdmin\obj\Debug\RCAdmin.exe
+C:\Projects\Production\RCAdmin\RCAdmin\obj\Debug\RCAdmin.xml
+C:\Projects\Production\RCAdmin\RCAdmin\obj\Debug\RCAdmin.pdb

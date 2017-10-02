@@ -204,6 +204,7 @@
     <Content Include="fonts\glyphicons-halflings-regular.eot" />
     <Content Include="Account\Web.config" />
     <Content Include="MasterPages\Frontend.Master" />
+    <Content Include="WebForms\VendorInventoryAnalysisReport.aspx" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
@@ -472,6 +473,13 @@
     </Compile>
     <Compile Include="BuiltinStuff\Site.Mobile.Master.designer.vb">
       <DependentUpon>Site.Mobile.Master</DependentUpon>
+    </Compile>
+    <Compile Include="WebForms\VendorInventoryAnalysisReport.aspx.designer.vb">
+      <DependentUpon>VendorInventoryAnalysisReport.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="WebForms\VendorInventoryAnalysisReport.aspx.vb">
+      <DependentUpon>VendorInventoryAnalysisReport.aspx</DependentUpon>
+      <SubType>ASPXCodebehind</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>

@@ -926,7 +926,7 @@ Module Module1
         Try
             stopWatch.Start()
             Dim cnt As Integer = 0
-            Dim preq, batch, vend_no, vend, loc, buyer, alloc, mrg As String
+            Dim preq, batch, vend_no, vend, loc, buyer, alloc, mrg, terms As String
             Dim ord, del, can, extract As Date
             Dim amt, totlCost As Decimal
             totlCost = 0
@@ -986,13 +986,16 @@ Module Module1
                         oTest = row("EXTRACT_DATE")
                         If IsDBNull(oTest) Then oTest = 0
                         extract = CDate(oTest)
+                        oTest = row("TERMS")
+                        If IsDBNull(oTest) Then oTest = Nothing
+                        terms = oTest
                         thisprocess = "XMLUpdate - Process PREQ Header - Insert into Purchase_Request_Header"
                         sql = "INSERT INTO Purchase_Request_Header(PREQ_NO, Batch_Id, Loc_Id, " &
                             "Vendor_Id, Buyer, Order_Date, Deliver_Date, Cancel_Date, Order_Total, " &
-                            "Allocated, Merged, Last_Update) " &
+                            "Allocated, Merged, Last_Update, Terms) " &
                             "SELECT '" & preq & "','" & batch & "','" & loc & "','" & vend_no & "','" &
                             buyer & "','" & ord & "','" & del & "','" & can & "'," & totlCost & ",'" &
-                            alloc & "','" & mrg & "','" & Date.Today & "'"
+                            alloc & "','" & mrg & "','" & Date.Today & "','" & terms & "'"
                         cmd = New SqlCommand(sql, con2)
                         cmd.CommandTimeout = 480
                         cmd.ExecuteNonQuery()
@@ -1128,7 +1131,7 @@ Module Module1
             Dim cnt As Integer = 0
             Dim recvd, lines, open_lines As Integer
             Dim amt, recvd_cost, ord_qty, open_amt As Decimal
-            Dim store, po, vendor, buyer, stat As String
+            Dim store, po, vendor, buyer, stat, terms As String
             Dim ordDate, dueDate, canDate As Date
             Dim datetime As DateTime
             Dim ds As DataSet = New DataSet
@@ -1195,13 +1198,15 @@ Module Module1
                         End If
                         oTest = row("EXTRACT_DATE")
                         If Not IsDBNull(oTest) And Not IsNothing(oTest) Then datetime = CDate(oTest) Else datetime = Nothing
+                        oTest = row("TERMS")
+                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then terms = CStr(oTest) Else terms = Nothing
                         thisprocess = "XMLUpdate - Process PO Header - Insert into PO_Header"
                         sql = "IF NOT EXISTS (SELECT PO_NO FROM PO_Header WHERE PO_NO = '" & po & "') " &
                             "INSERT INTO PO_Header (Loc_Id, PO_NO, Order_Date, Due_Date, Cancel_Date, Vendor_Id, Buyer, Status, " &
-                            "Amount, Recvd_Cost, Lines, Ord_Qty, Open_Lines, Open_Amt) " &
+                            "Amount, Recvd_Cost, Lines, Ord_Qty, Open_Lines, Open_Amt, Terms) " &
                             "SELECT '" & store & "','" & po & "','" & ordDate & "','" & dueDate & "','" & canDate & "','" &
                             vendor & "','" & buyer & "','" & stat & "', " & amt & ", " & recvd_cost & ", " & lines & ", " &
-                            ord_qty & ", " & open_lines & ", " & open_amt
+                            ord_qty & ", " & open_lines & ", " & open_amt & ",'" & terms & "'"
                         cmd = New SqlCommand(sql, con)
                         cmd.CommandTimeout = 480
                         cmd.ExecuteNonQuery()
@@ -1477,7 +1482,7 @@ Module Module1
                         Else : transDate = "1900-01-01 00:00:00"
                         End If
                         ordtype = ""
-                        whsl = ""
+                        whsl = "N"
                         Select Case theField
                             Case "Sold"
                                 oTest = row("STR_ID")
@@ -1600,13 +1605,14 @@ Module Module1
                                     "AND LOCATION = '" & loc & "' " & " AND TRANS_DATE = '" & transDate & "') " &
                                     "INSERT INTO Daily_Transaction_Log (TRANS_ID, SEQUENCE_NO, STORE, SKU, LOCATION, QTY, COST, RETAIL, " &
                                     "MKDN, TRANS_DATE, [TYPE], POST_DATE, DEPT, BUYER, CLASS, EXTRACT_DATE, CUST_NO, TKT_NO, MKDN_REASON, " &
-                                    "COUPON_CODE, ITEM, DIM1, DIM2, DIM3, ORD_TYPE, TKT_DATE, SALES_REP, USER_ID, STATION, DRAWER, SALE_TYPE) " &
+                                    "COUPON_CODE, ITEM, DIM1, DIM2, DIM3, ORD_TYPE, TKT_DATE, SALES_REP, USER_ID, STATION, DRAWER, SALE_TYPE,
+                                    WHOLESALE) " &
                                     "SELECT '" & id & "', " & seq & ", '" & store & "', '" & sku & "','" & loc & "'," &
                                     qty & "," & cost & "," & retail & ", " & mkdn & ",'" & transDate & "','" & transtype & "','" & datetimenow & "','" &
                                     dept & "','" & buyer & "','" & clss & "', '" & extractDate & "','" & cust & "','" & tkt & "','" &
                                     reason & "','" & coupon & "','" & item & "','" & dim1 & "','" & dim2 & "','" & dim3 & "','" & ordtype & "','" &
-                                    tktDate & "','" & sales_rep & "','" & userid & "','" & station & "','" & drawer & "','" & sale_type & "'"
-
+                                    tktDate & "','" & sales_rep & "','" & userid & "','" & station & "','" & drawer & "','" & sale_type & "','" &
+                                    whsl & "'"
                                 thisprocess = "XMLUpdate - Process Data - Insert into Daily_Transaction_Log - " & sql & ""
                                 cmd = New SqlCommand(sql, con)
                                 cmd.CommandTimeout = 480
