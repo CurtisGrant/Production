@@ -2475,9 +2475,9 @@ Module Module1
                 "QTY decimal(18,4) NULL, COST decimal(18,4) NULL, RETAIL decimal(18,4) NULL, DATE date, MARKDOWN decimal(18,4) NULL,  " &
                 "MKDN_REASON varchar(30) NULL, COUPON_CODE varchar(30) NULL, DEPT varchar(10) NULL, CLASS varchar(10) NULL, " &
                 "BUYER varchar(10) NULL, TKT_NO varchar(30) NULL, VENDOR varchar(30), SALES_REP varchar(10), CUST_NO varchar(15), " &
-                "ORD_TYPE varchar(10), TKT_DATE datetime) " &
+                "ORD_TYPE varchar(10), TKT_DATE datetime, USER_ID varchar(10)) " &
                 "INSERT INTO #dtl (TRANS_ID, SEQ_NO, STORE, ITEM, DIM1, DIM2, DIM3, LOCATION, STATION, DRAWER, QTY, COST, RETAIL, DATE, " &
-                "MARKDOWN, MKDN_REASON, COUPON_CODE, DEPT, CLASS, BUYER, TKT_NO, VENDOR, SALES_REP, CUST_NO, ORD_TYPE, TKT_DATE) " &
+                "MARKDOWN, MKDN_REASON, COUPON_CODE, DEPT, CLASS, BUYER, TKT_NO, VENDOR, SALES_REP, CUST_NO, ORD_TYPE, TKT_DATE, USER_ID) " &
                 "SELECT ISNULL(l.DOC_ID,'NA') AS TRANS_ID, ISNULL(l.LIN_SEQ_NO,0) AS SEQ_NO,  ISNULL(l.STR_ID,'NA') STR_ID, " &
                 "ISNULL(l.ITEM_NO,'NA') ITEM, ISNULL(c.DIM_1_UPR,'*') DIM1, ISNULL(c.DIM_2_UPR,'*') DIM2, ISNULL(c.DIM_3_UPR,'*') DIM3,  " &
                 "ISNULL(l.STK_LOC_ID,'') LOCATION, ISNULL(h.STA_ID,'NA'), 'NA' DRAWER, " &
@@ -2487,7 +2487,7 @@ Module Module1
                 "ISNULL(PRC_OVRD_REAS,'') MKDN_REASON, CONVERT(varchar(30),'') COUPON_CODE, ISNULL(l.CATEG_COD,'NA') DEPT, " &
                 "ISNULL(l.SUBCAT_COD,'NA') CLASS,  ISNULL(pv.LST_ORD_BUYER,'OTHER') BUYER, ISNULL(l.TKT_NO,'') TKT_NO, " &
                 "ISNULL(i.ITEM_VEND_NO,'') VENDOR_ID, ISNULL(h.SLS_REP,'NA'), ISNULL(h.CUST_NO,'NA'), " &
-                "ISNULL(h.DOC_TYP,'UNKNOWN'), ISNULL(h.TKT_DT,'1-1-1900') FROM VI_PS_ORD_HIST_LIN AS l " &
+                "ISNULL(h.DOC_TYP,'UNKNOWN'), ISNULL(h.TKT_DT,'1-1-1900'), ISNULL(h.USR_ID,'UNKNOWN') FROM VI_PS_ORD_HIST_LIN AS l " &
                 "INNER JOIN VI_PS_ORD_HIST AS h ON h.DOC_ID = l.DOC_ID " &
                 "LEFT JOIN PO_VEND_ITEM AS pv ON pv.ITEM_NO = l.ITEM_NO AND pv.VEND_NO = l.ITEM_VEND_NO " &
                 "LEFT JOIN VI_IM_ITEM_WITH_INV i ON i.ITEM_NO = l.ITEM_NO AND i.LOC_ID = l.STK_LOC_ID " &
@@ -2499,7 +2499,7 @@ Module Module1
                 "UPDATE t1 SET t1.COUPON_CODE = PROMPT_ALPHA_1 FROM #dtl t1 " &
                 "JOIN #us2 t2 ON t2.DOC_ID = t1.TRANS_ID AND t2.LIN_SEQ_NO = SEQ_NO " &
                 "SELECT TRANS_ID, SEQ_NO, STORE, ITEM, DIM1, DIM2, DIM3, LOCATION, STATION, DRAWER, QTY, COST, RETAIL, DATE, MARKDOWN, " &
-                "MKDN_REASON,  COUPON_CODE, DEPT, CLASS, BUYER, TKT_NO, SALES_REP, CUST_NO, ORD_TYPE, TKT_DATE FROM #dtl WHERE QTY > 0"
+                "MKDN_REASON,  COUPON_CODE, DEPT, CLASS, BUYER, TKT_NO, SALES_REP, CUST_NO, ORD_TYPE, TKT_DATE, USER_ID FROM #dtl WHERE QTY > 0"
             cmd = New SqlCommand(sql, cpCon)
             rdr = cmd.ExecuteReader
             While rdr.Read
@@ -2592,7 +2592,9 @@ Module Module1
                 oTest = rdr("ORD_TYPE")
                 xmlWriter.WriteElementString("ORD_TYPE", CStr(oTest))
                 oTest = rdr("TKT_DATE")
-                xmlWriter.WriteElementString("TKT_DATE", oTest)
+                xmlWriter.WriteElementString("TICKET_DATE", oTest)
+                oTest = rdr("USER_ID")
+                xmlWriter.WriteElementString("USER_ID", CStr(oTest))
                 xmlWriter.WriteElementString("CUSTOM_1", custom)
                 xmlWriter.WriteElementString("CUSTOM_2", custom2)
                 xmlWriter.WriteElementString("CUSTOM_3", custom3)
