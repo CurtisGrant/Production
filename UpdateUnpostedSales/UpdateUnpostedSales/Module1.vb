@@ -100,8 +100,8 @@ Module Module1
         Try
             con = New SqlConnection(constring)
             con.Open()
-            sql = "IF OBJECT_ID('tempdb.#t1','U') IS NOT NULL DROP TABLE #t1; " &
-                "CREATE TABLE #t1(transId varchar(30), strId varchar(20), locId varchar(20), station varchar(20), drawer varchar(20), " &
+            ''sql = "IF OBJECT_ID('tempdb.#t1','U') IS NOT NULL DROP TABLE #t1; " &
+            sql = "CREATE TABLE _t1(transId varchar(30), strId varchar(20), locId varchar(20), station varchar(20), drawer varchar(20), " &
                 "tDate datetime, cust varchar(20), cust_typ varchar(10), ord_typ varchar(10), tkt varchar(20), rep varchar(20), " &
                 "cntry varchar(20), due decimal(18,4), terms varchar(20), paid decimal(20), stat varchar(10), totl decimal(18,4), edte datetime)"
             cmd = New SqlCommand(sql, con)
@@ -155,7 +155,7 @@ Module Module1
                     If IsDBNull(oTest) Then totl = 0 Else totl = CDec(oTest)
                     oTest = row("EXTRACT_DATE")
                     If IsDBNull(oTest) Then edte = "1/1/1900" Else edte = CDate(oTest)
-                    sql = "INSERT INTO #t1(transId, strId, locId, station, drawer, tDate, cust, cust_typ, ord_typ, tkt, rep, " &
+                    sql = "INSERT INTO _t1(transId, strId, locId, station, drawer, tDate, cust, cust_typ, ord_typ, tkt, rep, " &
                         "cntry, due, terms, paid, stat, totl, edte) " &
                         "SELECT '" & transId & "','" & strId & "','" & locId & "','" & station & "','" & drawer & "','" & tdate & "','" &
                         cust & "','" & cust_typ & "','" & ord_typ & "','" & tkt & "','" & rep & "','" & cntry & "'," & due & ",'" &

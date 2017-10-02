@@ -696,7 +696,7 @@ Module Module1
             xmlWriter.Formatting = Formatting.Indented
             xmlWriter.Indentation = 5
             xmlWriter.WriteStartElement("Customers")
-            Dim flipIt As String
+            Dim flipIt, custom, custom2, custom3, custom4, custom5 As String
             cpCon.Open()
             sql = "SELECT CUST_NO, NAM_UPR AS NAME, FST_NAM_UPR AS FIRST_NAME, LST_NAM_UPR AS LAST_NAME, ADRS_1 AS ADDRESS_1, " &
                 "ADRS_2 AS ADDRESS_2, ADRS_3 AS ADDRESS_3, CITY, STATE, ZIP_COD AS ZIP, CONTCT_2 AS SPOUSE, COMMNT AS BIRTHDAY, " &
@@ -708,6 +708,11 @@ Module Module1
             rdr = cmd.ExecuteReader
             cnt = 0
             While rdr.Read
+                custom = Nothing
+                custom2 = Nothing
+                custom3 = Nothing
+                custom4 = Nothing
+                custom5 = Nothing
                 xmlWriter.WriteStartElement("Customer")
                 cnt += 1
                 If cnt Mod 1000 = 0 Then Console.WriteLine(cnt)
@@ -791,6 +796,11 @@ Module Module1
                 oTest = rdr("CELL_2")
                 If IsDBNull(oTest) Then oTest = Nothing
                 xmlWriter.WriteElementString("CELL_2", oTest)
+                xmlWriter.WriteElementString("CUSTOM_1", custom)
+                xmlWriter.WriteElementString("CUSTOM_2", custom2)
+                xmlWriter.WriteElementString("CUSTOM_3", custom3)
+                xmlWriter.WriteElementString("CUSTOM_4", custom4)
+                xmlWriter.WriteElementString("CUSTOM_4", custom5)
                 xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
                 xmlWriter.WriteEndElement()
             End While
@@ -1225,7 +1235,7 @@ Module Module1
             cnt = 0
             totlRetail = 0
             Dim amt As Decimal
-            Dim preq, batch, vend_id, vend, loc, buyer, alloc, mrg, terms As String
+            Dim preq, batch, vend_id, vend, loc, buyer, alloc, mrg, terms, custom, custom2, custom3, custom4, custom5 As String
             Dim ord, del, can As Date
             path = xmlPath & "\Purchase_Request_Header.xml"
             xmlWriter = New XmlTextWriter(path, System.Text.Encoding.UTF8)
@@ -1236,7 +1246,7 @@ Module Module1
             Console.WriteLine("extracting Purchase Requests Header")
             cpCon.Open()
             sql = "SELECT PREQ_NO, BAT_ID, VEND_NO, VEND_NAM, LOC_ID, BUYER, ORD_DAT, DELIV_DAT, CANCEL_DAT, ORD_TOT, " &
-                "IS_ALLOC, ALLOC_SEP_OR_MERGED, TERMS_COD FROM PO_PREQ_HDR"
+                "IS_ALLOC, ALLOC_SEP_OR_MERGED, TERMS_COD, COMMNT_1 FROM PO_PREQ_HDR"
             cmd = New SqlCommand(sql, cpCon)
             rdr = cmd.ExecuteReader
             While rdr.Read
@@ -1253,6 +1263,11 @@ Module Module1
                 ord = Nothing
                 del = Nothing
                 can = Nothing
+                custom = Nothing
+                custom2 = Nothing
+                custom3 = Nothing
+                custom4 = Nothing
+                custom5 = Nothing
                 amt = 0
                 terms = Nothing
                 oTest = rdr("PREQ_NO")
@@ -1284,6 +1299,8 @@ Module Module1
                 If Not IsDBNull(oTest) And Not IsNothing(oTest) Then mrg = CStr(oTest)
                 oTest = rdr("TERMS_COD")
                 If Not IsDBNull(oTest) And Not IsNothing(oTest) Then terms = CStr(oTest)
+                oTest = rdr("COMMNT_1")
+                If Not IsDBNull(oTest) And Not IsNothing(oTest) Then custom = CStr(Replace(oTest, "'", "''"))
                 xmlWriter.WriteStartElement("PREQ")
                 xmlWriter.WriteElementString("PREQ_NO", preq)
                 xmlWriter.WriteElementString("BATCH", batch)
@@ -1298,6 +1315,11 @@ Module Module1
                 xmlWriter.WriteElementString("ISALLOCATED", alloc)
                 xmlWriter.WriteElementString("MERGED", mrg)
                 xmlWriter.WriteElementString("TERMS", terms)
+                xmlWriter.WriteElementString("CUSTOM_1", custom)
+                xmlWriter.WriteElementString("CUSTOM_2", custom2)
+                xmlWriter.WriteElementString("CUSTOM_3", custom3)
+                xmlWriter.WriteElementString("CUSTOM_4", custom4)
+                xmlWriter.WriteElementString("CUSTOM_5", custom5)
                 xmlWriter.WriteElementString("EXTRACT_DATE", Date.Now)
                 xmlWriter.WriteEndElement()
             End While
@@ -1446,7 +1468,7 @@ Module Module1
             Dim tbl As New DataTable
             Dim row, foundRow As DataRow
             Dim column As New DataColumn
-            Dim po, store, sku, dim1, dim2, dim3, terms As String
+            Dim po, store, sku, dim1, dim2, dim3, terms, custom, custom2, custom3, custom4, custom5 As String
             column.DataType = System.Type.GetType("System.String")
             column.ColumnName = "PO"
             tbl.Columns.Add(column)
@@ -1467,6 +1489,11 @@ Module Module1
             tbl.Columns.Add("Open_Lines", GetType(System.String))
             tbl.Columns.Add("Open_Amt", GetType(System.String))
             tbl.Columns.Add("Terms", GetType(System.String))
+            tbl.Columns.Add("Custom", GetType(System.String))
+            tbl.Columns.Add("Custom2", GetType(System.String))
+            tbl.Columns.Add("Custom3", GetType(System.String))
+            tbl.Columns.Add("Custom4", GetType(System.String))
+            tbl.Columns.Add("Custom5", GetType(System.String))
             path = xmlPath & "\PODetail.xml"
             xmlWriter = New XmlTextWriter(path, System.Text.Encoding.UTF8)
             xmlWriter.WriteStartDocument(True)
@@ -1481,7 +1508,7 @@ Module Module1
                 "(SELECT MAX(RECVR_DAT) FROM PO_RECVR_HIST_LIN r WHERE r.PO_NO = h.PO_NO " &
                 "AND r.RECVR_LOC_ID = h.LOC_ID AND r.ITEM_NO = l.ITEM_NO AND QTY_RECVD > 0) AS LAST_RECVD_DATE, " &
                 "h.ORD_SUB_TOT AS AMT, h.LIN_CNT AS LINES, h.ORD_QTY_IN_STK_UNITS AS STK_QTY, " &
-                "OPN_LIN_CNT AS OPEN_LINES, h.OPN_PO_TOT AS OPEN_AMT, TERMS_COD " &
+                "OPN_LIN_CNT AS OPEN_LINES, h.OPN_PO_TOT AS OPEN_AMT, TERMS_COD, h.COMMNT_1 " &
                 "FROM PO_ORD_HDR h " &
                 "JOIN PO_ORD_LIN l ON l.PO_NO = h.PO_NO " &
                 "LEFT JOIN PO_ORD_CELL c ON c.PO_NO = l.PO_NO AND c.SEQ_NO = l.SEQ_NO " &
@@ -1501,6 +1528,11 @@ Module Module1
             cmd.CommandTimeout = 480
             rdr = cmd.ExecuteReader
             While rdr.Read
+                custom = ""
+                custom2 = ""
+                custom3 = ""
+                custom4 = ""
+                custom5 = ""
                 xmlWriter.WriteStartElement("ONORDER")
                 cnt += 1
                 If cnt Mod 1000 = 0 Then Console.WriteLine(cnt)
@@ -1600,6 +1632,13 @@ Module Module1
                     row("OPEN_AMT") = CDec(oTest)
                     oTest = rdr("TERMS_COD")
                     If Not IsDBNull(oTest) And Not IsNothing(oTest) Then row("Terms") = oTest
+                    oTest = rdr("COMMNT_1")
+                    If Not IsDBNull(oTest) And Not IsNothing(oTest) Then custom = CStr(oTest)
+                    row("Custom") = custom
+                    row("Custom2") = custom2
+                    row("Custom3") = custom3
+                    row("Custom4") = custom4
+                    row("Custom5") = custom5
                     tbl.Rows.Add(row)
                 End If
             End While
@@ -1664,6 +1703,11 @@ Module Module1
                     xmlWriter.WriteElementString("OPEN_AMT", row("OPEN_AMT"))
                     If IsDBNull(row("Terms")) Then row("Terms") = ""
                     xmlWriter.WriteElementString("TERMS", row("Terms"))
+                    xmlWriter.WriteElementString("CUSTOM_1", row("Custom"))
+                    xmlWriter.WriteElementString("CUSTOM_2", row("Custom2"))
+                    xmlWriter.WriteElementString("CUSTOM_3", row("Custom3"))
+                    xmlWriter.WriteElementString("CUSTOM_4", row("Custom4"))
+                    xmlWriter.WriteElementString("CUSTOM_5", row("Custom5"))
                     xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
                     xmlWriter.WriteEndElement()
                 Next
@@ -2154,7 +2198,7 @@ Module Module1
             Console.WriteLine("Extracting Sales data")
             cpCon.Open()
             path = xmlPath & "\Sales.xml"
-            Dim item, itemString, dim1, dim2, dim3, store, station, drawer, location As String
+            Dim item, itemString, dim1, dim2, dim3, store, station, drawer, location, custom, custom2, custom3, custom4, custom5 As String
             Dim grandQty As Decimal = 0
             Dim grandCost As Decimal = 0
             Dim grandRetail As Decimal = 0
@@ -2248,6 +2292,11 @@ Module Module1
                 End If
                 item = ""
                 itemString = ""
+                custom = Nothing
+                custom2 = Nothing
+                custom3 = Nothing
+                custom4 = Nothing
+                custom5 = Nothing
                 xmlWriter.WriteStartElement("SALE")
                 oTest = rdr("BUS_DATE")
                 If IsDBNull(oTest) Then oTest = 0
@@ -2339,6 +2388,11 @@ Module Module1
                 oTest = rdr("SALES_REP")
                 If IsDBNull(oTest) Then oTest = "UNKNOWN"
                 xmlWriter.WriteElementString("SALES_REP", Replace(oTest, "'", "''"))
+                xmlWriter.WriteElementString("CUSTOM_1", custom)
+                xmlWriter.WriteElementString("CUSTOM_2", custom2)
+                xmlWriter.WriteElementString("CUSTOM_3", custom3)
+                xmlWriter.WriteElementString("CUSTOM_4", custom4)
+                xmlWriter.WriteElementString("CUSTOM_5", custom5)
                 xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
                 xmlWriter.WriteEndElement()
             End While
@@ -2400,7 +2454,7 @@ Module Module1
             Console.WriteLine("Extracting Order data")
             cpCon.Open()
             path = xmlPath & "\Orders.xml"
-            Dim item, itemString, dim1, dim2, dim3, store, drawer, location As String
+            Dim item, itemString, dim1, dim2, dim3, store, drawer, location, custom, custom2, custom3, custom4, custom5 As String
             Dim mkdn As Decimal = 0
             Dim grandQty As Decimal = 0
             Dim grandCost As Decimal = 0
@@ -2444,6 +2498,11 @@ Module Module1
             While rdr.Read
                 cnt += 1
                 If cnt Mod 1000 = 0 Then Console.WriteLine(cnt)
+                custom = Nothing
+                custom2 = Nothing
+                custom3 = Nothing
+                custom4 = Nothing
+                custom5 = Nothing
                 xmlWriter.WriteStartElement("ORDER")
                 oTest = rdr("TRANS_ID")
                 If IsDBNull(oTest) Then oTest = ""
@@ -2527,6 +2586,11 @@ Module Module1
                 totlQty += qty
                 totlCost += (qty * cost)
                 totlRetail += (qty * retail)
+                xmlWriter.WriteElementString("CUSTOM_1", custom)
+                xmlWriter.WriteElementString("CUSTOM_2", custom2)
+                xmlWriter.WriteElementString("CUSTOM_3", custom3)
+                xmlWriter.WriteElementString("CUSTOM_4", custom4)
+                xmlWriter.WriteElementString("CUSTOM_5", custom5)
                 xmlWriter.WriteElementString("EXTRACT_DATE", Date.Today)
                 xmlWriter.WriteEndElement()
             End While
