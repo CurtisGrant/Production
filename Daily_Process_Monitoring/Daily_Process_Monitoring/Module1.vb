@@ -107,17 +107,41 @@ Module Module1
             '
             Dim errLog As String = xmlPath & "\errlog.txt"
             If System.IO.File.Exists(errLog) Then
-                err = "Found an error log file for " & client & " in " & xmlPath
-                Call Write_Error(err)
+                Dim len As Int32
+                Dim throwError As Boolean = True
+                Dim infoReader As System.IO.FileInfo
+                infoReader = My.Computer.FileSystem.GetFileInfo(errLog)
+                len = infoReader.Length
+                If len > 0 Then
+                    Dim reader = File.OpenText(errLog)
+                    Dim line As String = Nothing
+                    line = reader.ReadLine
+                    If line.StartsWith("Title: CounterpointUnpostedSalesExtract Get") Then
+                        line = reader.ReadLine
+                        If line.StartsWith("Message: Connection Timeout Expired.") Then
+                            throwError = False
+                        End If
+                        If line.StartsWith("Message: A connection was successfully established with the server,") Then
+                            throwError = False
+                        End If
+                        If line.Contains("was deadlocked on lock resources with another process and has been chosen") Then
+                            throwError = False
+                        End If
+                    End If
+                        If throwError Then
+                        err = "Found an error log file for " & client & " in " & xmlPath
+                        Call Write_Error(err)
+                    End If
+                End If
             End If
-            '
-            '                 Check for an error log in the ERRORS folder
-            '
-            errLog = errorPath & "\errLog.txt"
-            If System.IO.File.Exists(errLog) Then
-                err = "Found an error log file for " & client & " in " & errorPath
-                Call Write_Error(err)
-            End If
+            ''''
+            ''''                 Check for an error log in the ERRORS folder
+            ''''
+            ''errLog = errorPath & "\errLog.txt"
+            ''If System.IO.File.Exists(errLog) Then                                     Chad is looking for these with Splinterware
+            ''    err = "Found an error log file for " & client & " in " & errorPath
+            ''    Call Write_Error(err)
+            ''End If
 
             rccon2.Open()
             sql = "SELECT Program, Module, Process, DOW, XMLFile FROM Client_Processes WHERE Client_Id = '" & client & "' "
@@ -189,7 +213,7 @@ Module Module1
                     End If
                 Else
                     thisDay = CInt(oTest) + 1
-                    If thisDay = DOW Then                    ' a process is supposed to run this day of the week
+                    If thisDay = DOW Then
                         oTest2 = row("OK")
                         If IsDBNull(oTest2) Then
                             Call Write_Error(err)
@@ -198,27 +222,48 @@ Module Module1
                     End If
                 End If
             Next
-            ''If allIsGood = False Then
-            ''    err = "DAILY UPDATE was INCOMPLETE - CHECK ERROR AND PROCESS LOGS"
-            ''    Call Write_Error(err)
-            ''Else
-            ''    Console.WriteLine("ALL IS GOOD")
-            ''End If
+            If allIsGood = False Then
+                err = "DAILY UPDATE was INCOMPLETE - CHECK ERROR AND PROCESS LOGS"
+                Call Write_Error(err)
+            Else
+                Console.WriteLine("ALL IS GOOD")
+            End If
 
-            ''con.Open()
-            ''sql = "SELECT ISNULL(SUM(End_OH * Retail),0) AS OnHand FROM Item_Inv WHERE eDate = '" & thisEdate & "'"
-            ''cmd = New SqlCommand(sql, con)
-            ''rdr = cmd.ExecuteReader
-            ''While rdr.Read
-            ''    oTest = rdr("OnHand")
-            ''    If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
-            ''        If rdr("OnHand") < 2000000 Then
-            ''            err = "Inventory may be off. Current On Hand at retail is only " & Format(CDec(rdr("OnHand")), "$###,###,###.00")
-            ''            Call Write_Error(err)
-            ''        End If
-            ''    End If
-            ''End While
-            ''con.Close()
+
+
+            thisEdate = "8/5/2017"
+
+
+
+            con.Open()
+            sql = "SELECT eDate, ISNULL(SUM(End_OH * Retail),0) AS OnHand FROM Item_Inv " &
+                "WHERE eDate BETWEEN '" & DateAdd(DateInterval.Day, -7, thisEdate) & "' AND '" & thisEdate & "' GROUP BY eDate"
+            cmd = New SqlCommand(sql, con)
+            rdr = cmd.ExecuteReader
+            Dim diff As Decimal = 0
+            Dim invVal As Decimal = 0
+            Dim thisWeek As Decimal = 0
+            Dim lastWeek As Decimal = 0
+            While rdr.Read
+                oTest = rdr("OnHand")
+                If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
+                    invVal = CDec(oTest)
+                    oTest = rdr("eDate")
+                    If CDate(oTest) = thisEdate Then thisWeek = invVal Else lastWeek = invVal
+                End If
+            End While
+            If thisWeek = 0 Then
+                err = "ERROR! No Inventory for this week. " & thisEdate
+                Call Write_Error(err)
+            Else
+                diff = ((thisWeek - lastWeek) / lastWeek)
+                If Math.Abs(diff) < 0.2 Or Math.Abs(diff) > 0.2 Then
+                    err = "Current On Hand (" & Format(thisWeek, "###,###,###") & ") is " &
+                        Format(diff, "###.#0%") & " of last week''s. (" & Format(lastWeek, "###,###,###") & ")"
+                    Call Write_Error(err)
+                End If
+                con.Close()
+            End If
         Next
         rccon.Close()
     End Sub

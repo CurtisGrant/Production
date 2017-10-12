@@ -1127,9 +1127,6 @@ Module Module1
             totlCost = 0
             totlRetail = 0
             totlMarkdown = 0
-            Dim avail As Decimal
-            Dim commited As Decimal = 0
-            Dim totlcommited As Decimal = 0
             path = xmlPath & "\Inventory.xml"
             Dim sku As String
             Dim path2 As String = xmlPath & "Inventory_" & Today & ".xml"
@@ -1149,33 +1146,25 @@ Module Module1
             ''    "DELETE FROM #t1 WHERE AVAIL = 0 " & _
             ''    "SELECT LOCATION, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, ONHAND, AVAIL, COMMITED, COST, RETAIL from #t1"
             sql = "SELECT i.LOC_ID AS LOCATION, i.ITEM_NO, c.DIM_1_UPR, c.DIM_2_UPR, c.DIM_3_UPR, " &
-                 "c.QTY_ON_HND ONHAND, " &
-                 "c.QTY_AVAIL AVAIL, " &
-                 "c.QTY_COMMIT COMMITED, " &
-                 "AVG_COST AS COST, PRC_1 AS RETAIL INTO #t1 FROM IM_INV i " &
+                 "c.QTY_ON_HND ONHAND, AVG_COST AS COST, PRC_1 AS RETAIL INTO #t1 FROM IM_INV i " &
                  "LEFT JOIN IM_INV_CELL c ON c.ITEM_NO = i.ITEM_NO AND c.LOC_ID = i.LOC_ID " &
                  "LEFT JOIN IM_ITEM im ON IM.ITEM_NO=i.ITEM_NO " &
-                 "WHERE im.TRK_METH = 'G' AND c.QTY_AVAIL <> 0 " &
-                 "INSERT INTO #t1(LOCATION, ITEM_NO, ONHAND, AVAIL, COMMITED, COST, RETAIL) " &
-                 "SELECT i.LOC_ID, i.ITEM_NO, i.QTY_ON_HND, i.QTY_AVAIL, i.QTY_COMMIT, AVG_COST, PRC_1 FROM IM_INV i " &
+                 "WHERE im.TRK_METH = 'G' AND c.QTY_ON_HND <> 0 " &
+                 "INSERT INTO #t1(LOCATION, ITEM_NO, ONHAND, COST, RETAIL) " &
+                 "SELECT i.LOC_ID, i.ITEM_NO, i.QTY_ON_HND, AVG_COST, PRC_1 FROM IM_INV i " &
                  "LEFT JOIN IM_ITEM im ON im.ITEM_NO = i.ITEM_NO " &
-                 "WHERE im.TRK_METH <> 'G' AND i.QTY_AVAIL <> 0 " &
-                 "SELECT LOCATION, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, ONHAND, AVAIL, COMMITED, COST, RETAIL from #t1"
+                 "WHERE im.TRK_METH <> 'G' AND i.QTY_ON_HND <> 0 " &
+                 "SELECT LOCATION, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, ONHAND, COST, RETAIL from #t1"
             cmd = New SqlCommand(sql, cpCon)
-            cmd.CommandTimeout = 120
+            cmd.CommandTimeout = 480
             rdr = cmd.ExecuteReader
             While rdr.Read
                 cnt += 1
                 If cnt Mod 1000 = 0 Then Console.WriteLine(cnt)
                 oTest = rdr("ONHAND")
                 If IsDBNull(oTest) Then qty = 0 Else qty = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
-                oTest = rdr("COMMITED")
-                If IsDBNull(oTest) Then commited = 0 Else commited = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
-                oTest = rdr("AVAIL")
-                If IsDBNull(oTest) Then avail = 0 Else avail = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
                 xmlWriter.WriteStartElement("ITEM")
                 totlQty += qty
-                totlcommited += commited
                 oTest = rdr("LOCATION")
                 If Not IsDBNull(oTest) And Not IsNothing(oTest) Then oTest = FixData(oTest) Else oTest = "NA"
                 xmlWriter.WriteElementString("LOCATION", Replace(oTest, "'", "''"))
@@ -1188,8 +1177,6 @@ Module Module1
                 End If
                 xmlWriter.WriteElementString("SKU", Replace(sku, "'", "''"))
                 xmlWriter.WriteElementString("ONHAND", qty)
-                xmlWriter.WriteElementString("COMMITTED", commited)
-                xmlWriter.WriteElementString("AVAIL", avail)
                 oTest = rdr("COST")
                 If IsDBNull(oTest) Then cost = 0 Else cost = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
                 totlCost += (qty * cost)
@@ -1209,8 +1196,6 @@ Module Module1
             xmlWriter.WriteElementString("LOCATION", "")
             xmlWriter.WriteElementString("SKU", "TOTALS")
             xmlWriter.WriteElementString("ONHAND", totlQty)
-            xmlWriter.WriteElementString("COMMITTED", totlcommited)
-            xmlWriter.WriteElementString("AVAIL", "")
             xmlWriter.WriteElementString("COST", totlCost)
             xmlWriter.WriteElementString("RETAIL", totlRetail)
             xmlWriter.WriteElementString("EXTRACT_DATE", Date.Now)

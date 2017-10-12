@@ -87,16 +87,16 @@ Module Module1
         ''dbase = "TCM"
         ''xmlPath = "c:\RetailClarity\XMLs\TCM"
         ''''''xmlPath = "\\LPS2-2\RetailClarity\TCM\XMLs\Build"
-        ''thisSdate = "10/1/2017"
-        ''thisEdate = "10/7/2017"
+        ''thisSdate = "10/8/2017"
+        ''thisEdate = "10/14/2017"
         ''lastWeekseDate = DateAdd(DateInterval.Day, -7, thisEdate)
         ''sqlUserId = "sa"
         ''sqlPassword = "PGadm01!"
         ''rcErrorPath = "c:\RetailClarity\RCSystem\SYSFAIL"
         ''rcExePath = "c:\RetailClarity\EXEs"
         ''cust = "N"
-        ''eDateTBL.Rows.Add("10/7/2017")
-        ''xmlProcess = "SALES"
+        ''eDateTBL.Rows.Add("10/14/2017")
+        ''xmlProcess = "ALL"
 
 
 
@@ -107,20 +107,28 @@ Module Module1
         con3 = New SqlConnection(conString)
         constr = conString
 
+
+
+
+
+
+
+
+
+
+        ''  xmlProcess = "INVENTORY"
+
+
+
+
+
+
+
+
         thisDate = CDate(Date.Today)
         DayOfWeek = thisDate.DayOfWeek
         clearDate = DateAdd(DateInterval.Month, -6, thisEdate)
         stopWatch = New Stopwatch
-
-        If xmlProcess = "ALL" Then
-            Console.WriteLine("Check_Log for existance of ErrorLog.xml")
-            thePath = xmlPath & "\ErrLog.txt"
-            If FileSize(thePath) > 0 Then
-                msg = "Error Log from Counterpoint found"
-                Dim el As New XMLUpdate.ErrorLogger
-                el.WriteToErrorLog(msg, "", "Look for Counterpoint Error Log")
-            End If
-        End If
 
         If xmlProcess = "ALL" Then
             Dim rCon As New SqlConnection(rcConString)
@@ -163,7 +171,7 @@ Module Module1
             If xmlProcess = "PREQDETAIL" Then Exit Sub
         End If
 
-100:    If xmlProcess = "INVENTORY" Or xmlProcess = "ALL" Then
+        If xmlProcess = "INVENTORY" Or xmlProcess = "ALL" Then
             Console.WriteLine("Processing " & client & " Inventory records")
             thePath = xmlPath & "\Inventory.xml"
             If FileSize(thePath) > 0 Then Call Process_Inventory(thePath, con, con2)
@@ -231,16 +239,17 @@ Module Module1
             If xmlProcess = "ORDERS" Then Exit Sub
         End If
 
-        If xmlProcess = "ALL" Then
-            Call Set_Max_OH(thisEdate)
-            Call Update_Store_Table()
-        End If
-
         If xmlProcess = "TRANSFERS" Or xmlProcess = "ALL" Then
             Console.WriteLine("Processing " & client & " Transfer records")
             thePath = xmlPath & "\Transfer.xml"
             If FileSize(thePath) > 0 Then Call Process_Data(thePath, "XFER", con, con2)
             If xmlProcess = "TRANSFERS" Then Exit Sub
+        End If
+
+        If xmlProcess = "ALL" Then
+            Call Set_Max_OH(thisEdate)
+            ''  Call Update_BeginOH
+            Call Update_Store_Table()
         End If
 
         If xmlProcess = "BUYERS" Or xmlProcess = "ALL" Then
@@ -310,7 +319,7 @@ Module Module1
 
         If xmlProcess <> "ALL" Then Exit Sub
 
-        Try                 '    Create records for the next week when processing the last day of the week
+100:    Try                 '    Create records for the next week when processing the last day of the week
             Dim nextSdate, nextEdate As Date
             If DayOfWeek = 0 Then                                              ' create new inventory records on Sunday
                 Console.WriteLine("Adding Item_Inv records for next week.")
@@ -323,14 +332,14 @@ Module Module1
                     "DECLARE @eDate date = '" & nextEdate & "' " &
                     "DECLARE @lasteDate date = '" & lastWeekseDate & "' " &
                     "IF OBJECT_ID('tempdb.dbo.#t1','U') IS NOT NULL DROP TABLE dbo.#t1; " &
-                    "SELECT Loc_Id, Sku, @sDate sDate, @eDate eDate, Cost, Retail, c.YrWk, Avail, Begin_OH, End_OH, " &
+                    "SELECT Loc_Id, Sku, @sDate sDate, @eDate eDate, Cost, Retail, c.YrWk, Begin_OH, End_OH, " &
                     "Item, DIM1, DIM2, DIM3 INTO #t1 FROM Item_Inv i " &
                     "JOIN Calendar c ON c.eDate = @eDate AND c.week_Id > 0 " &
                     "WHERE i.eDate = @lasteDate AND End_OH <> 0 " &
                     "MERGE Item_Inv AS t USING #t1 AS s ON s.Loc_Id=t.Loc_Id AND s.Sku=t.Sku AND s.eDate=t.eDate " &
                     "WHEN NOT MATCHED BY Target THEN " &
-                    "INSERT(Loc_Id, sku, sDate, eDate, cost, retail, YrWk, Avail, Begin_OH, End_OH, item, dim1, dim2, dim3) " &
-                    "VALUES(s.Loc_Id, s.Sku, s.sDate, s.eDate, s.Cost, s.Retail, s.YrWk, s.Avail, s.End_OH, s.End_OH, s.Item, s.DIM1, s.DIM2, s.DIM3) " &
+                    "INSERT(Loc_Id, sku, sDate, eDate, cost, retail, YrWk, Begin_OH, End_OH, item, dim1, dim2, dim3) " &
+                    "VALUES(s.Loc_Id, s.Sku, s.sDate, s.eDate, s.Cost, s.Retail, s.YrWk, s.End_OH, s.End_OH, s.Item, s.DIM1, s.DIM2, s.DIM3) " &
                     "WHEN MATCHED THEN UPDATE SET t.Begin_OH = s.End_OH;"
                 cmd = New SqlCommand(sql, con2)
                 cmd.CommandTimeout = 480
@@ -338,7 +347,7 @@ Module Module1
 
                 thisprocess = "XMLUpdate - Set SysOH"
                 Console.WriteLine("Setting Sys_OH = End_OH")
-                sql = "UPDATE Item_Inv SET Sys_OH = End_OH WHERE eDate = '" & thisEdate & "'"
+                sql = "UPDATE Item_Inv SET Sys_OH = End_OH WHERE eDate = '" & lastWeekseDate & "'"
                 cmd = New SqlCommand(sql, con2)
                 cmd.CommandTimeout = 480
                 cmd.ExecuteNonQuery()
@@ -729,13 +738,11 @@ Module Module1
                    "[Sku] [varchar](90) NOT NULL," &
                    "[sDate] [date] NOT NULL," &
                    "[eDate] [date] NOT NULL," &
-                   "[Avail] [decimal](18, 4) NULL," &
                    "[Cost] [decimal](18,4) NULL," &
                    "[Retail] [decimal](18,4) NULL," &
                    "[YrWk] [int] NULL," &
                    "[Begin_OH] [decimal](18, 4) NULL," &
                    "[End_OH] [decimal](18, 4) NULL," &
-                   "[Committed] [decimal](18,4) NULL, " &
                    "[Sys_OH] [decimal](18, 4) NULL," &
                    "[Max_OH] [decimal](18, 4) NULL," &
                    "[Item] [varchar](30) NOT NULL," &
@@ -749,7 +756,7 @@ Module Module1
             thisprocess = "XMLUpdate - Process Inventory - Get sDate & eDate"
             Dim cnt As Int64 = 0
             Dim oTest As Object
-            Dim onhand, avail, committed As Decimal
+            Dim onhand As Decimal
             Dim tqty As Decimal = 0
             Dim item, dim1, dim2, dim3, sku, loc As String
             Dim cost, retail, tcost, tretail As Decimal
@@ -797,10 +804,6 @@ Module Module1
                         loc = Trim(row("LOCATION"))
                         oTest = row("OnHand")
                         If IsDBNull(oTest) Then onhand = 0 Else onhand = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
-                        oTest = row("COMMITTED")
-                        If IsDBNull(oTest) Then committed = 0 Else committed = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
-                        oTest = row("AVAIL")
-                        If IsDBNull(oTest) Then avail = 0 Else avail = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         oTest = row("COST")
                         If IsDBNull(oTest) Then cost = 0 Else cost = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         oTest = row("RETAIL")
@@ -817,11 +820,10 @@ Module Module1
                         Else : dttime = DateAndTime.Now
                         End If
                         thisprocess = "XMLUpdate - Process Inventory - Insert into temp Table"
-                        sql = "INSERT INTO _t1 (Loc_Id, Sku, sDate, eDate, Avail, End_OH, " &
-                                 "Committed, Cost, Retail, YrWk, Item, DIM1, DIM2, DIM3) " &
+                        sql = "INSERT INTO _t1 (Loc_Id, Sku, sDate, eDate, End_OH, " &
+                                 "Cost, Retail, YrWk, Item, DIM1, DIM2, DIM3) " &
                                  "SELECT '" & loc & "','" & sku & "','" & thisSdate & "','" & thisEdate &
-                                 "'," & avail & "," & onhand & "," & committed & "," & cost & "," &
-                                 retail & ", YrWk ,'" & item & "','" & dim1 & "','" & dim2 & "','" &
+                                 "'," & onhand & "," & cost & "," & retail & ", YrWk ,'" & item & "','" & dim1 & "','" & dim2 & "','" &
                                  dim3 & "' FROM Calendar c JOIN Item_Master m ON m.Sku = '" & sku & "' WHERE eDate = '" & thisEdate & "' " &
                                  "AND m.[Type] = 'I' AND Prd_Id > 0 AND Week_Id > 0"
                         cmd = New SqlCommand(sql, con2)
@@ -831,14 +833,12 @@ Module Module1
                     Else
                         oTest = row("OnHand")
                         If IsNumeric(oTest) Then onhand = Decimal.Round(CDec(row("OnHand")), 4, MidpointRounding.AwayFromZero)
-                        oTest = row("AVAIL")
-                        If IsNumeric(oTest) Then avail = Decimal.Round(CDec(oTest), 4, MidpointRounding.AwayFromZero)
                         oTest = row("COST")
                         If IsNumeric(oTest) Then cost = Decimal.Round(CDec(row("COST")), 4, MidpointRounding.AwayFromZero)
                         oTest = row("RETAIL")
                         If IsNumeric(oTest) Then retail = Decimal.Round(CDec(row("RETAIL")), 4, MidpointRounding.AwayFromZero)
                         If onhand <> totlQty Then
-                            msg = "Expected " & Format(avail, "###,###,##0.0000") & " Received " & Format(tqty, "###,###,##0.0000")
+                            msg = "Expected " & Format(onhand, "###,###,##0.0000") & " Received " & Format(tqty, "###,###,##0.0000")
                             Dim el As New XMLUpdate.ErrorLogger
                             el.WriteToErrorLog(msg, "Quantity Mismatch " & conString, "Process Inventory")
                         End If
@@ -860,7 +860,7 @@ Module Module1
             Console.WriteLine("Set End_OH, Max_OH and Committed to 0")
             con.open()
             thisprocess = "XMLUpdate - Process Inventory - Set Qty Fields to 0"
-            sql = "UPDATE Item_Inv SET End_OH = 0, Max_OH = 0, Committed = 0 WHERE eDate = '" & thisEdate & "'"
+            sql = "UPDATE Item_Inv SET End_OH = 0, Max_OH = 0 WHERE eDate = '" & thisEdate & "'"
             cmd = New SqlCommand(sql, con)
             cmd.CommandTimeout = 480
             cmd.ExecuteNonQuery()
@@ -869,31 +869,17 @@ Module Module1
             sql = "MERGE Item_Inv AS target USING _t1 AS source ON (source.Loc_Id = target.Loc_Id AND source.Sku = target.Sku " &
                       "AND source.eDate = target.eDate) " &
                       "WHEN NOT MATCHED BY TARGET THEN " &
-                      "INSERT (Loc_Id, Sku, sDate, eDate, Cost, Retail, YrWk, Avail, Begin_OH, End_OH, Committed, " &
-                          "Max_OH, Item, DIM1, DIM2, DIM3) " &
+                      "INSERT (Loc_Id, Sku, sDate, eDate, Cost, Retail, YrWk, Begin_OH, End_OH, Max_OH, Item, DIM1, DIM2, DIM3) " &
                       "VALUES (source.Loc_Id, source.Sku, source.sDate, source.eDate, source.Cost, source.Retail, " &
-                          "source.YrWk, source.Avail, source.Begin_OH, source.End_OH, source.Committed, source.Max_OH, " &
+                          "source.YrWk, source.Begin_OH, source.End_OH, source.Max_OH, " &
                           "source.Item, source.DIM1, source.DIM2, source.DIM3) " &
                       "WHEN MATCHED THEN " &
-                      "UPDATE SET target.Avail = source.Avail, target.Begin_OH = source.Begin_OH, " &
-                      "target.End_OH = source.End_OH, target.Cost = source.Cost, target.Retail = source.retail, " &
-                      "target.Max_OH = source.Max_OH, target.Yrwk = source.YrWk, target.Committed = source.Committed;"
+                      "UPDATE SET target.Begin_OH = source.Begin_OH, target.End_OH = source.End_OH, target.Cost = source.Cost, " &
+                      "target.Retail = source.retail, target.Max_OH = source.Max_OH, target.Yrwk = source.YrWk;"
             cmd = New SqlCommand(sql, con)
             cmd.CommandTimeout = 960
             cmd.ExecuteNonQuery()
-            thisprocess = "XMLUpdate - Process Inventory - Update Begin_OH"
-            Console.WriteLine("Update Begin_OH")
-            sql = "UPDATE i SET i.Begin_OH = CASE WHEN Begin_OH IS NULL THEN ISNULL(End_OH,0) " &
-                    "-ISNULL(ADJ, 0) " &
-                    "- ISNULL(RECVD,0) " &
-                    "- ISNULL(XFER,0) " &
-                    "+ ISNULL(RTV,0) " &
-                    "+ ISNULL((SELECT ISNULL(SUM(Sold),0) FROM Item_Sales s " &
-                    "WHERE s.Loc_Id = i.Loc_Id AND s.Sku = i.Sku AND s.eDate = i.eDate),0) END " &
-                    "FROM Item_Inv i WHERE i.eDate = '" & thisEdate & "'"
-            cmd = New SqlCommand(sql, con)
-            cmd.CommandTimeout = 960
-            cmd.ExecuteNonQuery()
+
             thisprocess = "XMLUpdate - Process Inventory - Drop temp Table"
             Console.WriteLine("Drop _t1")
             sql = "IF OBJECT_ID('dbo._t1','U') IS NOT NULL DROP TABLE dbo. _t1; "
@@ -910,6 +896,29 @@ Module Module1
         End Try
     End Sub
 
+    Private Sub Update_BeginOH()
+        Try
+            con.Open()
+            thisprocess = "XMLUpdate - Process Inventory - Update Begin_OH"
+            Console.WriteLine("Update Begin_OH")
+            sql = "UPDATE i SET i.Begin_OH = ISNULL(End_OH,0) " &
+                    "-ISNULL(ADJ, 0) " &
+                    "- ISNULL(RECVD,0) " &
+                    "- ISNULL(XFER,0) " &
+                    "+ ISNULL(RTV,0) " &
+                    "+ ISNULL((SELECT ISNULL(SUM(Sold),0) FROM Item_Sales s " &
+                    "WHERE s.Loc_Id = i.Loc_Id AND s.Sku = i.Sku AND s.eDate = i.eDate),0) " &
+                    "FROM Item_Inv i WHERE i.Begin_OH IS NULL"
+            cmd = New SqlCommand(sql, con)
+            cmd.CommandTimeout = 960
+            cmd.ExecuteNonQuery()
+            con.Close()
+        Catch ex As Exception
+            If con.State = ConnectionState.Open Then con.Close()
+            Dim el As New XMLUpdate.ErrorLogger
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
+        End Try
+    End Sub
     Private Sub Process_PREQ_Header(ByVal thePath, ByVal con, ByVal con2)
         Try
             stopWatch.Start()
@@ -1208,6 +1217,7 @@ Module Module1
                         oTest = row("CUSTOM_4")
                         If Not IsDBNull(oTest) And Not IsNothing(oTest) Then custom4 = CStr(oTest) Else custom4 = Nothing
                         oTest = row("CUSTOM_5")
+                        If Not IsDBNull(oTest) And Not IsNothing(oTest) Then custom5 = CStr(oTest) Else custom5 = Nothing
                         thisprocess = "XMLUpdate - Process PO Header - Insert into PO_Header"
                         sql = "IF NOT EXISTS (SELECT PO_NO FROM PO_Header WHERE PO_NO = '" & po & "') " &
                             "INSERT INTO PO_Header (Loc_Id, PO_NO, Order_Date, Due_Date, Cancel_Date, Vendor_Id, Buyer, Status, " &
@@ -1528,7 +1538,7 @@ Module Module1
                             If Not IsDBNull(oTest) AndAlso Not IsNothing(oTest) Then cust = CStr(oTest)
                             oTest = row("TKT_NO")
                             If Not IsDBNull(oTest) AndAlso Not IsNothing(oTest) Then tkt = oTest
-                            oTest = row("TICKET_DATE")
+                            oTest = row("TKT_DATE")
                             If Not IsDBNull(oTest) Then tktDate = CDate(oTest) Else tktDate = "1900-01-01 00:00:00"
                             oTest = row("MARKDOWN")
                             If Not IsDBNull(oTest) AndAlso Not IsNothing(oTest) Then mkdn = CDec(oTest)
@@ -1577,62 +1587,63 @@ Module Module1
                         Else : extractDate = "1900-01-01 00:00:00"
                         End If
 
-                        'Dim itexists As Boolean = Check_Log(con2, id, seq, loc, sku, transDate, store)
-                        'If Not itexists Then
-                        tQty += qty
-                        tCost += (qty * cost)
-                        tRetail += (qty * retail)
-                        tMkdn += mkdn
-                        thisprocess = "XMLUpdate - Process Data - Get eDate"
-                        If con2.state = ConnectionState.Closed Then con2.open()
-                        sql = "SELECT eDate FROM Calendar WHERE '" & CDate(transDate) & "' BETWEEN sDate AND eDate AND Week_ID > 0"
-                        cmd = New SqlCommand(sql, con2)
-                        cmd.CommandTimeout = 120
-                        rdr = cmd.ExecuteReader
-                        While rdr.Read
-                            If Not IsDBNull(rdr(0)) AndAlso Not IsNothing(rdr(0)) Then eDate = rdr(0) Else eDate = "2012-01-01"
-                        End While
-                        If con2.state = ConnectionState.Open Then con2.close()
+                        Dim itexists As Boolean = Check_Log(con2, id, seq, loc, sku, transDate, store)
+                        If Not itexists Then
+                            tQty += qty
+                            tCost += (qty * cost)
+                            tRetail += (qty * retail)
+                            tMkdn += mkdn
+                            thisprocess = "XMLUpdate - Process Data - Get eDate"
+                            If con2.state = ConnectionState.Closed Then con2.open()
+                            sql = "SELECT eDate FROM Calendar WHERE '" & CDate(transDate) & "' BETWEEN sDate AND eDate AND Week_ID > 0"
+                            cmd = New SqlCommand(sql, con2)
+                            cmd.CommandTimeout = 120
+                            rdr = cmd.ExecuteReader
+                            While rdr.Read
+                                If Not IsDBNull(rdr(0)) AndAlso Not IsNothing(rdr(0)) Then eDate = rdr(0) Else eDate = "2012-01-01"
+                            End While
+                            If con2.state = ConnectionState.Open Then con2.close()
 
-                        row = eDateTBL.Rows.Find(eDate)              ' We need to send the eDate to Client_Weekly_Summary
-                        If IsNothing(row) Then
-                            eDateTBL.Rows.Add(eDate)                 ' Add date to eDateTBL if it isn't already there
-                        End If
+                            row = eDateTBL.Rows.Find(eDate)              ' We need to send the eDate to Client_Weekly_Summary
+                            If IsNothing(row) Then
+                                eDateTBL.Rows.Add(eDate)                 ' Add date to eDateTBL if it isn't already there
+                            End If
 
-                        If theField = "Order" Then transtype = "Sold" Else transtype = theField
+                            If theField = "Order" Then transtype = "Sold" Else transtype = theField
 
-                        If qty <> 0 Then                            ' Don't do anything unless qty <> 0
-                            Call Update_Tables(store, loc, eDate, sku, qty, retail, cost, mkdn, theField, dept, buyer, clss, "", whsl, con2)
-                            If transtype = "Sold" Then
-                                datetimenow = DateAndTime.Now
-                                sql = "IF NOT EXISTS (SELECT TRANS_ID FROM Daily_Transaction_Log WHERE TRANS_ID = '" & id & "' " &
-                                    "AND SEQUENCE_NO = '" & seq & "' AND STORE = '" & store & "' AND SKU = '" & sku & "' " &
-                                    "AND LOCATION = '" & loc & "' " & " AND TRANS_DATE = '" & transDate & "') " &
-                                    "INSERT INTO Daily_Transaction_Log (TRANS_ID, SEQUENCE_NO, STORE, SKU, LOCATION, QTY, COST, RETAIL, " &
-                                    "MKDN, TRANS_DATE, [TYPE], POST_DATE, DEPT, BUYER, CLASS, EXTRACT_DATE, CUST_NO, TKT_NO, MKDN_REASON, " &
-                                    "COUPON_CODE, ITEM, DIM1, DIM2, DIM3, ORD_TYPE, TKT_DATE, SALES_REP, USER_ID, STATION, DRAWER, SALE_TYPE, " &
-                                    "WHOLESALE, CUSTOM1, CUSTOM2, CUSTOM3, CUSTOM4, CUSTOM5) " &
-                                    "SELECT '" & id & "', " & seq & ", '" & store & "', '" & sku & "','" & loc & "'," &
-                                        qty & "," & cost & "," & retail & ", " & mkdn & ",'" & transDate & "','" & transtype & "','" & datetimenow & "','" &
-                                        dept & "','" & buyer & "','" & clss & "', '" & extractDate & "','" & cust & "','" & tkt & "','" &
-                                        reason & "','" & coupon & "','" & item & "','" & dim1 & "','" & dim2 & "','" & dim3 & "','" & ordtype & "','" &
-                                        tktDate & "','" & sales_rep & "','" & userid & "','" & station & "','" & drawer & "','" & sale_type & "','" &
-                                        whsl & "','" & custom & "','" & custom2 & "','" & custom3 & "','" & custom4 & "','" & custom5 & "'"
-                                thisprocess = "XMLUpdate - Process Data - Insert into Daily_Transaction_Log - " & sql & ""
-                                cmd = New SqlCommand(sql, con)
-                                cmd.CommandTimeout = 480
-                                cmd.ExecuteNonQuery()
-                            Else
-                                sql = "IF NOT EXISTS (SELECT TRANS_ID FROM Inv_Transaction_Log WHERE TRANS_ID = '" & id & "' " &
-                                    "AND SEQUENCE_NO = " & seq & " AND LOCATION = '" & loc & "' " & " AND TRANS_DATE = '" & transDate & "') " &
-                                    "INSERT INTO Inv_Transaction_Log (TRANS_ID, SEQUENCE_NO, SKU, LOCATION, TRANS_DATE, TYPE, QTY, COST, " &
-                                    "RETAIL, EXTRACT_DATE, POST_DATE, ITEM, DIM1, DIM2, DIM3) " &
-                                    "SELECT '" & id & "', " & seq & ", '" & sku & "', '" & loc & "', '" & transDate & "', '" & transtype & "', " &
-                                    qty & ", " & cost & ", " & retail & ", '" & extractDate & "', '" & datetimenow & "', '" & item & "', '" &
-                                    dim1 & "', '" & dim2 & "', '" & dim3 & "'"
-                                cmd = New SqlCommand(sql, con)
-                                cmd.CommandTimeout = 480
-                                cmd.ExecuteNonQuery()
+                            If qty <> 0 Then                            ' Don't do anything unless qty <> 0
+                                Call Update_Tables(store, loc, eDate, sku, qty, retail, cost, mkdn, theField, dept, buyer, clss, "", whsl, con2)
+                                If transtype = "Sold" Then
+                                    datetimenow = DateAndTime.Now
+                                    sql = "IF NOT EXISTS (SELECT TRANS_ID FROM Daily_Transaction_Log WHERE TRANS_ID = '" & id & "' " &
+                                        "AND SEQUENCE_NO = '" & seq & "' AND STORE = '" & store & "' AND SKU = '" & sku & "' " &
+                                        "AND LOCATION = '" & loc & "' " & " AND TRANS_DATE = '" & transDate & "') " &
+                                        "INSERT INTO Daily_Transaction_Log (TRANS_ID, SEQUENCE_NO, STORE, SKU, LOCATION, QTY, COST, RETAIL, " &
+                                        "MKDN, TRANS_DATE, [TYPE], POST_DATE, DEPT, BUYER, CLASS, EXTRACT_DATE, CUST_NO, TKT_NO, MKDN_REASON, " &
+                                        "COUPON_CODE, ITEM, DIM1, DIM2, DIM3, ORD_TYPE, TKT_DATE, SALES_REP, USER_ID, STATION, DRAWER, SALE_TYPE, " &
+                                        "WHOLESALE, CUSTOM1, CUSTOM2, CUSTOM3, CUSTOM4, CUSTOM5) " &
+                                        "SELECT '" & id & "', " & seq & ", '" & store & "', '" & sku & "','" & loc & "'," &
+                                            qty & "," & cost & "," & retail & ", " & mkdn & ",'" & transDate & "','" & transtype & "','" & datetimenow & "','" &
+                                            dept & "','" & buyer & "','" & clss & "', '" & extractDate & "','" & cust & "','" & tkt & "','" &
+                                            reason & "','" & coupon & "','" & item & "','" & dim1 & "','" & dim2 & "','" & dim3 & "','" & ordtype & "','" &
+                                            tktDate & "','" & sales_rep & "','" & userid & "','" & station & "','" & drawer & "','" & sale_type & "','" &
+                                            whsl & "','" & custom & "','" & custom2 & "','" & custom3 & "','" & custom4 & "','" & custom5 & "'"
+                                    thisprocess = "XMLUpdate - Process Data - Insert into Daily_Transaction_Log - " & sql & ""
+                                    cmd = New SqlCommand(sql, con)
+                                    cmd.CommandTimeout = 480
+                                    cmd.ExecuteNonQuery()
+                                Else
+                                    sql = "IF NOT EXISTS (SELECT TRANS_ID FROM Inv_Transaction_Log WHERE TRANS_ID = '" & id & "' " &
+                                        "AND SEQUENCE_NO = " & seq & " AND LOCATION = '" & loc & "' " & " AND TRANS_DATE = '" & transDate & "') " &
+                                        "INSERT INTO Inv_Transaction_Log (TRANS_ID, SEQUENCE_NO, SKU, LOCATION, TRANS_DATE, TYPE, QTY, COST, " &
+                                        "RETAIL, EXTRACT_DATE, POST_DATE, ITEM, DIM1, DIM2, DIM3) " &
+                                        "SELECT '" & id & "', " & seq & ", '" & sku & "', '" & loc & "', '" & transDate & "', '" & transtype & "', " &
+                                        qty & ", " & cost & ", " & retail & ", '" & extractDate & "', '" & datetimenow & "', '" & item & "', '" &
+                                        dim1 & "', '" & dim2 & "', '" & dim3 & "'"
+                                    cmd = New SqlCommand(sql, con)
+                                    cmd.CommandTimeout = 480
+                                    cmd.ExecuteNonQuery()
+                                End If
                             End If
                         End If
                     Else
@@ -1682,33 +1693,33 @@ Module Module1
 
     End Sub
 
-    ''Private Function Check_Log(ByVal con2, ByVal id, ByVal seq, ByVal location, ByVal sku, ByVal dte, ByVal store)
-    ''    Try
-    ''        Dim reslt As Boolean = False
-    ''        If con2.State = ConnectionState.Open Then con2.Close()
-    ''        con2.open()
-    ''        Dim sql As String = "SELECT TRANS_ID FROM Daily_Transaction_Log WHERE TRANS_ID = '" & id & "' " &
-    ''            "AND SEQUENCE_NO = " & seq & " AND LOCATION = '" & location & "' AND SKU = '" & sku & "' " &
-    ''            "AND TRANS_DATE = '" & dte & "'"
-    ''        If store <> "" Then sql &= " AND STORE = '" & store & "'"
-    ''        thisprocess = "XMLUpdate - Check_Log - " & sql & ""
-    ''        Dim cmd As SqlCommand = New SqlCommand(sql, con2)
-    ''        Dim rdr As SqlDataReader = cmd.ExecuteReader
-    ''        While rdr.Read
-    ''            If Not IsNothing(rdr(0)) And Not IsDBNull(rdr(0)) Then
-    ''                reslt = True
-    ''                con2.close()
-    ''                Return reslt
-    ''            End If
-    ''        End While
-    ''        con2.close()
-    ''        Return reslt
-    ''    Catch ex As Exception
-    ''        If con2.State = ConnectionState.Open Then con2.Close()
-    ''        Dim el As New XMLUpdate.ErrorLogger
-    ''        el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
-    ''    End Try
-    ''End Function
+    Private Function Check_Log(ByVal con2, ByVal id, ByVal seq, ByVal location, ByVal sku, ByVal dte, ByVal store)
+        Try
+            Dim reslt As Boolean = False
+            If con2.State = ConnectionState.Open Then con2.Close()
+            con2.open()
+            Dim sql As String = "SELECT TRANS_ID FROM Daily_Transaction_Log WHERE TRANS_ID = '" & id & "' " &
+                "AND SEQUENCE_NO = " & seq & " AND LOCATION = '" & location & "' AND SKU = '" & sku & "' " &
+                "AND TRANS_DATE = '" & dte & "'"
+            If store <> "" Then sql &= " AND STORE = '" & store & "'"
+            thisprocess = "XMLUpdate - Check_Log - " & sql & ""
+            Dim cmd As SqlCommand = New SqlCommand(sql, con2)
+            Dim rdr As SqlDataReader = cmd.ExecuteReader
+            While rdr.Read
+                If Not IsNothing(rdr(0)) And Not IsDBNull(rdr(0)) Then
+                    reslt = True
+                    con2.close()
+                    Return reslt
+                End If
+            End While
+            con2.close()
+            Return reslt
+        Catch ex As Exception
+            If con2.State = ConnectionState.Open Then con2.Close()
+            Dim el As New XMLUpdate.ErrorLogger
+            el.WriteToErrorLog(ex.Message, ex.StackTrace, thisprocess)
+        End Try
+    End Function
 
     Private Sub Update_Tables(ByVal store, ByVal location, ByVal dte, ByVal item, ByVal qty, ByVal retail,
                              ByVal cost, ByVal mkdn, ByVal theField, ByVal dept, ByVal buyer, ByVal clss,
@@ -1754,11 +1765,11 @@ Module Module1
                 sql = "IF NOT EXISTS (SELECT * FROM Item_Inv d WHERE Loc_Id = '" & Trim(location) & "' AND Sku = '" & Trim(item) & "' " &
                     "AND eDate = '" & thisEdate & "') " &
                     "INSERT INTO Item_Inv (Loc_Id, Sku, sDate, eDate, " & theField & ", Cost, Retail, YrWk, Item, DIM1, DIM2, DIM3, " &
-                    "Avail, Begin_OH, End_OH, Max_OH) " &
+                    "Begin_OH, End_OH, Max_OH) " &
                     "SELECT '" & Trim(location) & "', '" & Trim(item) & "', '" & thisSdate & "', '" & thisEdate & "', " &
                         qty & ", " & cost & ", " & retail & ", " &
                         "(SELECT YrWk FROM Calendar WHERE eDate = '" & thisEdate & "' AND Prd_Id > 0 AND Week_Id > 0), " &
-                        "Item, DIM1, DIM2, DIM3, 0, 0, " & qty & ", " & qty & " " &
+                        "Item, DIM1, DIM2, DIM3, 0, " & qty & ", " & qty & " " &
                         "FROM Item_Master WHERE Sku = '" & Trim(item) & "' " &
                     "ELSE " &
                     "UPDATE d SET " & theField & " = ISNULL(" & theField & ",0) + " & qty & " " &
@@ -2088,9 +2099,7 @@ Module Module1
             Dim hoursDiff = DateDiff(DateInterval.Hour, fileDate, Date.Now)
             If hoursDiff > 26 Then
                 Dim el As New XMLUpdate.ErrorLogger
-                If fileName = "errlog.txt" Then
-                    System.IO.File.Delete(fileName)
-                Else
+                If fileName <> xmlPath & "\ErrLog.txt" Then
                     el.WriteToErrorLog(fileName & " IS OLDER THAN 24 HOURS", "", "Check File Datetime")
                 End If
             End If

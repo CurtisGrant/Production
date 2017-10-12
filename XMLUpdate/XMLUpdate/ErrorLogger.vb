@@ -35,17 +35,17 @@ Public Class ErrorLogger
         s1.Close()
         fs1.Close()
 
-        If System.IO.File.Exists(rcErrorPath & "failure.txt") Then
-            Dim fs As FileStream = New FileStream(rcErrorPath & "\failure.txt", FileMode.Append, FileAccess.Write)
-            Dim s As StreamWriter = New StreamWriter(fs)
-            s.WriteLine(client & " - " & title & " - " & msg)
-            s.Close()
-            fs.Close()
-        Else
-            Using sw As StreamWriter = File.CreateText(errorPath & "\failure.txt")
-                sw.WriteLine(Err)
-            End Using
-        End If
+        ''If System.IO.File.Exists(rcErrorPath & "failure.txt") Then
+        ''    Dim fs As FileStream = New FileStream(rcErrorPath & "\failure.txt", FileMode.Append, FileAccess.Write)
+        ''    Dim s As StreamWriter = New StreamWriter(fs)
+        ''    s.WriteLine(client & " - " & title & " - " & msg)
+        ''    s.Close()
+        ''    fs.Close()
+        ''Else
+        ''    Using sw As StreamWriter = File.CreateText(errorPath & "\failure.txt")
+        ''        sw.WriteLine(Err)
+        ''    End Using
+        ''End If
         Threading.Thread.Sleep(3000)
     End Sub
 End Class

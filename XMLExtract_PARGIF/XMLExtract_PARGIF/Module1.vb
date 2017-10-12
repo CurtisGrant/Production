@@ -947,19 +947,19 @@ Module Module1
 
                 oTest = rdr("CUSTOM1")
                 If IsDBNull(oTest) Then oTest = ""
-                xmlWriter.WriteElementString("CUSTOM1", Replace(oTest, "'", "''"))
+                xmlWriter.WriteElementString("CUSTOM_1", Replace(oTest, "'", "''"))
 
-                xmlWriter.WriteElementString("CUSTOM2", "")
+                xmlWriter.WriteElementString("CUSTOM_2", "")
 
                 oTest = rdr("CUSTOM3")
                 If IsDBNull(oTest) Then oTest = ""
-                xmlWriter.WriteElementString("CUSTOM3", Replace(oTest, "'", "''"))
+                xmlWriter.WriteElementString("CUSTOM_3", Replace(oTest, "'", "''"))
 
-                xmlWriter.WriteElementString("CUSTOM4", "")
+                xmlWriter.WriteElementString("CUSTOM_4", "")
 
                 oTest = rdr("CUSTOM5")
                 If IsDBNull(oTest) Then oTest = ""
-                xmlWriter.WriteElementString("CUSTOM5", Replace(oTest, "'", "''"))
+                xmlWriter.WriteElementString("CUSTOM_5", Replace(oTest, "'", "''"))
 
                 oTest = rdr("UOM")
                 If IsDBNull(oTest) Then oTest = "EA"
