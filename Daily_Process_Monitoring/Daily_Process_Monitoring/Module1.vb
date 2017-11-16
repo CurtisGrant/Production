@@ -252,17 +252,18 @@ Module Module1
                     If CDate(oTest) = thisEdate Then thisWeek = invVal Else lastWeek = invVal
                 End If
             End While
+            con.Close()
+
             If thisWeek = 0 Then
                 err = "ERROR! No Inventory for this week. " & thisEdate
                 Call Write_Error(err)
-            Else
-                diff = ((thisWeek - lastWeek) / lastWeek)
-                If Math.Abs(diff) < 0.2 Or Math.Abs(diff) > 0.2 Then
-                    err = "Current On Hand (" & Format(thisWeek, "###,###,###") & ") is " &
-                        Format(diff, "###.#0%") & " of last week''s. (" & Format(lastWeek, "###,###,###") & ")"
-                    Call Write_Error(err)
-                End If
-                con.Close()
+                ''Else
+                ''    diff = ((thisWeek - lastWeek) / lastWeek)
+                ''    If Math.Abs(diff) < 0.2 Or Math.Abs(diff) > 0.2 Then
+                ''        err = "Current On Hand (" & Format(thisWeek, "###,###,###") & ") is " &
+                ''            Format(diff, "###.#0%") & " of last week''s. (" & Format(lastWeek, "###,###,###") & ")"
+                ''        Call Write_Error(err)
+                ''    End If
             End If
         Next
         rccon.Close()

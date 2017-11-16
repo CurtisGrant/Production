@@ -42,7 +42,7 @@ Public Class DBAdmin
             serverTable = InitialSetup.serverTable
             RCClientConString = InitialSetup.RCClientConString
             RCClientServer = InitialSetup.RCClientServer
-            exePath = InitialSetup.exePath
+            ''exePath = InitialSetup.exePath
             '
             '  Comment next 4 lines for CURTIS-MOBILE only!
             '  Comment line 53 in InitialSetup also
@@ -509,6 +509,16 @@ Public Class DBAdmin
         Dim proc As Process = Process.Start(p)
         proc.WaitForExit()
 
+        '                 Change sDate and eDate to match BuildEndDate
+        '                 Clean out Begin_OH, Max_OH and all the tranaction fields
+        '                 The backfill code will add all the deleted records back in
+        con.Open()
+        sql = "UPDATE i SET i.sDate = c.sDate, i.eDate = c.eDate, Begin_OH = NULL, Max_OH = NULL, " &
+            "ADJ = NULL, XFER = NULL, RTV = NULL, RECVD = NULL, SOLD = NULL FROM Item_Inv i" &
+            "JOIN Calendar c On '" & BuildEndDate & "' BETWEEN c.sDate AND c.eDate AND c.Week_Id > 0 "
+        cmd = New SqlCommand(sql, con)
+        con.Close()
+
         Dim cost As Decimal = 0
         Dim retail As Decimal = 0
         cnt = 0
@@ -531,132 +541,7 @@ Public Class DBAdmin
         stopwatch = New Stopwatch
         stopwatch.Start()
 
-        ''Dim endDate As Date = CDate(txteDate.Text)
-        ''Dim fromDate As Date = CDate(txtsDate.Text)
 
-        ''con2.Open()
-        ''sql = "SELECT CASE WHEN ORD_TYPE = 'WHOLESALE' THEN l.STORE+'-WHSL' ELSE l.STORE END AS STORE, l.LOCATION, " &
-        ''    "cl.sDate, cl.eDate, l.SKU, l.QTY, l.COST, l.RETAIL, l.QTY * l.COST extCost, l.QTY * l.RETAIL extRetail, " &
-        ''    "l.MKDN, cl.YrWk, cl.Year_Id, cl.Week_Id, l.ITEM, l.DIM1, l.DIM2, l.DIM3 INTO #t1 FROM Daily_Transaction_Log l " &
-        ''    "JOIN Calendar cl ON l.TRANS_DATE BETWEEN cl.sDate AND cl.eDate and cl.Week_Id > 0 " &
-        ''    "WHERE l.[TYPE] = 'Sold' " &
-        ''    "INSERT INTO Item_Sales(Str_Id, Loc_Id, Sku, sDate, eDate, Sold, Avg_Cost, Retail_Price, Sales_Cost, " &
-        ''    "Sales_retail, Markdown, YrWk, Year, Wk, Item, DIM1, DIM2, DIM3) " &
-        ''    "SELECT STORE, LOCATION, SKU, sDate, eDate, SUM(QTY), AVG(COST), AVG(RETAIL), SUM(extCost), SUM(extRETAIL), SUM(MKDN), " &
-        ''    "YrWk, Year_Id, Week_Id, ITEM, DIM1, DIM2, DIM3 FROM #t1 " &
-        ''    "GROUP BY STORE, LOCATION, SKU, sDate, eDate, YrWk, Year_Id, Week_Id, ITEM, DIM1, DIM2, DIM3"
-        ''cmd = New SqlCommand(sql, con2)
-        ''cmd.CommandTimeout = 960
-        ''cmd.ExecuteNonQuery()
-        ''con2.Close()
-        ''''                       Insert a record for every date there's an inventory changing transaction
-        ''con2.Open()
-        ''sql = "INSERT INTO Item_Inv(Loc_Id, Sku, sDate, eDate, Cost, Retail, YrWk, OnHand, Item, DIM1, DIM2, DIM3) " & _
-        ''    "SELECT LOCATION, l.SKU, c.sDate, c.eDate, Avg(COST), Avg(Retail), c.YrWk, CONVERT(Decimal(18,4),0), m.ITEM, " & _
-        ''    "m.DIM1, m.DIM2, m.DIM3 FROM Daily_Transaction_Log l " & _
-        ''    "LEFT JOIN Item_Master m ON m.SKU = l.SKU " & _
-        ''    "JOIN Calendar c ON CONVERT(Date,TRANS_DATE) BETWEEN c .sDate AND c.eDate AND c.Week_Id > 0 " & _
-        ''    "WHERE m.[TYPOE] = 'I' AND CONVERT(Date,TRANS_DATE) BETWEEN '" & fromDate & "' AND '" & endDate & "' " & _
-        ''    "GROUP BY LOCATION, l.SKU, c.sDate, c.eDate, c.YrWk, m.Item, m.DIM1, m.DIM2, m.DIM3"
-        ''sql = "SELECT DISTINCT DATEPART(year,eDate) FROM Item_Sales"
-        ''cmd = New SqlCommand(sql, con2)
-        ''rdr = cmd.ExecuteReader
-        ''Dim yr As Integer
-        ''While rdr.Read
-        ''    yr = rdr(0)
-
-        ''    ' Now, update Item_Inv with qty and amounts for each of the transaction types
-
-        ''    txtprogress.Text = "Updating Adjustments for " & yr
-        ''    Me.Refresh()
-        ''    con.Open()                        ' Update ADJ
-        ''    sql = "SELECT LOCATION, SKU, c.eDate, SUM(ISNULL(QTY,0)) AS Qty, AVG(COST) AS Cost, AVG(RETAIL) AS Retail " & _
-        ''        "INTO #t1 FROM Daily_Transaction_Log AS l " & _
-        ''        "LEFT JOIN Calendar AS c ON CONVERT(Date,TRANS_DATE) BETWEEN c.sDate AND c.eDate AND c.Week_Id > 0 AND TYPE = 'ADJ' " & _
-        ''        "AND DATEPART(yy,c.eDate) = " & yr & " AND ISNULL(QTY,0) <> 0 " & _
-        ''        "GROUP BY LOCATION, SKU, eDate"
-        ''    cmd = New SqlCommand(sql, con)
-        ''    cmd.ExecuteNonQuery()
-        ''    sql = "UPDATE d SET ADJ = Qty, d.Cost = t.Cost, d.Retail = t.Retail FROM Item_Inv d " & _
-        ''        "JOIN #t1 t ON t.LOCATION = d.Loc_Id AND t.Sku = d.Sku AND t.eDate = d.eDate"
-        ''    cmd = New SqlCommand(sql, con)
-        ''    cmd.ExecuteNonQuery()
-        ''    con.Close()
-
-        ''    txtprogress.Text = "Updating Received for " & yr
-        ''    Me.Refresh()
-        ''    con.Open()                            ' Update RECVD
-        ''    sql = "SELECT LOCATION, SKU, c.eDate, SUM(ISNULL(QTY,0)) AS Qty, AVG(COST) AS Cost, AVG(RETAIL) AS Retail " & _
-        ''        "INTO #t1 FROM Daily_Transaction_Log AS l " & _
-        ''        "LEFT JOIN Calendar AS c ON CONVERT(Date,TRANS_DATE,0) BETWEEN c.sDate AND c.eDate AND c.Week_Id > 0 " & _
-        ''        "WHERE TYPE = 'RECVD' AND DATEPART(yy,c.eDate) = " & yr & " AND ISNULL(QTY,0) <> 0 " & _
-        ''        "GROUP BY LOCATION, SKU, eDate"
-        ''    cmd = New SqlCommand(sql, con)
-        ''    cmd.CommandTimeout = 120
-        ''    cmd.ExecuteNonQuery()
-        ''    sql = "UPDATE d SET RECVD = Qty, d.Cost = t.Cost, d.Retail = t.Retail FROM Item_Inv d " & _
-        ''        "JOIN #t1 t ON t.LOCATION = d.Loc_Id AND t.SKU = d.Sku AND t.eDate = d.eDate"
-        ''    cmd = New SqlCommand(sql, con)
-        ''    cmd.ExecuteNonQuery()
-        ''    con.Close()
-
-        ''    txtprogress.Text = "updating Returns for " & yr
-        ''    Me.Refresh()
-        ''    con.Open()                         ' Update RTV
-        ''    sql = "SELECT LOCATION, SKU, c.eDate, SUM(ISNULL(QTY,0)) AS Qty, AVG(COST) AS Cost, AVG(RETAIL) AS Retail " & _
-        ''        "INTO #t1 FROM Daily_Transaction_Log AS l " & _
-        ''        "LEFT JOIN Calendar AS c ON CONVERT(Date,TRANS_DATE) BETWEEN c.sDate AND c.eDate AND c.Week_Id > 0 " & _
-        ''        "WHERE TYPE = 'RTV' AND DATEPART(yy,c.eDate) = " & yr & " AND ISNULL(QTY,0) <> 0 " & _
-        ''        "GROUP BY LOCATION, SKU, eDate"
-        ''    cmd = New SqlCommand(sql, con)
-        ''    cmd.ExecuteNonQuery()
-        ''    sql = "UPDATE d SET RTV = Qty, d.Cost = t.Cost, d.Retail = t.Retail FROM Item_Inv d " & _
-        ''        "JOIN #t1 t ON t.LOCATION = d.Loc_Id AND t.SKU = d.Sku AND t.eDate = d.eDate"
-        ''    cmd = New SqlCommand(sql, con)
-        ''    cmd.ExecuteNonQuery()
-        ''    con.Close()
-
-        ''    txtprogress.Text = "Updating Sales for " & yr
-        ''    Me.Refresh()
-        ''    con.Open()                              ' Update Sales
-        ''    sql = "SELECT STORE, LOCATION, SKU, eDate, SUM(ISNULL(QTY,0)) AS Qty, AVG(COST) AS Cost, AVG(RETAIL) AS Retail, " & _
-        ''        "SUM(ISNULL(QTY,0) * ISNULL(COST,0)) AS Sales_Cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) AS Sales_Retail, " & _
-        ''        "SUM(MKDN) AS Mkdn " & _
-        ''        "INTO #t1 FROM Daily_Transaction_Log AS l " & _
-        ''        "LEFT JOIN Calendar AS c ON CONVERT(Date,TRANS_DATE) BETWEEN sDate AND eDate AND Week_Id > 0 " & _
-        ''        "WHERE TYPE = 'Sold' AND DATEPART(yy,c.eDate) = " & yr & " AND ISNULL(QTY,0) <> 0 " & _
-        ''        "GROUP BY STORE, LOCATION, SKU, eDate"
-        ''    cmd = New SqlCommand(sql, con)
-        ''    cmd.CommandTimeout = 120
-        ''    cmd.ExecuteNonQuery()
-        ''    sql = "UPDATE d SET Sold = Qty, Avg_Cost = Cost, Retail_Price = Retail, d.Sales_Cost = t.Sales_Cost, " & _
-        ''        "d.Sales_Retail = t.Sales_Retail, d.Markdown = t.mkdn FROM Item_Sales d " & _
-        ''        "JOIN #t1 t ON t.STORE = d.Str_Id AND t.LOCATION = d.Loc_Id AND t.SKU = d.Sku AND t.eDate = d.eDate"
-        ''    cmd = New SqlCommand(sql, con)
-        ''    cmd.CommandTimeout = 120
-        ''    cmd.ExecuteNonQuery()
-        ''    con.Close()
-
-        ''    txtprogress.Text = "Updating Transfers for " & yr
-        ''    Me.Refresh()
-        ''    con.Open()                         ' Update Transfers
-        ''    sql = "SELECT LOCATION, SKU, c.eDate, SUM(ISNULL(QTY,0)) AS Qty, AVG(COST) AS Cost, AVG(RETAIL) AS Retail " & _
-        ''        "INTO #t1 FROM Daily_Transaction_Log AS l " & _
-        ''        "LEFT JOIN Calendar AS c ON CONVERT(Date,TRANS_DATE) BETWEEN c.sDate AND c.eDate AND c.Week_Id > 0 " & _
-        ''        "WHERE TYPE = 'XFER' AND DATEPART(yy,c.eDate) = " & yr & " AND ISNULL(QTY,0) <> 0 " & _
-        ''        "GROUP BY LOCATION, SKU, eDate"
-        ''    cmd = New SqlCommand(sql, con)
-        ''    cmd.CommandTimeout = 120
-        ''    cmd.ExecuteNonQuery()
-        ''    sql = "UPDATE d SET XFER = Qty, d.Cost = t.Cost, d.Retail = t.Retail FROM Item_Inv d " & _
-        ''        "JOIN #t1 t ON t.LOCATION = d.Loc_Id AND t.SKU = d.Sku AND t.eDate = d.eDate"
-        ''    cmd = New SqlCommand(sql, con)
-        ''    cmd.CommandTimeout = 120
-        ''    cmd.ExecuteNonQuery()
-        ''    con.Close()
-
-        ''End While
-        ''con2.Close()
 12:
 
 
@@ -682,7 +567,7 @@ Public Class DBAdmin
         Console.WriteLine(arguments)
         Console.ReadLine()
 
-        arguments = thisClient & ";" & server & ";" & dbName & ";" & xmlPath & ";" & sqlUserID & ";" &
+        arguments = thisClient & ";" & server & ";" & dbName & ";" & exePath & ";" & xmlPath & ";" & sqlUserID & ";" &
                 sqlPassword & ";" & BuildStartDate & ";" & BuildEndDate & ";" & errorLog & ";" & Client.DoMarketing
         stopwatch = New Stopwatch
         stopwatch.Start()
@@ -700,7 +585,7 @@ Public Class DBAdmin
         con.Open()
         sql = "SELECT COUNT(*) cnt, ISNULL(SUM(ISNULL(QTY,0) * ISNULL(COST,0)),0) cost, " &
             "ISNULL(SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)),0) retail " &
-            "FROM Daily_Transaction_Log WHERE [TYPE] = 'ADJ'"
+            "FROM Inv_Transaction_Log WHERE [TYPE] = 'ADJ'"
         cmd = New SqlCommand(sql, con)
         rdr = cmd.ExecuteReader
         While rdr.Read
@@ -740,8 +625,8 @@ Public Class DBAdmin
         Dim retail As Decimal = 0
         cnt = 0
         con.Open()
-        sql = "SELECT COUNT(*) cnt, SUM(ISNULL(QTY,0) * ISNULL(COST,0)) cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) retail " &
-            "FROM Daily_Transaction_Log WHERE [TYPE] = 'ADJ' AND TRANS_ID LIKE 'P%'"
+        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(QTY * COST),0) cost, ISNULL(SUM(QTY * RETAIL),0) retail " &
+            "FROM Inv_Transaction_Log WHERE [TYPE] = 'ADJ' AND TRANS_ID LIKE 'P%'"
         cmd = New SqlCommand(sql, con)
         rdr = cmd.ExecuteReader
         While rdr.Read
@@ -782,8 +667,8 @@ Public Class DBAdmin
         Dim retail As Decimal = 0
         cnt = 0
         con.Open()
-        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(ISNULL(QTY,0) * ISNULL(COST,0)),0) cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) retail " &
-            "FROM Daily_Transaction_Log WHERE [TYPE] = 'RECVD'"
+        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(QTY * COST),0) cost, ISNULL(SUM(QTY * RETAIL),0) retail " &
+            "FROM Inv_Transaction_Log WHERE [TYPE] = 'RECVD'"
         cmd = New SqlCommand(sql, con)
         rdr = cmd.ExecuteReader
         While rdr.Read
@@ -824,8 +709,8 @@ Public Class DBAdmin
         Dim retail As Decimal = 0
         cnt = 0
         con.Open()
-        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(ISNULL(QTY,0) * ISNULL(COST,0)),0) cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) retail " &
-            "FROM Daily_Transaction_Log WHERE [TYPE] = 'RTV'"
+        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(QTY * COST),0) cost, ISNULL(SUM(QTY * RETAIL),0) retail " &
+            "FROM Inv_Transaction_Log WHERE [TYPE] = 'RTV'"
         cmd = New SqlCommand(sql, con)
         rdr = cmd.ExecuteReader
         While rdr.Read
@@ -867,8 +752,7 @@ Public Class DBAdmin
         Dim retail As Decimal = 0
         cnt = 0
         con.Open()
-        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(ISNULL(QTY,0) * ISNULL(COST,0)),0) cost, " &
-            "ISNULL(SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)),0) retail " &
+        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(QTY * COST),0) cost, ISNULL(SUM(QTY * RETAIL),0) retail " &
             "FROM Daily_Transaction_Log WHERE [TYPE] = 'Sold' AND SALE_TYPE = 'O'"
         cmd = New SqlCommand(sql, con)
         rdr = cmd.ExecuteReader
@@ -909,8 +793,8 @@ Public Class DBAdmin
         Dim retail As Decimal = 0
         cnt = 0
         con.Open()
-        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(ISNULL(QTY,0) * ISNULL(COST,0)),0) cost, " &
-            "ISNULL(SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)),0) retail " &
+        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(QTY * COST),0) cost, " &
+            "ISNULL(SUM(QTY * RETAIL),0) retail " &
             "FROM Daily_Transaction_Log WHERE [TYPE] = 'Sold' AND SALE_TYPE = 'T'"
         cmd = New SqlCommand(sql, con)
         rdr = cmd.ExecuteReader
@@ -948,8 +832,8 @@ Public Class DBAdmin
         Dim retail As Decimal = 0
         cnt = 0
         con.Open()
-        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(ISNULL(QTY,0) * ISNULL(COST,0)),0) cost, SUM(ISNULL(QTY,0) * ISNULL(RETAIL,0)) retail " &
-            "FROM Daily_Transaction_Log WHERE [TYPE] = 'XFER'"
+        sql = "SELECT COUNT(*) cnt, ISNULL(SUM(QTY * COST),0) cost, ISNULL(SUM(QTY * RETAIL),0) retail " &
+            "FROM Inv_Transaction_Log WHERE [TYPE] = 'XFER'"
         cmd = New SqlCommand(sql, con)
         rdr = cmd.ExecuteReader
         While rdr.Read
@@ -2320,83 +2204,89 @@ Public Class DBAdmin
             con2 = New SqlConnection(conString)
 
             ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-            ' ALL THE STUFF BETWEEN HERE AND 60: WAS DONE IN XMLUpdate WHEN IT WAS CALLED FOR EACH TRANSACTION TYPE
+            ' CLEAR OUT EVERYTHING EXCEPT THE LATEST INVENTORY AND REBUILD Item_Inv FROM THE 2 TRANSACTION LOGS
             ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-            ''con.Open()
-            ''sql = "IF OBJECT_ID('tempDB.dbo.#xfer','U') IS NOT NULL DROP TABLE #xfer; " & _
-            ''    "IF OBJECT_ID('tempDB.dbo.#adj','U') IS NOT NULL DROP TABLE #adj; " & _
-            ''    "IF OBJECT_ID('tempDB.dbo.#rtv','U') IS NOT NULL DROP TABLE #rtv; " & _
-            ''    "IF OBJECT_ID('tempDB.dbo.#rcvd','U') IS NOT NULL DROP TABLE #rcvd; " & _
-            ''    "IF OBJECT_ID('tempDB.dbo.#sold','U') IS NOT NULL DROP TABLE #sold; " & _
-            ''    "IF OBJECT_ID('tempDB.dbo.#inv','U') IS NOT NULL DROP TABLE #inv; " & _
-            ''    "DECLARE @fromDate date = '" & BuildStartDate & "' " & _
-            ''    "DECLARE @thruDate date = '" & BuildEndDate & "' " & _
-            ''    "select * into #inv from item_inv where edate = @thrudate " & _
-            ''    "delete from item_inv " & _
-            ''    "insert into Item_Inv(loc_id, sku, sdate, edate, cost, retail, yrwk, end_oh, item, dim1, dim2, dim3) " & _
-            ''    "select location, l.sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, " & _
-            ''    "convert(decimal(18,4),0) qty, l.item, l.dim1, l.dim2, l.dim3 from Daily_Transaction_Log l " & _
-            ''    "join calendar c on convert(date,trans_date) between sdate and edate and week_id > 0 " & _
-            ''    "join item_master m on m.sku = l.sku " & _
-            ''    "where m.[type]='I' and convert(date,trans_date) between @fromDate and @thruDate " & _
-            ''    "group by location, l.sku, sdate, edate, yrwk, l.item, l.dim1, l.dim2, l.dim3 " & _
-            ''    "select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) XFER, " & _
-            ''    "Item into #xfer from Daily_Transaction_Log l " & _
-            ''    "join calendar c on convert(date,trans_date) between c.sdate and c.edate and c.week_id > 0 " & _
-            ''    "where [type]='xfer' and convert(date,trans_date) between @fromDate and @thruDate " & _
-            ''    "group by location, sku, sdate, edate, Yrwk, Item " & _
-            ''    "update i set i.xfer=t.xfer from item_inv i " & _
-            ''    "join #xfer t on t.location=i.loc_id and t.sku=i.sku and t.edate=i.edate " & _
-            ''    "select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) ADJ, " & _
-            ''    "Item into #adj from Daily_Transaction_Log l " & _
-            ''    "join calendar c on convert(date,trans_date) between c.sdate and c.edate and c.week_id > 0 " & _
-            ''    "where [type]='adj' and convert(date,trans_date) between @fromDate and @thruDate " & _
-            ''    "group by location, sku, sdate, edate, Yrwk, Item " & _
-            ''    "update i set i.adj=t.adj from item_inv i " & _
-            ''    "join #adj t on t.location=i.loc_id and t.sku=i.sku and t.edate=i.edate " & _
-            ''    "select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) RTV, " & _
-            ''    "Item into #rtv from Daily_Transaction_Log l " & _
-            ''    "join calendar c on convert(date,trans_date) between c.sdate and c.edate and c.week_id > 0 " & _
-            ''    "where [type]='rtv' and convert(date,trans_date) between @fromDate and @thruDate " & _
-            ''    "group by location, sku, sdate, edate, Yrwk,Item " & _
-            ''    "update i set i.rtv=t.rtv from item_inv i " & _
-            ''    "join #rtv t on t.location=i.loc_id and t.sku=i.sku and t.edate=i.edate " & _
-            ''    "select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) RECVD, " & _
-            ''    "Item into #rcvd from Daily_Transaction_Log l " & _
-            ''    "join calendar c on convert(date,trans_date) between c.sdate and c.edate and c.week_id > 0 " & _
-            ''    "where [type]='recvd' and convert(date,trans_date) between @fromDate and @thruDate " & _
-            ''    "group by location, sku, sdate, edate, Yrwk, Item " & _
-            ''    "update i set i.recvd=t.recvd from item_inv i " & _
-            ''    "join #rcvd t on t.location=i.loc_id and t.sku=i.sku and t.edate=i.edate " & _
-            ''    "select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) SOLD, " & _
-            ''    "Item into #sold from Daily_Transaction_Log l " & _
-            ''    "join calendar c on convert(date,trans_date) between c.sdate and c.edate and c.week_id > 0 " & _
-            ''    "where [type]='Sold' and convert(date,trans_date) between @fromDate and @thruDate " & _
-            ''    "group by location, sku, sdate, edate, Yrwk, Item " & _
-            ''    "update i set i.sold=t.sold from item_inv i " & _
-            ''    "join #sold t on t.location=i.loc_id and t.sku=i.sku and t.edate=i.edate " & _
-            ''    "merge item_inv t using #inv s " & _
-            ''    "on t.loc_id=s.loc_id and t.sku=s.sku and t.edate=s.edate and t.item=s.item " & _
-            ''    "when not matched by target " & _
-            ''    "then insert(loc_id, sku, sdate, edate, cost, retail, yrwk, end_oh, item) " & _
-            ''    "values(s.loc_id, s.sku, s.sdate, s.edate, s.cost, s.retail, s.yrwk, s.end_oh, s.item) " & _
-            ''    "when matched then update set t.end_oh=s.end_oh; "
-            ''cmd = New SqlCommand(sql, con)
-            ''cmd.CommandTimeout = 960
-            ''cmd.ExecuteNonQuery()
-            ''con.Close()
+            con.Open()
+            sql = "update Item_Inv set adj=null, rtv=null, recvd=null, xfer=null, sold=null, begin_oh=null, max_oh=null " &
+                "IF OBJECT_ID('tempDB.dbo.#xfer','U') IS NOT NULL DROP TABLE #xfer; " &
+                "IF OBJECT_ID('tempDB.dbo.#adj','U') IS NOT NULL DROP TABLE #adj; " &
+                "IF OBJECT_ID('tempDB.dbo.#rtv','U') IS NOT NULL DROP TABLE #rtv; " &
+                "IF OBJECT_ID('tempDB.dbo.#rcvd','U') IS NOT NULL DROP TABLE #rcvd; " &
+                "IF OBJECT_ID('tempDB.dbo.#sold','U') IS NOT NULL DROP TABLE #sold; " &
+                "IF OBJECT_ID('tempDB.dbo.#inv','U') IS NOT NULL DROP TABLE #inv; " &
+                "DECLARE @fromDate date = '" & BuildStartDate & "' " &
+                "DECLARE @thruDate date = '" & BuildEndDate & "' " &
+                "select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) XFER, " &
+                    "item, dim1, dim2, dim3 into #xfer from Inv_Transaction_Log l " &
+                "Join Calendar c On convert(Date, trans_date) between c.sdate And c.edate And c.week_id > 0 " &
+                "where [Type] ='xfer' and convert(date,trans_date) between @fromDate and @thruDate " &
+                "Group by location, sku, sdate, edate, yrwk, item, dim1, dim2, dim3 " &
+                "merge item_inv t using #xfer s on s.location=t.loc_id And s.sku=t.sku And s.edate=t.edate " &
+                "when Not matched by target then insert(loc_id, sku, sdate, edate, cost, retail, xfer, item, dim1, dim2, dim3, yrwk) " &
+                "values(s.location, s.sku, s.sdate, s.edate, s.cost, s.retail, s.xfer, s.item, s.dim1, s.dim2, s.dim3, s.yrwk) " &
+                "when matched then update set t.xfer=s.xfer; " &
+                "Select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) ADJ, " &
+                    "item, dim1, dim2, dim3 into #adj from Inv_Transaction_Log l " &
+                "Join Calendar c On convert(Date, trans_date) between c.sdate And c.edate And c.week_id > 0 " &
+                "where [Type] ='adj' and convert(date,trans_date) between @fromDate and @thruDate " &
+                "Group by location, sku, sdate, edate, yrwk, item, dim1, dim2, dim3 " &
+                "merge item_inv t using #adj s on s.location=t.loc_id And s.sku=t.sku And s.edate=t.edate " &
+                "when Not matched by target then insert(loc_id, sku, sdate, edate, cost, retail, adj, item, dim1, dim2, dim3, yrwk) " &
+                "values(s.location, s.sku, s.sdate, s.edate, s.cost, s.retail, s.adj, s.item, s.dim1, s.dim2, s.dim3, s.yrwk) " &
+                "when matched then update set t.adj=s.adj; " &
+                "Select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) RTV, " &
+                    "item, dim1, dim2, dim3 into #rtv from Inv_Transaction_Log l " &
+                "Join Calendar c On convert(Date, trans_date) between c.sdate And c.edate And c.week_id > 0 " &
+                "where [Type] ='rtv' and convert(date,trans_date) between @fromDate and @thruDate " &
+                "Group by location, sku, sdate, edate, yrwk, item, dim1, dim2, dim3 " &
+                "merge item_inv t using #rtv s on s.location=t.loc_id And s.sku=t.sku And s.edate=t.edate " &
+                "when Not matched by target then insert(loc_id, sku, sdate, edate, cost, retail, rtv, item, dim1, dim2, dim3, yrwk) " &
+                "values(s.location, s.sku, s.sdate, s.edate, s.cost, s.retail, s.rtv, s.item, s.dim1, s.dim2, s.dim3, s.yrwk) " &
+                "when matched then update set t.rtv=s.rtv; " &
+                "Select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) RECVD, " &
+                    "item, dim1, dim2, dim3 into #rcvd from Inv_Transaction_Log l " &
+                "Join Calendar c On convert(Date, trans_date) between c.sdate And c.edate And c.week_id > 0 " &
+                "where [Type] ='recvd' and convert(date,trans_date) between @fromDate and @thruDate " &
+                "Group by location, sku, sdate, edate, yrwk, item, dim1, dim2, dim3 " &
+                "merge item_inv t using #rcvd s on s.location=t.loc_id And s.sku=t.sku And s.edate=t.edate " &
+                "when Not matched by target then insert(loc_id, sku, sdate, edate, cost, retail, recvd, item, dim1, dim2, dim3, yrwk) " &
+                "values(s.location, s.sku, s.sdate, s.edate, s.cost, s.retail, s.recvd, s.item, s.dim1, s.dim2, s.dim3, s.yrwk) " &
+                "when matched then update set t.recvd=s.recvd; " &
+                "Select location, sku, sdate, edate, avg(cost) cost, avg(retail) retail, YrWk, sum(qty) SOLD, " &
+                    "item, dim1, dim2, dim3 into #sold from Daily_Transaction_Log l " &
+                "Join Calendar c On convert(Date, trans_date) between c.sdate And c.edate And c.week_id > 0 " &
+                "where [Type] ='Sold' and sale_type='t' and convert(date,trans_date) between @fromDate and @thruDate " &
+                "Group by location, sku, sdate, edate, yrwk, item, dim1, dim2, dim3 " &
+                "merge item_inv t using #sold s on s.location=t.loc_id And s.sku=t.sku And s.edate=t.edate " &
+                "when Not matched by target then insert(loc_id, sku, sdate, edate, cost, retail, sold, item, dim1, dim2, dim3, yrwk) " &
+                "values(s.location, s.sku, s.sdate, s.edate, s.cost, s.retail, s.sold, s.item, s.dim1, s.dim2, s.dim3, s.yrwk) " &
+                "when matched then update set t.sold=s.sold; "
+            cmd = New SqlCommand(sql, con)
+            cmd.CommandTimeout = 960
+            cmd.ExecuteNonQuery()
+            con.Close()
 
 60:
+
+            ''              Get rid of records with no Inventory and no Transactions
+            con.Open()
+            sql = "DELETE FROM Item_Inv WHERE ISNULL(XFER,0)=0 AND ISNULL(ADJ,0)=0 AND ISNULL(RTV,0)=0 AND ISNULL(RECVD,0)=0 " &
+                "AND ISNULL(Sold,0)=0 AND ISNULL(End_OH,0)=0 " &
+                "UPDATE Item_Inv SET Begin_OH = NULL, End_OH = NULL, Max_OH = NULL WHERE eDate <> '" & BuildEndDate & "'"
+            cmd = New SqlCommand(sql, con)
+            cmd.ExecuteNonQuery()
+            con.Close()
+
             con.Open()
             con2.Open()
-            sql = "SELECT i.Loc_Id, i.Sku, i.sDate, i.eDate, ISNULL(Cost,0) AS Cost, ISNULL(Retail,0) AS Retail, c.YrWk, " & _
-                "i.Sold, ISNULL(ADJ,0) AS ADJ, ISNULL(XFER,0) AS XFER, ISNULL(RTV,0) AS RTV, ISNULL(RECVD,0) AS RECVD, " & _
-                "ISNULL(Begin_OH,0) AS Begin_OH, ISNULL(End_OH,0) AS End_OH, ISNULL(Max_OH,0) AS Max_OH, " & _
-                "Lead_Time, i.Item, i.DIM1, i.DIM2, i.DIM3 FROM Item_Inv i " & _
-                "JOIN Item_Master m ON m.Sku = i.Sku " & _
-                "JOIN Calendar c ON c.eDate = i.eDate AND c.Week_Id > 0 " & _
-                "WHERE Type = 'I' AND i.eDate BETWEEN '" & BuildStartDate & "' AND '" & BuildEndDate & "' " & _
+            sql = "Select i.Loc_Id, i.Sku, i.sDate, i.eDate, ISNULL(Cost,0) As Cost, ISNULL(Retail,0) As Retail, c.YrWk, " &
+                "i.Sold, ISNULL(ADJ,0) As ADJ, ISNULL(XFER,0) As XFER, ISNULL(RTV,0) As RTV, ISNULL(RECVD,0) As RECVD, " &
+                "ISNULL(Begin_OH,0) As Begin_OH, ISNULL(End_OH,0) As End_OH, ISNULL(Max_OH,0) As Max_OH, " &
+                "Lead_Time, i.Item, i.DIM1, i.DIM2, i.DIM3 FROM Item_Inv i " &
+                "JOIN Item_Master m On m.Sku = i.Sku " &
+                "JOIN Calendar c On c.eDate = i.eDate And c.Week_Id > 0 " &
+                "WHERE Type = 'I' AND i.eDate BETWEEN '" & BuildStartDate & "' AND '" & BuildEndDate & "' " &
                 "ORDER BY i.Loc_Id, i.Sku, eDate DESC"
             cmd = New SqlCommand(sql, con)
             cmd.CommandTimeout = 960
@@ -2477,19 +2367,20 @@ Public Class DBAdmin
                 '          Different sku below
                 '
                 If sku <> prevSku Then
-                    If prevBegin <> 0 Then
+                    ''If prevBegin <> 0 Then
+                    If thisBeginOH > 0 Then
                         nextEdate = DateAdd(DateInterval.Day, -7, preveDate)
                         nextSdate = DateAdd(DateInterval.Day, -6, nextEdate)
                         Do While BuildStartDate <= nextEdate
-                            prevMax = thisEndOH
+                            prevMax = prevBegin
                             If prevMax < 0 Then prevMax = 0
-                            sql = "IF NOT EXISTS (SELECT * FROM Item_Inv WHERE Loc_Id = '" & location & "' AND Sku = '" & prevSku & "' " & _
-                                "AND sDate = '" & nextSdate & "' AND eDate = '" & nextEdate & "' AND Item = '" & prevItem & "') " & _
-                                "INSERT INTO Item_Inv (Loc_Id, Sku, sDate, eDate, Cost, Retail, YrWk, Begin_OH, End_OH, Max_OH, " & _
-                                "Lead_Time, Item, DIM1, DIM2, DIM3) " & _
-                                "SELECT '" & location & "', '" & prevSku & "', '" & nextSdate & "', '" & nextEdate & "', " & prevCost & ", " & _
-                                prevRetail & ", YrWk, " & prevBegin & ", " & prevBegin & ", " & prevMax & ", " & prevLeadTime & ", '" & _
-                                prevItem & "','" & prevDim1 & "','" & prevDim2 & "','" & prevDim3 & "' FROM Calendar " & _
+                            sql = "IF NOT EXISTS (SELECT * FROM Item_Inv WHERE Loc_Id = '" & location & "' AND Sku = '" & prevSku & "' " &
+                                "AND sDate = '" & nextSdate & "' AND eDate = '" & nextEdate & "' AND Item = '" & prevItem & "') " &
+                                "INSERT INTO Item_Inv (Loc_Id, Sku, sDate, eDate, Cost, Retail, YrWk, Begin_OH, End_OH, Max_OH, " &
+                                "Lead_Time, Item, DIM1, DIM2, DIM3) " &
+                                "SELECT '" & location & "', '" & prevSku & "', '" & nextSdate & "', '" & nextEdate & "', " & prevCost & ", " &
+                                prevRetail & ", YrWk, " & prevBegin & ", " & prevBegin & ", " & prevMax & ", " & prevLeadTime & ", '" &
+                                prevItem & "','" & prevDim1 & "','" & prevDim2 & "','" & prevDim3 & "' FROM Calendar " &
                                 "WHERE eDate = '" & nextEdate & "' AND Week_Id > 0 "
                             cmd = New SqlCommand(sql, con2)
                             cmd.ExecuteNonQuery()
@@ -2550,13 +2441,13 @@ Public Class DBAdmin
                     Do While edate < nextEdate
                         nextSdate = DateAdd(DateInterval.Day, -6, nextEdate)
                         If nextSdate > BuildStartDate Then
-                            sql = "IF NOT EXISTS (SELECT * FROM Item_Inv WHERE Loc_Id = '" & location & "' AND Sku = '" & prevSku & "' " & _
-                                "AND sDate = '" & nextSdate & "' AND eDate = '" & nextEdate & "') " & _
-                                "INSERT INTO Item_Inv (Loc_Id, Sku, sDate, eDate, Cost, Retail, YrWk, Begin_OH, End_OH, Max_OH, " & _
-                                "Item, DIM1, DIM2, DIM3) " & _
-                                "SELECT '" & location & "', '" & prevSku & "', '" & nextSdate & "', '" & nextEdate & "', " & cost & ", " & _
-                                retail & ", YrWk, " & prevBegin & ", " & thisEndOH & ", " & prevMax & ",'" & _
-                                prevItem & "','" & prevDim1 & "','" & prevDim2 & "','" & prevDim3 & "' " & _
+                            sql = "IF NOT EXISTS (SELECT * FROM Item_Inv WHERE Loc_Id = '" & location & "' AND Sku = '" & prevSku & "' " &
+                                "AND sDate = '" & nextSdate & "' AND eDate = '" & nextEdate & "') " &
+                                "INSERT INTO Item_Inv (Loc_Id, Sku, sDate, eDate, Cost, Retail, YrWk, Begin_OH, End_OH, Max_OH, " &
+                                "Item, DIM1, DIM2, DIM3) " &
+                                "SELECT '" & location & "', '" & prevSku & "', '" & nextSdate & "', '" & nextEdate & "', " & cost & ", " &
+                                retail & ", YrWk, " & prevBegin & ", " & thisEndOH & ", " & prevMax & ",'" &
+                                prevItem & "','" & prevDim1 & "','" & prevDim2 & "','" & prevDim3 & "' " &
                                 "From Calendar WHERE eDate = '" & nextEdate & "' AND Week_Id > 0"
                             cmd = New SqlCommand(sql, con2)
                             cmd.ExecuteNonQuery()
@@ -2646,7 +2537,7 @@ righthere:
             End If
             Dim RTRACcon As New SqlConnection(RCClientConString)
             RTRACcon.Open()
-            Dim sql As String = "SELECT Server, [Database] AS dBase, XMLs, SQLUserID, SQLPassword, errorLog " & _
+            Dim sql As String = "SELECT Server, [Database] AS dBase, EXEs, XMLs, SQLUserID, SQLPassword, errorLog " &
                 "FROM CLIENT_MASTER WHERE Client_Id = '" & thisClient & "'"
             cmd = New SqlCommand(sql, RTRACcon)
             rdr = cmd.ExecuteReader
@@ -2657,6 +2548,8 @@ righthere:
                     If Not IsDBNull(oTest) And Not IsNothing(oTest) Then server = CStr(oTest)
                     oTest = rdr("dBase")
                     If Not IsDBNull(oTest) And Not IsNothing(oTest) Then dbName = CStr(oTest)
+                    oTest = rdr("EXEs")
+                    If Not IsDBNull(oTest) And Not IsNothing(oTest) Then exePath = CStr(oTest)
                     oTest = rdr("XMLs")
                     If Not IsDBNull(oTest) And Not IsNothing(oTest) Then path = CStr(oTest)
                     oTest = rdr("XMLs")
@@ -3284,7 +3177,7 @@ righthere:
                 lblClient.Text = "Client"
                 GroupBox5.Visible = True
             End If
-            arguments = thisClient & ";" & server & ";" & dbName & ";" & xmlPath & ";" & sqlUserID & ";" &
+            arguments = thisClient & ";" & server & ";" & dbName & ";" & exePath & ";" & xmlPath & ";" & sqlUserID & ";" &
                             sqlPassword & ";" & Date.Today & ";" & Date.Today & ";" & errorLog & ";" & Client.DoMarketing
         Catch ex As Exception
 

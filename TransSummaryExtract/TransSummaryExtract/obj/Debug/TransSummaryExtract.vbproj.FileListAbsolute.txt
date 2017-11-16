@@ -16,3 +16,4 @@ C:\Projects\Production\TransSummaryExtract\TransSummaryExtract\bin\Debug\TransSu
 C:\Projects\Production\TransSummaryExtract\TransSummaryExtract\bin\Debug\TransSummaryExtract.xml
 C:\Projects\Production\TransSummaryExtract\TransSummaryExtract\obj\Debug\TransSummaryExtract.Resources.resources
 C:\Projects\Production\TransSummaryExtract\TransSummaryExtract\obj\Debug\TransSummaryExtract.vbproj.GenerateResource.Cache
+C:\Projects\Production\TransSummaryExtract\TransSummaryExtract\obj\Debug\TransSummaryExtract.vbprojResolveAssemblyReference.cache

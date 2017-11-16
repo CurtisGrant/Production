@@ -17,7 +17,7 @@ Module Module2
                     valu = xmlReader.Value
             End Select
             If fld = "SERVER" Then server = valu
-            If fld = "EXEPATH" Then exePath = valu
+            ''If fld = "EXEPATH" Then exePath = valu          exePath moved to Client_Master
             If fld = "USERID" Then userid = valu
             If fld = "PD" Then passWord = valu
         End While
@@ -51,7 +51,7 @@ Module Module2
         con = New SqlConnection(conString)
         con.Open()
         Console.WriteLine("RCClient is now open")
-        sql = "SELECT Client_Id, [Database] AS dbase, Server, SQLUserId, SQLPassword, XMLs AS Path, " &
+        sql = "SELECT Client_Id, [Database] AS dbase, Server, SQLUserId, SQLPassword, EXEs, XMLs AS Path, " &
             "errorLog, Marketing FROM RCClient.dbo.CLIENT_MASTER " &
             "WHERE Status = 'Active' ORDER BY Client_Id"
         cmd = New SqlCommand(sql, con)
@@ -62,6 +62,7 @@ Module Module2
             server = rdr("Server")
             sqlUserId = rdr("SQLUserId")
             sqlPassword = rdr("SQLPassword")
+            exePath = rdr("EXEs")
             xmlPath = rdr("Path")
             oTest = rdr("errorLog")
             If Not IsDBNull(oTest) And Not IsNothing(oTest) Then errorLog = oTest Else errorLog = ""
@@ -85,6 +86,7 @@ Module Module2
             row("Client") = client
             row("Server") = server
             row("dBase") = dbase
+            row("exePath") = exePath
             row("xmlPath") = xmlPath
             row("sqlUserId") = sqlUserId
             row("sqlPassword") = sqlPassword
@@ -100,6 +102,7 @@ Module Module2
             client = row("Client")
             server = row("Server")
             dbase = row("dBase")
+            exePath = row("exePath")
             xmlPath = row("xmlPath")
             sqlUserId = row("sqlUserId")
             sqlPassword = row("sqlPassword")
@@ -111,7 +114,7 @@ Module Module2
             Console.WriteLine("Calling XMLUpdate.exe for " & client & " exepath=" & exePath)
             Dim p As New ProcessStartInfo
             p.FileName = exePath & "\XMLUpdate.exe"
-            p.Arguments = client & ";" & server & ";" & dbase & ";" & xmlPath & ";" & sqlUserId & ";" &
+            p.Arguments = client & ";" & server & ";" & dbase & ";" & exePath & ";" & xmlPath & ";" & sqlUserId & ";" &
                 sqlPassword & ";" & BeginDate & ";" & EndDate & ";" & errorLog & ";" & marketing & ";ALL"
             p.UseShellExecute = True
             p.WindowStyle = ProcessWindowStyle.Normal

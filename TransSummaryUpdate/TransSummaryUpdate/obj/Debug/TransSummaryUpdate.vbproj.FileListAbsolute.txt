@@ -7,3 +7,7 @@ C:\Projects\DEMO\TransSummaryUpdate\TransSummaryUpdate\bin\Debug\TransSummaryUpd
 C:\Projects\DEMO\TransSummaryUpdate\TransSummaryUpdate\obj\Debug\TransSummaryUpdate.exe
 C:\Projects\DEMO\TransSummaryUpdate\TransSummaryUpdate\obj\Debug\TransSummaryUpdate.xml
 C:\Projects\DEMO\TransSummaryUpdate\TransSummaryUpdate\obj\Debug\TransSummaryUpdate.pdb
+C:\Projects\Production\TransSummaryUpdate\TransSummaryUpdate\bin\Debug\TransSummaryUpdate.exe.config
+C:\Projects\Production\TransSummaryUpdate\TransSummaryUpdate\obj\Debug\TransSummaryUpdate.exe
+C:\Projects\Production\TransSummaryUpdate\TransSummaryUpdate\obj\Debug\TransSummaryUpdate.xml
+C:\Projects\Production\TransSummaryUpdate\TransSummaryUpdate\obj\Debug\TransSummaryUpdate.pdb

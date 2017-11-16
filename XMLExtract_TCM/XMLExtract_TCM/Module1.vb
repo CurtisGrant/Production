@@ -96,7 +96,7 @@ Module Module1
 
 
 
-        ''  GoTo 100
+        ''    GoTo 100
 
 
 
@@ -121,6 +121,7 @@ Module Module1
             End If
             Console.WriteLine("Extracting Buyers")
             Dim id, desc As String
+            Dim lastUpdate As DateTime
             path = xmlPath & "\Buyers.xml"
             xmlWriter = New XmlTextWriter(path, System.Text.Encoding.UTF8)
             xmlWriter.WriteStartDocument(True)
@@ -130,13 +131,7 @@ Module Module1
             Dim constr2 As String = ""
             Dim stat As String = ""
             cpCon.Open()
-            sql = "SELECT DISTINCT CATEG_COD AS ID, s.NAM_UPR AS DESCR INTO #t1 FROM PO_VEND p " &
-                "JOIN SY_USR s ON CATEG_COD = USR_ID " &
-                "WHERE CATEG_COD IS NOT NULL " &
-                "SELECT DISTINCT BUYER AS ID, '' AS DESCR INTO #t2 FROM PO_ORD_HDR WHERE BUYER IS NOT NULL; " &
-                "MERGE #t1 AS t USING #t2 AS s ON (s.ID = t.ID) " &
-                "WHEN NOT MATCHED BY TARGET THEN INSERT(ID, DESCR) VALUES (s.ID, s.ID); " &
-                "SELECT ID, DESCR FROM #t1"
+            sql = "SELECT USR_ID, NAM_UPR, LST_MAINT_DT LAST_UPDATE, LST_MAINT_USR_ID LAST_USER FROM SY_USR WHERE IS_BUYER = 'Y'"
             cmd = New SqlCommand(sql, cpCon)
 
             If Err.Number <> 0 Then Console.WriteLine(Err.Number)
@@ -144,14 +139,20 @@ Module Module1
             rdr = cmd.ExecuteReader
             While rdr.Read
                 cnt += 1
-                oTest = rdr("ID")
+                oTest = rdr("USR_ID")
                 If Not IsDBNull(oTest) Then id = CStr(oTest) Else id = "NA"
                 If Not IsDBNull(oTest) And Not IsNothing(oTest) Then
-                    oTest = rdr("DESCR")
+                    oTest = rdr("NAM_UPR")
                     If Not IsDBNull(oTest) Then desc = CStr(oTest) Else desc = "NA"
+                    oTest = rdr("LAST_UPDATE")
+                    If Not IsDBNull(oTest) Then lastUpdate = CDate(oTest) Else lastUpdate = "1900-01-01 00:00:00"
                     xmlWriter.WriteStartElement("Buyer")
                     xmlWriter.WriteElementString("ID", Replace(id, "'", "''"))
                     xmlWriter.WriteElementString("DESCRIPTION", Replace(desc, "'", "''"))
+                    xmlWriter.WriteElementString("LAST_UPDATE", Format(lastUpdate, "yyyy-MM-dd HH:mm:ss"))
+                    oTest = rdr("LAST_USER")
+                    If IsDBNull(oTest) Then oTest = Nothing
+                    xmlWriter.WriteElementString("LAST_USER", oTest)
                     xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
                     xmlWriter.WriteEndElement()
                 End If
@@ -294,21 +295,31 @@ Module Module1
             xmlWriter.Formatting = Formatting.Indented
             xmlWriter.Indentation = 5
             xmlWriter.WriteStartElement("Classes")
-            Dim dept, desc As String
+            Dim id, dept, desc, lastUser As String
+            Dim lastUpdate As DateTime
             cpCon.Open()
-            sql = "SELECT DISTINCT SUBCAT_COD AS ID, CATEG_COD AS DEPT, DESCR FROM IM_SUBCAT_COD WHERE SUBCAT_COD IS NOT NULL"
+            sql = "SELECT DISTINCT SUBCAT_COD AS ID, CATEG_COD AS DEPT, DESCR, LST_MAINT_DT LAST_UPDATE, " &
+            "LST_MAINT_USR_ID LAST_USER FROM IM_SUBCAT_COD " &
+            "WHERE SUBCAT_COD Is Not NULL"
             cmd = New SqlCommand(sql, cpCon)
             rdr = cmd.ExecuteReader
 
             While rdr.Read
                 cnt += 1
                 oTest = rdr("ID")
+                If Not IsDBNull(oTest) Then id = CStr(oTest) Else id = Nothing
                 dept = rdr("Dept")
                 desc = rdr("DESCR")
+                oTest = rdr("LAST_UPDATE")
+                If Not IsDBNull(oTest) Then lastUpdate = CDate(oTest) Else lastUpdate = "1900-01-01 00:00:00"
+                oTest = rdr("LAST_USER")
+                If Not IsDBNull(oTest) Then lastUser = CStr(oTest) Else lastUpdate = Nothing
                 xmlWriter.WriteStartElement("Class")
-                xmlWriter.WriteElementString("ID", Replace(oTest, "'", "''"))
+                xmlWriter.WriteElementString("ID", Replace(id, "'", "''"))
                 xmlWriter.WriteElementString("DEPT", Replace(dept, "'", "''"))
                 xmlWriter.WriteElementString("DESCRIPTION", Replace(desc, "'", "''"))
+                xmlWriter.WriteElementString("LAST_UPDATE", Format(lastUpdate, "yyyy-MM-dd HH:mm:ss"))
+                xmlWriter.WriteElementString("LAST_USER", lastUser)
                 xmlWriter.WriteElementString("EXTRACT_DATE", Date.Now)
                 xmlWriter.WriteEndElement()
             End While
@@ -344,9 +355,12 @@ Module Module1
             xmlWriter.Formatting = Formatting.Indented
             xmlWriter.Indentation = 5
             xmlWriter.WriteStartElement("Departments")
-            Dim id, desc As String
+            Dim id, desc, lastUser As String
+            Dim lastUpdate As DateTime
             cpCon.Open()
-            sql = "SELECT DISTINCT CATEG_COD AS ID, DESCR FROM IM_CATEG_COD WHERE CATEG_COD IS NOT NULL"
+            sql = "SELECT DISTINCT CATEG_COD AS ID, DESCR, LST_MAINT_DT LAST_UPDATE, " &
+                "LST_MAINT_USR_ID LAST_USER FROM IM_CATEG_COD " &
+                "WHERE CATEG_COD Is Not NULL"
             cmd = New SqlCommand(sql, cpCon)
             rdr = cmd.ExecuteReader
 
@@ -356,9 +370,15 @@ Module Module1
                 If Not IsDBNull(oTest) Then id = CStr(oTest) Else id = "NA"
                 oTest = rdr("DESCR")
                 If Not IsDBNull(oTest) Then desc = CStr(oTest) Else desc = "NA'"
+                oTest = rdr("LAST_UPDATE")
+                If Not IsDBNull(oTest) Then lastUpdate = CDate(oTest) Else lastUpdate = "1900-01-01 00:00:00"
+                oTest = rdr("LAST_USER")
+                If Not IsDBNull(oTest) Then lastUser = CStr(oTest) Else lastUser = Nothing
                 xmlWriter.WriteStartElement("Department")
                 xmlWriter.WriteElementString("ID", Replace(id, "'", "''"))
                 xmlWriter.WriteElementString("DESCRIPTION", Replace(desc, "'", "''"))
+                xmlWriter.WriteElementString("LAST_UPDATE", Format(lastUpdate, "yyyy-MM-dd HH:mm:ss"))
+                xmlWriter.WriteElementString("LAST_USER", lastUser)
                 xmlWriter.WriteElementString("EXTRACT_DATE", Date.Now)
                 xmlWriter.WriteEndElement()
             End While
@@ -394,10 +414,12 @@ Module Module1
             xmlWriter.Formatting = Formatting.Indented
             xmlWriter.Indentation = 5
             xmlWriter.WriteStartElement("ProductLines")
-            Dim id, desc As String
+            Dim id, desc, lastUser As String
+            Dim lastUpdate As DateTime
             cpCon.Open()
-            sql = "SELECT DISTINCT PROF_COD AS ID, DESCR FROM IM_ITEM_PROF_COD WHERE PROF_COD IS NOT NULL " &
-                "AND VAL_3 ='Y'"
+            sql = "SELECT DISTINCT PROF_COD AS ID, DESCR, LST_MAINT_DT LAST_UPDATE, LST_MAINT_USR_ID LAST_USER FROM IM_ITEM_PROF_COD " &
+            "WHERE PROF_COD Is Not NULL " &
+                "And VAL_3 ='Y'"
             cmd = New SqlCommand(sql, cpCon)
             rdr = cmd.ExecuteReader
 
@@ -407,9 +429,15 @@ Module Module1
                 If Not IsDBNull(oTest) Then id = CStr(oTest) Else id = "NA"
                 oTest = rdr("DESCR")
                 If Not IsDBNull(oTest) Then desc = CStr(oTest) Else desc = "NA"
+                oTest = rdr("LAST_UPDATE")
+                If Not IsDBNull(oTest) Then lastUpdate = CDate(oTest) Else lastUpdate = "1900-01-01 00:00:00"
+                oTest = rdr("LAST_USER")
+                If Not IsDBNull(oTest) Then lastUser = CStr(oTest) Else lastUser = Nothing
                 xmlWriter.WriteStartElement("ProductLine")
                 xmlWriter.WriteElementString("ID", Replace(id, "'", "''"))
                 xmlWriter.WriteElementString("DESCRIPTION", Replace(desc, "'", "''"))
+                xmlWriter.WriteElementString("LAST_UPDATE", Format(lastUpdate, "yyyy-MM-dd HH:mm:ss"))
+                xmlWriter.WriteElementString("LAST_USER", lastUser)
                 xmlWriter.WriteElementString("EXTRACT_DATE", Date.Now)
                 xmlWriter.WriteEndElement()
             End While
@@ -440,15 +468,17 @@ Module Module1
             cnt = 0
             Console.WriteLine("Extracting Seasons")
             path = xmlPath & "\Seasons.xml"
-            Dim id, desc As String
+            Dim id, desc, lastUser As String
+            Dim lastUpdate As DateTime
             xmlWriter = New XmlTextWriter(path, System.Text.Encoding.UTF8)
             xmlWriter.WriteStartDocument(True)
             xmlWriter.Formatting = Formatting.Indented
             xmlWriter.Indentation = 5
             xmlWriter.WriteStartElement("Seasons")
             cpCon.Open()
-            sql = "SELECT DISTINCT PROF_COD AS ID, DESCR FROM IM_ITEM_PROF_COD WHERE PROF_COD IS NOT NULL " &
-                "AND VAL_1 ='Y'"
+            sql = "SELECT DISTINCT PROF_COD AS ID, DESCR, LST_MAINT_DT LAST_UPDATE, LST_MAINT_USR_ID LAST_USER FROM IM_ITEM_PROF_COD " &
+            "WHERE PROF_COD Is Not NULL " &
+                "And VAL_1 ='Y'"
             cmd = New SqlCommand(sql, cpCon)
             rdr = cmd.ExecuteReader
 
@@ -458,9 +488,15 @@ Module Module1
                 If Not IsDBNull(oTest) Then id = CStr(oTest) Else id = "NA"
                 oTest = rdr("DESCR")
                 If Not IsDBNull(oTest) Then desc = CStr(oTest) Else desc = "NA"
+                oTest = rdr("LAST_UPDATE")
+                If Not IsDBNull(oTest) Then lastUpdate = CDate(oTest) Else lastUpdate = "1900-01-01 00:00:00"
+                oTest = rdr("LAST_USER")
+                If Not IsDBNull(oTest) Then lastUser = CStr(oTest) Else lastUser = Nothing
                 xmlWriter.WriteStartElement("Season")
                 xmlWriter.WriteElementString("ID", Replace(id, "'", "''"))
                 xmlWriter.WriteElementString("DESCRIPTION", Replace(desc, "'", "''"))
+                xmlWriter.WriteElementString("LAST_UPDATE", Format(lastUpdate, "yyyy-MM-dd HH:mm:ss"))
+                xmlWriter.WriteElementString("LAST_USER", lastUser)
                 xmlWriter.WriteElementString("EXTRACT_DATE", Date.Now)
                 xmlWriter.WriteEndElement()
             End While
@@ -496,9 +532,11 @@ Module Module1
             xmlWriter.Formatting = Formatting.Indented
             xmlWriter.Indentation = 5
             xmlWriter.WriteStartElement("Location")
-            Dim id, desc As String
+            Dim id, desc, lastUser As String
+            Dim lastUpdate As DateTime
             cpCon.Open()
-            sql = "SELECT DISTINCT LOC_ID AS ID, DESCR_UPR FROM IM_LOC WHERE LOC_ID IS NOT NULL "
+            sql = "SELECT DISTINCT LOC_ID AS ID, DESCR_UPR, LST_MAINT_DT LAST_UPDATE, LST_MAINT_USR_ID LAST_USER FROM IM_LOC " &
+            "WHERE LOC_ID Is Not NULL "
             cmd = New SqlCommand(sql, cpCon)
             rdr = cmd.ExecuteReader
 
@@ -508,9 +546,15 @@ Module Module1
                 If Not IsDBNull(oTest) Then id = CStr(oTest) Else id = "NA"
                 oTest = rdr("DESCR_UPR")
                 If Not IsDBNull(oTest) Then desc = CStr(oTest) Else desc = "NA"
+                oTest = rdr("LAST_UPDATE")
+                If Not IsDBNull(oTest) Then lastUpdate = CDate(oTest) Else lastUpdate = "1900-01-01 00:00:00"
+                oTest = rdr("LAST_USER")
+                If Not IsDBNull(oTest) Then lastUser = CStr(oTest) Else lastUser = Nothing
                 xmlWriter.WriteStartElement("Location")
                 xmlWriter.WriteElementString("ID", Replace(id, "'", "''"))
                 xmlWriter.WriteElementString("DESCRIPTION", Replace(desc, "'", "''"))
+                xmlWriter.WriteElementString("LAST_UPDATE", Format(lastUpdate, "yyyy-MM-dd HH:mm:ss"))
+                xmlWriter.WriteElementString("LAST_USER", lastUser)
                 xmlWriter.WriteElementString("EXTRACT_DATE", Date.Now)
                 xmlWriter.WriteEndElement()
             End While
@@ -545,10 +589,12 @@ Module Module1
             xmlWriter.Formatting = Formatting.Indented
             xmlWriter.Indentation = 5
             xmlWriter.WriteStartElement("Stores")
-            Dim id, desc As String
+            Dim id, desc, lastUser As String
+            Dim lastUpdate As DateTime
             cpCon.Open()
-            sql = "SELECT DISTINCT s.STR_ID AS ID, DESCR_UPR, STK_LOC_ID FROM PS_STR s " &
-                "JOIN PS_STR_CFG_PS c ON c.STR_ID = s.STR_ID WHERE STK_LOC_ID IS NOT NULL "
+            sql = "SELECT DISTINCT s.STR_ID AS ID, DESCR_UPR, STK_LOC_ID, s.LST_MAINT_DT LAST_UPDATE, " &
+                "s.LST_MAINT_USR_ID LAST_USER FROM PS_STR s " &
+                "JOIN PS_STR_CFG_PS c ON c.STR_ID = s.STR_ID WHERE STK_LOC_ID Is Not NULL "
             cmd = New SqlCommand(sql, cpCon)
             rdr = cmd.ExecuteReader
 
@@ -562,6 +608,12 @@ Module Module1
                 xmlWriter.WriteElementString("ID", Replace(id, "'", "''"))
                 xmlWriter.WriteElementString("DESCRIPTION", Replace(desc, "'", "''"))
                 xmlWriter.WriteElementString("LOCATION", Replace(rdr("STK_LOC_ID"), "'", "''"))
+                oTest = rdr("LAST_UPDATE")
+                If Not IsDBNull(oTest) Then lastUpdate = CDate(oTest) Else lastUpdate = "1900-01-01 00:00:00"
+                xmlWriter.WriteElementString("LAST_UPDATE", Format(lastUpdate, "yyyy-MM-dd HH:mm:ss"))
+                oTest = rdr("LAST_USER")
+                If Not IsDBNull(oTest) Then lastUser = CStr(oTest) Else lastUser = Nothing
+                xmlWriter.WriteElementString("LAST_USER", lastUser)
                 xmlWriter.WriteElementString("EXTRACT_DATE", Date.Now)
                 xmlWriter.WriteEndElement()
             End While
@@ -597,9 +649,12 @@ Module Module1
             xmlWriter.Formatting = Formatting.Indented
             xmlWriter.Indentation = 5
             xmlWriter.WriteStartElement("Vendors")
-            Dim id, desc As String
+            Dim id, desc, lastUser As String
+            Dim lastUpdate As DateTime
             cpCon.Open()
-            sql = "SELECT DISTINCT VEND_NO AS ID, NAM_UPR FROM VI_PO_VEND_WITH_ADDRESS WHERE VEND_NO IS NOT NULL "
+            sql = "SELECT DISTINCT VEND_NO AS ID, NAM_UPR, LST_MAINT_DT LAST_UPDATE, " &
+                "LST_MAINT_USR_ID LAST_USER FROM VI_PO_VEND_WITH_ADDRESS " &
+                "WHERE VEND_NO Is Not NULL "
             cmd = New SqlCommand(sql, cpCon)
             cmd.CommandTimeout = 120
             rdr = cmd.ExecuteReader
@@ -609,9 +664,15 @@ Module Module1
                 If Not IsDBNull(oTest) Then id = CStr(oTest) Else id = "NA"
                 oTest = rdr("NAM_UPR")
                 If Not IsDBNull(oTest) Then desc = CStr(oTest) Else desc = "NA"
+                oTest = rdr("LAST_UPDATE")
+                If Not IsDBNull(oTest) Then lastUpdate = CDate(oTest) Else lastUpdate = "1900-01-01 00:00:00"
+                oTest = rdr("LAST_USER")
+                If Not IsDBNull(oTest) Then lastUser = CStr(oTest) Else lastUser = Nothing
                 xmlWriter.WriteStartElement("Vendor")
                 xmlWriter.WriteElementString("ID", Replace(id, "'", "''"))
                 xmlWriter.WriteElementString("DESCRIPTION", Replace(desc, "'", "''"))
+                xmlWriter.WriteElementString("LAST_UPDATE", Format(lastUpdate, "yyyy-MM-dd HH:mm:ss"))
+                xmlWriter.WriteElementString("LAST_USER", lastUser)
                 xmlWriter.WriteElementString("EXTRACT_DATE", Date.Now)
                 xmlWriter.WriteEndElement()
             End While
@@ -647,9 +708,10 @@ Module Module1
             xmlWriter.Formatting = Formatting.Indented
             xmlWriter.Indentation = 5
             xmlWriter.WriteStartElement("Coupon_Code")
-            Dim id, desc As String
+            Dim id, desc, lastUser As String
+            Dim lastUpdate As DateTime
             cpCon.Open()
-            sql = "SELECT REAS_COD, DESCR FROM PS_REAS_COD ORDER BY REAS_COD"
+            sql = "SELECT REAS_COD, DESCR, LST_MAINT_DT LAST_UPDATE, LST_MAINT_USR_ID LAST_USER FROM PS_REAS_COD ORDER BY REAS_COD"
             cmd = New SqlCommand(sql, cpCon)
             rdr = cmd.ExecuteReader
             While rdr.Read
@@ -660,7 +722,13 @@ Module Module1
                     xmlWriter.WriteElementString("ID", Replace(oTest, "'", "''"))
                     oTest = rdr("DESCR")
                     If Not IsDBNull(oTest) And Not IsNothing(oTest) Then desc = oTest Else desc = ""
+                    oTest = rdr("LAST_UPDATE")
+                    If Not IsDBNull(oTest) Then lastUpdate = CDate(oTest) Else lastUpdate = "1900-01-01 00:00:00"
+                    oTest = rdr("LAST_USER")
+                    If Not IsDBNull(oTest) Then lastUser = CStr(oTest) Else lastUser = Nothing
                     xmlWriter.WriteElementString("DESCRIPTION", Replace(desc, "'", "''"))
+                    xmlWriter.WriteElementString("LAST_UPDATE", Format(lastUpdate, "yyyy-MM-dd HH:mm:ss"))
+                    xmlWriter.WriteElementString("LAST_USER", lastUser)
                     xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
                     xmlWriter.WriteEndElement()
                 End If
@@ -706,7 +774,7 @@ Module Module1
             sql = "SELECT CUST_NO, NAM_UPR AS NAME, FST_NAM_UPR AS FIRST_NAME, LST_NAM_UPR AS LAST_NAME, ADRS_1 AS ADDRESS_1, " &
                 "ADRS_2 AS ADDRESS_2, ADRS_3 AS ADDRESS_3, CITY, STATE, ZIP_COD AS ZIP, CONTCT_2 AS SPOUSE, COMMNT AS BIRTHDAY, " &
                 "PHONE_1, PHONE_2, EMAIL_ADRS_1 AS EMAIL, CATEG_COD AS TYPE, BAL AS BALANCE, " &
-                "FST_SAL_DAT AS FIRST_SALE_DATE, LST_SAL_DAT AS LAST_SALE_DATE, LST_MAINT_DT AS LAST_UPDATE, " &
+                "FST_SAL_DAT AS FIRST_SALE_DATE, LST_SAL_DAT AS LAST_SALE_DATE, LST_MAINT_DT AS LAST_UPDATE, LST_MAINT_USR_ID LAST_USER, " &
                 "LOY_PTS_BAL AS LOYALTY_POINTS, INCLUDE_IN_MARKETING_MAILOUTS AS OK_TO_EMAIL, PROF_ALPHA_2 AS OK_TO_MAIL, " &
                 "MBL_PHONE_1 AS CELL_1, MBL_PHONE_2 AS CELL_2 FROM VI_AR_CUST_WITH_ADDRESS"
             cmd = New SqlCommand(sql, cpCon)
@@ -776,6 +844,9 @@ Module Module1
                 oTest = rdr("LAST_UPDATE")
                 If IsDBNull(oTest) Then oTest = Nothing
                 xmlWriter.WriteElementString("LAST_UPDATE", oTest)
+                oTest = rdr("LAST_USER")
+                If IsDBNull(oTest) Then oTest = Nothing
+                xmlWriter.WriteElementString("LAST_USER", oTest)
                 oTest = rdr("LOYALTY_POINTS")
                 If IsDBNull(oTest) Then oTest = 0
                 xmlWriter.WriteElementString("LOYALTY_POINTS", oTest)
@@ -856,6 +927,7 @@ Module Module1
             Console.WriteLine("Extracting Item data")
             path = xmlPath & "\Items.xml"
             Dim sku As String
+            Dim lastUpdate As DateTime
             xmlWriter = New XmlTextWriter(path, System.Text.Encoding.UTF8)
             xmlWriter.WriteStartDocument(True)
             xmlWriter.Formatting = Formatting.Indented
@@ -870,13 +942,14 @@ Module Module1
                 "i.CATEG_COD AS DEPT, i.SUBCAT_COD AS CLASS, i.PRC_1 AS CURR_RTL, CONVERT(Decimal(18,4),pv.UNIT_COST / pv.PUR_NUMER) AS CURR_COST, " &
                 "CASE WHEN i.USR_LB_MERCHANT_SKU IS NOT NULL THEN i.USR_LB_MERCHANT_SKU ELSE gv.LB_MERCHANT_SKU END AS CUSTOM1, " &
                 "i.PROF_COD_3 AS CUSTOM3, i.PROF_COD_5 AS CUSTOM5, i.ALT_1_UNIT AS UOM, i.ALT_1_NUMER AS BUYUNIT, " &
-                "i.ALT_1_DENOM AS SELLUNIT, imn.NOTE_TXT, i.STAT AS STATUS, i.ITEM_TYP AS TYPE, i.STK_UNIT, pv.MIN_ORD_QTY, ORD_MULT FROM VI_IM_ITEM_WITH_INV_TOTS AS i " &
+                "i.ALT_1_DENOM AS SELLUNIT, imn.NOTE_TXT, i.STAT AS STATUS, i.ITEM_TYP AS TYPE, i.STK_UNIT, pv.MIN_ORD_QTY, " &
+                "ORD_MULT, i.LST_MAINT_DT LAST_UPDATE, i.LST_MAINT_USR_ID LAST_USER FROM VI_IM_ITEM_WITH_INV_TOTS AS i " &
                 "LEFT JOIN VI_IM_ITEM_GRID_DIMS g ON g.ITEM_NO = i.ITEM_NO " &
-                "LEFT JOIN USR_VI_MAG_ITEM_GRID_VAL gv ON i.ITEM_NO = gv.ITEM_NO AND g.DIM_1_UPR = gv.DIM_1_UPR " &
-                "AND g.DIM_2_UPR = gv.DIM_2_UPR AND g.DIM_3_UPR = gv.DIM_3_UPR " &
+                "LEFT JOIN USR_VI_MAG_ITEM_GRID_VAL gv ON i.ITEM_NO = gv.ITEM_NO And g.DIM_1_UPR = gv.DIM_1_UPR " &
+                "And g.DIM_2_UPR = gv.DIM_2_UPR And g.DIM_3_UPR = gv.DIM_3_UPR " &
                 "LEFT JOIN VI_PO_VEND_WITH_ADDRESS AS p ON p.VEND_NO = i. ITEM_VEND_NO " &
-                "LEFT JOIN PO_VEND_ITEM AS pv ON pv.ITEM_NO = i.ITEM_NO AND i.ITEM_VEND_NO = pv.VEND_NO " &
-                "LEFT JOIN IM_ITEM_NOTE AS imn ON imn.ITEM_NO =i.ITEM_NO AND NOTE_ID = 'PO'"
+                "LEFT JOIN PO_VEND_ITEM AS pv ON pv.ITEM_NO = i.ITEM_NO And i.ITEM_VEND_NO = pv.VEND_NO " &
+                "LEFT JOIN IM_ITEM_NOTE AS imn ON imn.ITEM_NO =i.ITEM_NO And NOTE_ID = 'PO'"
 
             cmd = New SqlCommand(sql, cpCon)
             cmd.CommandTimeout = 120
@@ -1000,6 +1073,12 @@ Module Module1
                 If IsDBNull(oTest) Then oTest = 1
                 xmlWriter.WriteElementString("ORD_MULT", oTest)
 
+                oTest = rdr("LAST_UPDATE")
+                If Not IsDBNull(oTest) Then lastUpdate = CDate(oTest) Else lastUpdate = "1900-01-01 00:00:00"
+                xmlWriter.WriteElementString("LAST_UPDATE", Format(lastUpdate, "yyyy-MM-dd HH:mm:ss"))
+                oTest = rdr("LAST_USER")
+                If IsDBNull(oTest) Then oTest = Nothing
+                xmlWriter.WriteElementString("LAST_USER", oTest)
                 xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
                 xmlWriter.WriteEndElement()
             End While
@@ -1050,6 +1129,7 @@ Module Module1
             StopWatch.Start()
             cnt = 0
             Dim sku, item, barcod_id, barcod As String
+            Dim lastUpdate As DateTime
             Console.WriteLine("Extracting Barcode data")
             path = xmlPath & "\Barcodes.xml"
             xmlWriter = New XmlTextWriter(path, System.Text.Encoding.UTF8)
@@ -1058,7 +1138,7 @@ Module Module1
             xmlWriter.Indentation = 2
             xmlWriter.WriteStartElement("Barcodes")
             cpCon.Open()
-            sql = "SELECT ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, BARCOD, BARCOD_ID FROM IM_BARCOD"
+            sql = "SELECT ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, BARCOD, BARCOD_ID, LST_MAINT_DT LAST_UPDATE FROM IM_BARCOD"
             cmd = New SqlCommand(sql, cpCon)
             rdr = cmd.ExecuteReader
             While rdr.Read
@@ -1095,6 +1175,9 @@ Module Module1
                 If IsDBNull(oTest) Then barcod_id = "NA" Else barcod_id = Replace(oTest, "'", "''")
                 xmlWriter.WriteElementString("BARCOD_ID", barcod_id)
 
+                oTest = rdr("LAST_UPDATE")
+                If Not IsDBNull(oTest) Then lastUpdate = CDate(oTest) Else lastUpdate = "1900-01-01 00:00:00"
+                xmlWriter.WriteElementString("LAST_UPDATE", Format(lastUpdate, "yyyy-MM-dd HH:mm:ss"))
                 xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
                 xmlWriter.WriteEndElement()
             End While
@@ -1129,6 +1212,7 @@ Module Module1
             totlMarkdown = 0
             path = xmlPath & "\Inventory.xml"
             Dim sku As String
+            Dim lastUpdate As DateTime
             Dim path2 As String = xmlPath & "Inventory_" & Today & ".xml"
             xmlWriter = New XmlTextWriter(path, System.Text.Encoding.UTF8)
             xmlWriter.WriteStartDocument(True)
@@ -1146,15 +1230,16 @@ Module Module1
             ''    "DELETE FROM #t1 WHERE AVAIL = 0 " & _
             ''    "SELECT LOCATION, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, ONHAND, AVAIL, COMMITED, COST, RETAIL from #t1"
             sql = "SELECT i.LOC_ID AS LOCATION, i.ITEM_NO, c.DIM_1_UPR, c.DIM_2_UPR, c.DIM_3_UPR, " &
-                 "c.QTY_ON_HND ONHAND, AVG_COST AS COST, PRC_1 AS RETAIL INTO #t1 FROM IM_INV i " &
-                 "LEFT JOIN IM_INV_CELL c ON c.ITEM_NO = i.ITEM_NO AND c.LOC_ID = i.LOC_ID " &
+                 "c.QTY_ON_HND ONHAND, AVG_COST AS COST, PRC_1 AS RETAIL, COALESCE(c.LST_MAINT_DT, " &
+                "i.LST_MAINT_DT) LAST_UPDATE, c.LST_MAINT_USR_ID LAST_USER INTO #t1 FROM IM_INV i " &
+                 "LEFT JOIN IM_INV_CELL c ON c.ITEM_NO = i.ITEM_NO And c.LOC_ID = i.LOC_ID " &
                  "LEFT JOIN IM_ITEM im ON IM.ITEM_NO=i.ITEM_NO " &
                  "WHERE im.TRK_METH = 'G' AND c.QTY_ON_HND <> 0 " &
-                 "INSERT INTO #t1(LOCATION, ITEM_NO, ONHAND, COST, RETAIL) " &
-                 "SELECT i.LOC_ID, i.ITEM_NO, i.QTY_ON_HND, AVG_COST, PRC_1 FROM IM_INV i " &
+                 "INSERT INTO #t1(LOCATION, ITEM_NO, ONHAND, COST, RETAIL, LAST_UPDATE, LAST_USER) " &
+                 "SELECT i.LOC_ID, i.ITEM_NO, i.QTY_ON_HND, AVG_COST, PRC_1, i.LST_MAINT_DT, i.LST_MAINT_USR_ID FROM IM_INV i " &
                  "LEFT JOIN IM_ITEM im ON im.ITEM_NO = i.ITEM_NO " &
                  "WHERE im.TRK_METH <> 'G' AND i.QTY_ON_HND <> 0 " &
-                 "SELECT LOCATION, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, ONHAND, COST, RETAIL from #t1"
+                 "SELECT LOCATION, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, ONHAND, COST, RETAIL, LAST_UPDATE, LAST_USER from #t1"
             cmd = New SqlCommand(sql, cpCon)
             cmd.CommandTimeout = 480
             rdr = cmd.ExecuteReader
@@ -1185,6 +1270,12 @@ Module Module1
                 If IsDBNull(oTest) Then retail = 0 Else retail = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
                 totlRetail += (qty * retail)
                 xmlWriter.WriteElementString("RETAIL", retail)
+                oTest = rdr("LAST_UPDATE")
+                If Not IsDBNull(oTest) Then lastUpdate = CDate(oTest) Else lastUpdate = "1900-01-01 00:00:00"
+                xmlWriter.WriteElementString("LAST_UPDATE", Format(lastUpdate, "yyyy-MM-dd HH:mm:ss"))
+                oTest = rdr("LAST_USER")
+                If IsDBNull(oTest) Then oTest = Nothing
+                xmlWriter.WriteElementString("LAST_USER", oTest)
                 xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
                 xmlWriter.WriteEndElement()
 
@@ -1224,6 +1315,7 @@ Module Module1
             Dim amt As Decimal
             Dim preq, batch, vend_id, vend, loc, buyer, alloc, mrg, terms, custom, custom2, custom3, custom4, custom5 As String
             Dim ord, del, can As Date
+            Dim lastUpdate As DateTime
             path = xmlPath & "\Purchase_Request_Header.xml"
             xmlWriter = New XmlTextWriter(path, System.Text.Encoding.UTF8)
             xmlWriter.WriteStartDocument(True)
@@ -1233,7 +1325,7 @@ Module Module1
             Console.WriteLine("extracting Purchase Requests Header")
             cpCon.Open()
             sql = "SELECT PREQ_NO, BAT_ID, VEND_NO, VEND_NAM, LOC_ID, BUYER, ORD_DAT, DELIV_DAT, CANCEL_DAT, ORD_TOT, " &
-                "IS_ALLOC, ALLOC_SEP_OR_MERGED, TERMS_COD, COMMNT_1 FROM PO_PREQ_HDR"
+                "IS_ALLOC, ALLOC_SEP_OR_MERGED, TERMS_COD, COMMNT_1, LST_MAINT_DT LAST_UPDATE FROM PO_PREQ_HDR"
             cmd = New SqlCommand(sql, cpCon)
             rdr = cmd.ExecuteReader
             While rdr.Read
@@ -1288,6 +1380,8 @@ Module Module1
                 If Not IsDBNull(oTest) And Not IsNothing(oTest) Then terms = CStr(oTest)
                 oTest = rdr("COMMNT_1")
                 If Not IsDBNull(oTest) And Not IsNothing(oTest) Then custom = CStr(Replace(oTest, "'", "''"))
+                oTest = rdr("LAST_UPDATE")
+                If Not IsDBNull(oTest) Then lastUpdate = CDate(oTest) Else lastUpdate = "1900-01-01 00:00:00"
                 xmlWriter.WriteStartElement("PREQ")
                 xmlWriter.WriteElementString("PREQ_NO", preq)
                 xmlWriter.WriteElementString("BATCH", batch)
@@ -1307,6 +1401,7 @@ Module Module1
                 xmlWriter.WriteElementString("CUSTOM_3", custom3)
                 xmlWriter.WriteElementString("CUSTOM_4", custom4)
                 xmlWriter.WriteElementString("CUSTOM_5", custom5)
+                xmlWriter.WriteElementString("LAST_UPDATE", Format(lastUpdate, "yyyy-MM-dd HH:mm:ss"))
                 xmlWriter.WriteElementString("EXTRACT_DATE", Date.Now)
                 xmlWriter.WriteEndElement()
             End While
@@ -1342,6 +1437,7 @@ Module Module1
             totlCost = 0
             totlQty = 0
             Dim sku As String = ""
+            Dim lastUpdate As DateTime
             path = xmlPath & "\Purchase_Request_Detail.xml"
             xmlWriter = New XmlTextWriter(path, System.Text.Encoding.UTF8)
             xmlWriter.WriteStartDocument(True)
@@ -1350,8 +1446,9 @@ Module Module1
             xmlWriter.WriteStartElement("PurchaseRequestDetail")
             cpCon.Open()
             sql = "SELECT l.PREQ_NO, l.SEQ_NO, ITEM_NO, DESCR_UPR, ORD_UNIT, ORD_QTY_NUMER, ORD_QTY_DENOM, " &
-                "ORD_COST, c.DIM_1_UPR, c.DIM_2_UPR, c.DIM_3_UPR, C.ORD_QTY FROM PO_PREQ_LIN l " &
-                "LEFT JOIN PO_PREQ_CELL C ON c.PREQ_NO = l.PREQ_NO AND c.SEQ_NO = l.SEQ_NO"
+                "ORD_COST, c.DIM_1_UPR, c.DIM_2_UPR, c.DIM_3_UPR, C.ORD_QTY, " &
+                "COALESCE(c.LST_MAINT_DT,l.LST_MAINT_DT) AS LAST_UPDATE FROM PO_PREQ_LIN l " &
+                "LEFT JOIN PO_PREQ_CELL C ON c.PREQ_NO = l.PREQ_NO And c.SEQ_NO = l.SEQ_NO"
             cmd = New SqlCommand(sql, cpCon)
             rdr = cmd.ExecuteReader
             While rdr.Read
@@ -1413,6 +1510,9 @@ Module Module1
                 totlQty += qty
                 totlCost += (cost * qty)
                 xmlWriter.WriteElementString("QTY", oTest)
+                oTest = rdr("LAST_UPDATE")
+                If Not IsDBNull(oTest) Then lastUpdate = CDate(oTest) Else lastUpdate = "1900-01-01 00:00:00"
+                xmlWriter.WriteElementString("LAST_UPDATE", Format(lastUpdate, "yyyy-MM-dd HH:mm:ss"))
                 xmlWriter.WriteElementString("EXTRACT_DATE", Date.Now)
                 xmlWriter.WriteEndElement()
             End While
@@ -1441,7 +1541,7 @@ Module Module1
             If cpCon.State = ConnectionState.Open Then cpCon.Close()
         End Try
 
-100:    Try
+        Try
             StopWatch = New Stopwatch
             StopWatch.Start()
             Console.WriteLine("Extracting Purchase Orders")
@@ -1456,6 +1556,7 @@ Module Module1
             Dim row, foundRow As DataRow
             Dim column As New DataColumn
             Dim po, store, sku, dim1, dim2, dim3, terms, comment As String
+            Dim lastUpdate As DateTime
             column.DataType = System.Type.GetType("System.String")
             column.ColumnName = "PO"
             tbl.Columns.Add(column)
@@ -1481,6 +1582,7 @@ Module Module1
             tbl.Columns.Add("Custom_3", GetType(System.String))
             tbl.Columns.Add("Custom_4", GetType(System.String))
             tbl.Columns.Add("Custom_5", GetType(System.String))
+            tbl.Columns.Add("LAST_UPDATE", GetType(System.String))
             path = xmlPath & "\PODetail.xml"
             xmlWriter = New XmlTextWriter(path, System.Text.Encoding.UTF8)
             xmlWriter.WriteStartDocument(True)
@@ -1495,8 +1597,8 @@ Module Module1
                 "(SELECT MAX(RECVR_DAT) FROM PO_RECVR_HIST_LIN r WHERE r.PO_NO = h.PO_NO " &
                 "AND r.RECVR_LOC_ID = h.LOC_ID AND r.ITEM_NO = l.ITEM_NO AND QTY_RECVD > 0) AS LAST_RECVD_DATE, " &
                 "h.ORD_SUB_TOT AS AMT, h.RECVD_TOT_COST AS RECVD_COST, h.LIN_CNT AS LINES, h.ORD_QTY_IN_STK_UNITS AS STK_QTY, " &
-                "OPN_LIN_CNT AS OPEN_LINES, h.OPN_PO_TOT AS OPEN_AMT, TERMS_COD, h.COMMNT_1 " &
-                "FROM PO_ORD_HDR h " &
+                "OPN_LIN_CNT AS OPEN_LINES, h.OPN_PO_TOT AS OPEN_AMT, TERMS_COD, h.COMMNT_1, " &
+                "COALESCE(c.LST_MAINT_DT,l.LST_MAINT_DT) AS LAST_UPDATE FROM PO_ORD_HDR h " &
                 "JOIN PO_ORD_LIN l ON l.PO_NO = h.PO_NO " &
                 "LEFT JOIN PO_ORD_CELL c ON c.PO_NO = l.PO_NO AND c.SEQ_NO = l.SEQ_NO " &
                 "JOIN IM_ITEM i ON i.ITEM_NO = l.ITEM_NO " &
@@ -1567,6 +1669,9 @@ Module Module1
                 oTest = rdr("LAST_RECVD_DATE")
                 If IsDBNull(oTest) Then oTest = ""
                 xmlWriter.WriteElementString("LAST_RECVD_DATE", oTest)
+                oTest = rdr("LAST_UPDATE")
+                If IsDBNull(oTest) Then lastUpdate = "1900-01-01 00:00:00" Else lastUpdate = CDate(oTest)
+                xmlWriter.WriteElementString("LAST_UPDATE", Format(lastUpdate, "yyyy-MM-dd HH:mm:ss"))
                 xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
                 xmlWriter.WriteEndElement()
                 foundRow = tbl.Rows.Find(po)
@@ -1623,6 +1728,7 @@ Module Module1
                     row("Custom_3") = Nothing
                     row("Custom_4") = Nothing
                     row("Custom_5") = Nothing
+                    row("LAST_UPDATE") = lastUpdate
                     tbl.Rows.Add(row)
                 End If
             End While
@@ -1698,6 +1804,7 @@ Module Module1
                     xmlWriter.WriteElementString("CUSTOM_3", row("Custom_3"))
                     xmlWriter.WriteElementString("CUSTOM_4", row("Custom_4"))
                     xmlWriter.WriteElementString("CUSTOM_5", row("Custom_5"))
+                    xmlWriter.WriteElementString("LAST_UPDATE", row("LAST_UPDATE"))
                     xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
                     xmlWriter.WriteEndElement()
                 Next
@@ -1746,13 +1853,31 @@ Module Module1
             xmlWriter.Indentation = 2
             xmlWriter.WriteStartElement("Adjustments")
             cpCon.Open()
-            sql = "SELECT h.EVENT_NO AS TRANS_ID, h.SEQ_NO, h.ITEM_NO, c.DIM_1_UPR, c.DIM_2_UPR, c.DIM_3_UPR, h.LOC_ID As LOCATION, " &
-                "CASE WHEN c.QTY Is Not NULL THEN c.QTY ELSE h.QTY * QTY_NUMER END AS QTY, cost, UNIT_RETL_VAL As RETAIL, h.TRX_DAT AS DATE " &
-                "FROM IM_ADJ_HIST h " &
-                "LEFT JOIN IM_ADJ_HIST_CELL c ON c.EVENT_NO = h.EVENT_NO And c.BAT_ID = h.BAT_ID And c.ITEM_NO = h.ITEM_NO " &
-                "And c.LOC_ID = h.LOC_ID And c.SEQ_NO = h.SEQ_NO " &
-                "WHERE h.LST_MAINT_DT >= '" & minADJdate & "'"
-                    cmd = New SqlCommand(sql, cpCon)
+            ''sql = "SELECT h.EVENT_NO AS TRANS_ID, h.SEQ_NO, h.ITEM_NO, c.DIM_1_UPR, c.DIM_2_UPR, c.DIM_3_UPR, h.LOC_ID As LOCATION, " &
+            ''    "CASE WHEN c.QTY Is Not NULL THEN c.QTY ELSE h.QTY * QTY_NUMER END AS QTY, cost, UNIT_RETL_VAL As RETAIL, h.TRX_DAT AS DATE " &
+            ''    "FROM IM_ADJ_HIST h " &
+            ''    "LEFT JOIN IM_ADJ_HIST_CELL c ON c.EVENT_NO = h.EVENT_NO And c.BAT_ID = h.BAT_ID And c.ITEM_NO = h.ITEM_NO " &
+            ''    "And c.LOC_ID = h.LOC_ID And c.SEQ_NO = h.SEQ_NO " &
+            ''    "WHERE h.LST_MAINT_DT >= '" & minADJdate & "'"
+            sql = "create table #t1(TRANS_ID varchar(30), SEQ_NO integer, ITEM_NO varchar(30), DIM_1_UPR varchar(30), " &
+                "   DIM_2_UPR varchar(30),DIM_3_UPR varchar(30), LOCATION varchar(30), QTY decimal(18,4), DATE date, COST decimal(18,4), " &
+                "   RETAIL decimal(18,4), LAST_UPDATE datetime, LAST_USER varchar(40)) " &
+                "insert into #t1(TRANS_ID, SEQ_NO, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, LOCATION, QTY, DATE, COST, RETAIL, " &
+                "   LAST_UPDATE, LAST_USER) " &
+                "SELECT H.EVENT_NO TRANS_ID, H.SEQ_NO, H.ITEM_NO, coalesce(C.DIM_1_UPR, '*') as DIM_1_UPR, " &
+                "   coalesce(C.DIM_2_UPR, '*') as DIM_2_UPR, coalesce(C.DIM_3_UPR, '*') as DIM_3_UPR, " &
+                "   H.LOC_ID LOCATION, coalesce(C.QTY, H.QTY) * (H.QTY_NUMER / H.QTY_DENOM) as QTY, H.TRX_DAT DATE, " &
+                "   case when H.QTY = 0 then 0 else cast(coalesce(H.EXT_COST / H.QTY, H.EXT_COST) as decimal(20,8)) end as COST, " &
+                "   cast(H.UNIT_RETL_VAL * (H.QTY_DENOM / H.QTY_NUMER) as decimal(20,8)) as RETAIL, " &
+                "   coalesce(c.LST_MAINT_DT, H.LST_MAINT_DT) as LAST_UPDATE, " &
+                "   coalesce(C.LST_MAINT_USR_ID, H.LST_MAINT_USR_ID) as LAST_USER from IM_ADJ_HIST H " &
+                "left join IM_ADJ_HIST_CELL C on H.EVENT_NO = C.EVENT_NO And H.BAT_ID = C.BAT_ID And H.ITEM_NO = C.ITEM_NO " &
+                "   And H.LOC_ID = C.LOC_ID And H.SEQ_NO = C.SEQ_NO " &
+                "WHERE H.LST_MAINT_DT >= '" & minADJdate & "' " &
+                "select TRANS_ID, SEQ_NO, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, LOCATION, sum(QTY) QTY, DATE, avg(COST) COST, avg(RETAIL) RETAIL, " &
+                "   LAST_UPDATE, LAST_USER from #t1 " &
+                "group by TRANS_ID, SEQ_NO, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, LOCATION, DATE, LAST_UPDATE, LAST_USER"
+            cmd = New SqlCommand(sql, cpCon)
             cmd.CommandTimeout = 120
             rdr = cmd.ExecuteReader
             While rdr.Read
@@ -1792,6 +1917,12 @@ Module Module1
                 oTest = rdr("DATE")
                 If IsDBNull(oTest) Then oTest = 0
                 xmlWriter.WriteElementString("TRANS_DATE", Format(oTest, "yyyy-MM-dd HH:mm:ss"))
+                oTest = rdr("LAST_UPDATE")
+                If IsDBNull(oTest) Then oTest = 0
+                xmlWriter.WriteElementString("LAST_UPDATE", Format(oTest, "yyyy-MM-dd HH:mm:ss"))
+                oTest = rdr("LAST_USER")
+                If IsDBNull(oTest) Then oTest = Nothing
+                xmlWriter.WriteElementString("LAST_USER", oTest)
                 xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
                 xmlWriter.WriteEndElement()
             End While '
@@ -1895,58 +2026,81 @@ Module Module1
             xmlWriter.Formatting = Formatting.Indented
             xmlWriter.Indentation = 2
             xmlWriter.WriteStartElement("Physical")
-            sql = "SELECT h.EVENT_NO AS TRANS_ID, 0 AS SEQ_NO, h.ITEM_NO, c.DIM_1_UPR, c.DIM_2_UPR, c.DIM_3_UPR, " &
-                "h.LOC_ID AS LOCATION, AVG_COST AS COST, UNIT_RETL_VAL AS RETAIL, POST_DAT AS DATE, " &
-                "c.CNT_QTY_1, c.FRZ_QTY_ON_HND, " &
-                "CASE WHEN c.QTY_CNTD IS NOT NULL THEN c.QTY_CNTD - c.FRZ_QTY_ON_HND ELSE QTY_ADJ END AS QTY " &
-                "FROM IM_CNT_HIST h " &
-                "LEFT JOIN IM_CNT_HIST_CELL c ON c.EVENT_NO = h.EVENT_NO AND c.ITEM_NO = h.ITEM_NO AND c.LOC_ID = h.LOC_ID " &
-                "WHERE ITEM_TYP = 'I' AND QTY_ADJ <> 0 AND h.LST_MAINT_DT >= '" & minADJdate & "'"
+            sql = "create table #t1(TRANS_ID varchar(30), SEQ_NO integer, ITEM_NO varchar(30), DIM_1_UPR varchar(30), " &
+                "DIM_2_UPR varchar(30), DIM_3_UPR varchar(30), LOCATION varchar(30), QTY decimal(18,4), COST decimal(18,4), " &
+                "RETAIL decimal(18,4), DATE date, LAST_UPDATE datetime, LAST_USER varchar(40)) " &
+                "insert into #t1(TRANS_ID, SEQ_NO, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, LOCATION, QTY, COST, RETAIL, DATE, " &
+                "LAST_UPDATE, LAST_USER) " &
+                "select  H.EVENT_NO TRANS_ID,  0 SEQ_NO, H.ITEM_NO,  '*' as DIM_1_UPR, '*' as DIM_2_UPR,  '*' as DIM_3_UPR, " &
+                "  H.LOC_ID LOCATION, H.QTY_ADJ As QTY, H.AVG_COST COST, H.UNIT_RETL_AT_POST as RETAIL, H.POST_DAT DATE, " &
+                "  H.LST_MAINT_DT, H.LST_MAINT_USR_ID from IM_CNT_HIST H " &
+                "left join IM_CNT_HIST_CELL C on H.EVENT_NO = C.EVENT_NO And H.ITEM_NO = C.ITEM_NO And H.LOC_ID = C.LOC_ID " &
+                " where c.ITEM_NO Is NULL And H.QTY_ADJ <> 0 And H.POST_DAT >= '" & minADJdate & "' " &
+                "union all " &
+                "select  C.EVENT_NO TRANS_ID,  0 SEQ_NO, C.ITEM_NO,  DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, C.LOC_ID LOCATION,  " &
+                "  C.QTY_CNTD - C.QTY_ON_HND_BEFORE As QTY, H.AVG_COST COST, " &
+                "  H.UNIT_RETL_AT_POST as RETAIL, H.POST_DAT DATE, C.LST_MAINT_DT, c.LST_MAINT_USR_ID from IM_CNT_HIST H " &
+                "left join IM_CNT_HIST_CELL C on H.EVENT_NO = C.EVENT_NO And H.ITEM_NO = C.ITEM_NO And H.LOC_ID = C.LOC_ID " &
+                " where c.QTY_CNTD - C.QTY_ON_HND_BEFORE <> 0 AND H.POST_DAT >= '" & minADJdate & "' " &
+                "select TRANS_ID, SEQ_NO, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, LOCATION, sum(QTY) QTY, avg(COST) COST, " &
+                "avg(RETAIL) RETAIL, DATE, LAST_UPDATE, LAST_USER from #t1 " &
+                "where qty <> 0 " &
+                "group by TRANS_ID, SEQ_NO, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, LOCATION, DATE, LAST_UPDATE, LAST_USER"
             cmd = New SqlCommand(sql, cpCon)
             cmd.CommandTimeout = 480
             rdr = cmd.ExecuteReader
             Dim sku As String
+            Dim id As String
             Dim qty As Decimal = 0
             While rdr.Read
                 cnt += 1
-                xmlWriter.WriteStartElement("PHYSICAL")
                 If cnt Mod 1000 = 0 Then Console.WriteLine(cnt)
-                oTest = rdr("TRANS_ID")
-                If IsDBNull(oTest) Then oTest = "NA"
-
-                xmlWriter.WriteElementString("TRANS_ID", Replace(oTest, "'", "''"))
-                xmlWriter.WriteElementString("SEQ_NO", 0)
-                sku = rdr("ITEM_NO")
-                If IsDBNull(sku) Then sku = "NA"
-                oTest = rdr("DIM_1_UPR")
-                If Not IsDBNull(oTest) Then
-                    If oTest <> "*" Then
-                        sku &= "~" & oTest & "~" & rdr("DIM_2_UPR") & "~" & rdr("DIM_3_UPR")
-                    End If
-                End If
-                xmlWriter.WriteElementString("SKU", Replace(sku, "'", "''"))
-                oTest = rdr("LOCATION")
-                If IsDBNull(oTest) Then oTest = "1"
-                xmlWriter.WriteElementString("LOCATION", Replace(oTest, "'", "''"))
                 oTest = rdr("QTY")
+                If IsDBNull(oTest) Or IsNothing(oTest) Then qty = 0
                 If IsNumeric(oTest) Then qty = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero) Else qty = 0
-                totlQty += qty
-                xmlWriter.WriteElementString("QTY", qty)
-                oTest = rdr("COST")
-                cost = 0
-                If Not IsDBNull(oTest) And Not IsNothing(oTest) Then cost = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
-                totlCost += (qty * cost)
-                xmlWriter.WriteElementString("COST", cost)
-                oTest = rdr("RETAIL")
-                retail = 0
-                If Not IsDBNull(oTest) And Not IsNothing(oTest) Then retail = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
-                totlRetail += (qty * retail)
-                xmlWriter.WriteElementString("RETAIL", retail)
-                oTest = rdr("DATE")
-                If IsDBNull(oTest) Then oTest = "1/1/1900"
-                xmlWriter.WriteElementString("TRANS_DATE", Format(oTest, "yyyy-MM-dd HH:mm:ss"))
-                xmlWriter.WriteElementString("EXTRACT_DATE", Date.Now)
-                xmlWriter.WriteEndElement()
+                If qty <> 0 Then
+                    xmlWriter.WriteStartElement("PHYSICAL")
+                    oTest = rdr("TRANS_ID")
+                    If IsDBNull(oTest) Then id = CStr(oTest) Else id = "NA"
+                    totlQty += qty
+                    xmlWriter.WriteElementString("TRANS_ID", Replace(oTest, "'", "''"))
+                    xmlWriter.WriteElementString("SEQ_NO", 0)
+                    sku = rdr("ITEM_NO")
+                    If IsDBNull(sku) Then sku = "NA"
+                    oTest = rdr("DIM_1_UPR")
+                    If Not IsDBNull(oTest) Then
+                        If oTest <> "*" Then
+                            sku &= "~" & oTest & "~" & rdr("DIM_2_UPR") & "~" & rdr("DIM_3_UPR")
+                        End If
+                    End If
+                    xmlWriter.WriteElementString("SKU", Replace(sku, "'", "''"))
+                    oTest = rdr("LOCATION")
+                    If IsDBNull(oTest) Then oTest = "1"
+                    xmlWriter.WriteElementString("LOCATION", Replace(oTest, "'", "''"))
+
+                    xmlWriter.WriteElementString("QTY", qty)
+                    oTest = rdr("COST")
+                    cost = 0
+                    If Not IsDBNull(oTest) And Not IsNothing(oTest) Then cost = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
+                    totlCost += (qty * cost)
+                    xmlWriter.WriteElementString("COST", cost)
+                    oTest = rdr("RETAIL")
+                    retail = 0
+                    If Not IsDBNull(oTest) And Not IsNothing(oTest) Then retail = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
+                    totlRetail += (qty * retail)
+                    xmlWriter.WriteElementString("RETAIL", retail)
+                    oTest = rdr("DATE")
+                    If IsDBNull(oTest) Then oTest = "1/1/1900"
+                    xmlWriter.WriteElementString("TRANS_DATE", Format(oTest, "yyyy-MM-dd HH:mm:ss"))
+                    oTest = rdr("LAST_UPDATE")
+                    If IsDBNull(oTest) Then oTest = "1/1/1900"
+                    xmlWriter.WriteElementString("LAST_UPDATE", Format(oTest, "yyyy-MM-dd HH:mm:ss"))
+                    oTest = rdr("LAST_USER")
+                    If IsDBNull(oTest) Then oTest = Nothing
+                    xmlWriter.WriteElementString("LAST_USER", oTest)
+                    xmlWriter.WriteElementString("EXTRACT_DATE", Date.Now)
+                    xmlWriter.WriteEndElement()
+                End If
             End While
             '
             '               Write a row for totals
@@ -1993,37 +2147,39 @@ Module Module1
             xmlWriter.Formatting = Formatting.Indented
             xmlWriter.Indentation = 2
             xmlWriter.WriteStartElement("Receipt")
-            sql = "SELECT l.RECVR_NO AS TRANS_ID, l.SEQ_NO, l.ITEM_NO, c.DIM_1_UPR, c.DIM_2_UPR, c.DIM_3_UPR, " &
-                 "l.PO_NO, l.PO_SEQ_NO, l.RECVR_LOC_ID AS LOCATION, ORD_DAT AS ORDER_DATE,DELIV_DAT AS EXPECTED_DATE, " &
-                 "CONVERT(Decimal(18,4),l.RECVD_COST / l.QTY_RECVD_NUMER) AS COST, " &
-                 "CONVERT(Decimal(18,4),l.UNIT_RETL_VAL / l.QTY_RECVD_NUMER) AS RETAIL, l.RECVR_DAT AS DATE,  " &
-                 "CASE WHEN c.QTY_RECVD IS NOT NULL THEN c.QTY_RECVD ELSE l.QTY_RECVD * l.QTY_RECVD_NUMER END AS QTY " &
-                 "FROM PO_RECVR_HIST_LIN AS l " &
-                 "LEFT JOIN PO_RECVR_HIST_CELL c ON c.RECVR_NO = l.RECVR_NO AND c.SEQ_NO = l.SEQ_NO " &
-                 "INNER JOIN PO_RECVR_HIST AS h ON h.RECVR_NO = l.RECVR_NO " &
-                 "LEFT JOIN PO_ORD_HDR p ON p.PO_NO = l.PO_NO " &
-                 "WHERE l.QTY_RECVD > 0 AND ITEM_TYP = 'I' AND l.RECVR_DAT >= '" & minRCPTdate & "' " &
-                 "UNION " &
-                 "SELECT h.EVENT_NO AS TRANS_ID, h.SEQ_NO, h.ITEM_NO, c.DIM_1_UPR, c.DIM_2_UPR, c.DIM_3_UPR, " &
-                "h.DOC_NO AS PO_NO, 0 AS PO_SEQ_NO, h.LOC_ID AS LOCATION, h.TRX_DAT AS ORDER_DATE, h.TRX_DAT AS EXPECTED_DATE, " &
-                "CONVERT(Decimal(18,4),COST / QTY_NUMER) AS COST, CONVERT(Decimal(18,4),h.UNIT_RETL_VAL / h.QTY_NUMER) AS RETAIL, " &
-                "h.TRX_DAT AS DATE, " &
-                "CASE WHEN c.QTY IS NOT NULL THEN c.QTY ELSE h.QTY  * h.QTY_NUMER END AS QTY FROM PO_QRECV_HIST h " &
-                "LEFT JOIN PO_QRECV_HIST_CELL c ON c.EVENT_NO = h.EVENT_NO AND c.SEQ_NO = h.SEQ_NO " &
-                "WHERE h.ITEM_TYP = 'I' AND h.TRX_DAT >= '" & minRCPTdate & "'"
+            sql = "create table #t1(TRANS_ID varchar(30), SEQ_NO integer, ITEM_NO varchar(30), DIM_1_UPR varchar(30), " &
+                "DIM_2_UPR varchar(30), DIM_3_UPR varchar(30), LOCATION varchar(30), QTY decimal(18,4), COST decimal(18,4), " &
+                "RETAIL decimal(18,4), DATE date, LAST_UPDATE datetime, LAST_USER varchar(40)) " &
+                "insert into #t1(TRANS_ID, SEQ_NO, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, LOCATION, QTY, COST, RETAIL, DATE, " &
+                "LAST_UPDATE, LAST_USER) " &
+                "select  H.EVENT_NO TRANS_ID,  H.SEQ_NO, H.ITEM_NO,  coalesce(C.DIM_1_UPR, '*') as DIM_1_UPR, " &
+                "  coalesce(C.DIM_2_UPR, '*') as DIM_2_UPR,  coalesce(C.DIM_3_UPR, '*') as DIM_3_UPR, " &
+                "  H.LOC_ID LOCATION,  coalesce(C.QTY, H.QTY) * (H.QTY_NUMER / H.QTY_DENOM) as QTY, " &
+                "  case when H.QTY = 0 then 0 else cast(coalesce(H.EXT_COST / H.QTY, H.EXT_COST) as decimal(20,8)) end as COST, " &
+                "  H.UNIT_RETL_VAL As RETAIL, H.TRX_DAT Date, coalesce(C.LST_MAINT_DT, H.LST_MAINT_DT) LAST_UPDATE," &
+                "  coalesce(C.LST_MAINT_USR_ID, H.LST_MAINT_USR_ID) LAST_USER from PO_QRECV_HIST H " &
+                "left join PO_QRECV_HIST_CELL C on H.EVENT_NO = C.EVENT_NO  And H.BAT_ID = C.BAT_ID " &
+                " And H.ITEM_NO = C.ITEM_NO And H.LOC_ID = C.LOC_ID And H.TRX_DAT = C.TRX_DAT And H.SEQ_NO = C.SEQ_NO " &
+                " where H.LST_MAINT_DT >= '" & minRCPTdate & "' " &
+                " union all " &
+                "Select  H.EVENT_NO TRANS_ID,  H.SEQ_NO, H.ITEM_NO,  coalesce(C.DIM_1_UPR, '*') as DIM_1_UPR, " &
+                "  coalesce(C.DIM_2_UPR, '*') as DIM_2_UPR,  coalesce(C.DIM_3_UPR, '*') as DIM_3_UPR, " &
+                "  H.RECVR_LOC_ID LOCATION,  coalesce(C.QTY_RECVD, H.QTY_RECVD) * (H.QTY_RECVD_NUMER / H.QTY_RECVD_DENOM) as QTY, " &
+                "  case when H.QTY_RECVD = 0 then 0 else cast(H.EXT_COST / H.QTY_RECVD as decimal(20,8)) end as EXT_COST, " &
+                "  H.UNIT_RETL_VAL as RETAIL, H.RECVR_DAT DATE, coalesce(C.LST_MAINT_DT, H.LST_MAINT_DT) LAST_UPDATE, " &
+                "  coalesce(C.LST_MAINT_USR_ID, H.LST_MAINT_USR_ID) LAST_USER from PO_RECVR_HIST_LIN H " &
+                "join PO_RECVR_HIST " &
+                "  on PO_RECVR_HIST.RECVR_NO = H.RECVR_NO " &
+                "left join PO_RECVR_HIST_CELL C on H.RECVR_NO = C.RECVR_NO And H.SEQ_NO = C.SEQ_NO " &
+                "WHERE PO_RECVR_HIST.IS_DROPSHIP_RECVR = 'N' and H.LST_MAINT_DT >= '" & minRCPTdate & "' " &
+                "select TRANS_ID, SEQ_NO, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, LOCATION, sum(QTY) QTY, sum(COST) COST, sum(RETAIL) RETAIL, " &
+                "DATE, LAST_UPDATE, LAST_USER from #t1 " &
+                "group by TRANS_ID, SEQ_NO, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, LOCATION, DATE, LAST_UPDATE, LAST_USER"
             cmd = New SqlCommand(sql, cpCon)
-            cmd.CommandTimeout = 480
+            cmd.CommandTimeout = 960
             rdr = cmd.ExecuteReader
             While rdr.Read
                 cnt += 1
-                xmlWriter.WriteStartElement("RECEIPT")
-                oTest = rdr("TRANS_ID")
-                If IsDBNull(oTest) Then oTest = "NA"
-                xmlWriter.WriteElementString("TRANS_ID", Replace(oTest, "'", "''"))
-                oTest = rdr("SEQ_NO")
-                If IsDBNull(oTest) Then oTest = "NA"
-                xmlWriter.WriteElementString("SEQ_NO", oTest)
-
                 sku = rdr("ITEM_NO")
                 If IsDBNull(sku) Then sku = "NA"
                 oTest = rdr("DIM_1_UPR")
@@ -2032,6 +2188,13 @@ Module Module1
                         sku &= "~" & oTest & "~" & rdr("DIM_2_UPR") & "~" & rdr("DIM_3_UPR")
                     End If
                 End If
+                xmlWriter.WriteStartElement("RECEIPT")
+                oTest = rdr("TRANS_ID")
+                If IsDBNull(oTest) Then oTest = "NA"
+                xmlWriter.WriteElementString("TRANS_ID", Replace(oTest, "'", "''"))
+                oTest = rdr("SEQ_NO")
+                If IsDBNull(oTest) Then oTest = "NA"
+                xmlWriter.WriteElementString("SEQ_NO", oTest)
                 xmlWriter.WriteElementString("SKU", Replace(sku, "'", "''"))
                 oTest = rdr("LOCATION")
                 If IsDBNull(oTest) Then oTest = "1"
@@ -2051,6 +2214,12 @@ Module Module1
                 oTest = rdr("DATE")
                 If IsDBNull(oTest) Then oTest = 0
                 xmlWriter.WriteElementString("TRANS_DATE", Format(oTest, "yyyy-MM-dd HH:mm:ss"))
+                oTest = rdr("LAST_UPDATE")
+                If IsDBNull(oTest) Then oTest = 0
+                xmlWriter.WriteElementString("LAST_UPDATE", Format(oTest, "yyyy-MM-dd HH:mm:ss"))
+                oTest = rdr("LAST_USER")
+                If IsDBNull(oTest) Then oTest = Nothing
+                xmlWriter.WriteElementString("LAST_USER", oTest)
                 xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
                 xmlWriter.WriteEndElement()
             End While
@@ -2099,14 +2268,16 @@ Module Module1
             xmlWriter.Formatting = Formatting.Indented
             xmlWriter.Indentation = 2
             xmlWriter.WriteStartElement("Return")
-            sql = "SELECT l.RTV_NO AS TRANS_ID, l.SEQ_NO, l.ITEM_NO, c.DIM_1_UPR, c.DIM_2_UPR, c.DIM_3_UPR, l.RTV_LOC_ID AS LOCATION, " &
-                "CONVERT(Decimal(18,4),COST / ISNULL(l.QTY_RETD_NUMER,1)) AS COST, " &
-                "CONVERT(Decimal(18,4),(UNIT_RETL_VAL / ISNULL(QTY_RETD_NUMER,1))) AS RETAIL, l.RTV_DAT AS DATE, " &
-                "CASE WHEN c.QTY_RETD IS NOT NULL THEN c.QTY_RETD ELSE l.QTY_RETD END AS QTY " &
-                "FROM PO_RTV_HIST_LIN as l " &
-                "LEFT JOIN PO_RTV_HIST_CELL c ON c.RTV_NO = l.RTV_NO AND c.SEQ_NO = l.SEQ_NO " &
-                "INNER JOIN PO_RTV_HIST AS h ON h.RTV_NO = l.RTV_NO " &
-                "WHERE ITEM_TYP = 'I' AND l.LST_MAINT_DT >= '" & minRTNdate & "'"
+            sql = "select  H.EVENT_NO TRANS_ID,  H.SEQ_NO, H.RTV_LOC_ID LOCATION, H.ITEM_NO,  coalesce(C.DIM_1_UPR, '*') as DIM_1_UPR, coalesce(C.DIM_2_UPR, '*') as DIM_2_UPR, " &
+                "  coalesce(C.DIM_3_UPR, '*') as DIM_3_UPR, coalesce(C.QTY_RETD, H.QTY_RETD) * (H.QTY_RETD_NUMER / H.QTY_RETD_DENOM) as QTY, " &
+                "  case when H.QTY_RETD = 0 then 0 else cast(coalesce(-H.EXT_COST / H.QTY_RETD, -H.EXT_COST) as decimal(20,8)) end as COST, " &
+                "  H.UNIT_RETL_VAL * (H.QTY_RETD_DENOM / H.QTY_RETD_NUMER) as RETAIL, H.RTV_DAT DATE, " &
+                "  coalesce(C.LST_MAINT_DT, H.LST_MAINT_DT) LAST_UPDATE, " &
+                "  coalesce(C.LST_MAINT_USR_ID, H.LST_MAINT_USR_ID) LAST_USER from PO_RTV_HIST_LIN H " &
+                "left join PO_RTV_HIST_CELL C " &
+                "  on H.SEQ_NO = C.SEQ_NO " &
+                " And H.RTV_NO = C.RTV_NO " &
+                "where H.LST_MAINT_DT >= '" & minRTNdate & "'"
             cmd = New SqlCommand(sql, cpCon)
             cmd.CommandTimeout = 480
             rdr = cmd.ExecuteReader
@@ -2148,6 +2319,12 @@ Module Module1
                 If IsDBNull(oTest) Then oTest = 0
                 xmlWriter.WriteElementString("TRANS_DATE", Format(oTest, "yyyy-MM-dd HH:mm:ss"))
                 '' xmlWriter.WriteElementString("OVERRIDE", "")
+                oTest = rdr("LAST_UPDATE")
+                If IsDBNull(oTest) Then oTest = 0
+                xmlWriter.WriteElementString("LAST_UPDATE", Format(oTest, "yyyy-MM-dd HH:mm:ss"))
+                oTest = rdr("LAST_USER")
+                If IsDBNull(oTest) Then oTest = Nothing
+                xmlWriter.WriteElementString("LAST_USER", oTest)
                 xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
                 xmlWriter.WriteEndElement()
             End While
@@ -2207,7 +2384,7 @@ Module Module1
                 "DIM1 varchar(30) NULL, DIM2 varchar(30) NULL, DIM3 varchar(30) NULL, LOCATION varchar(10), DRAWER varchar(10) NULL,  " &
                 "QTY decimal(18,4) NULL, COST decimal(18,4) NULL, RETAIL decimal(18,4) NULL, TKT_DT datetime, MARKDOWN decimal(18,4) NULL, " &
                 "MKDN_REASON varchar(30) NULL,COUPON_CODE varchar(30) NULL, DEPT varchar(10) NULL, CLASS varchar(10) NULL, " &
-                "BUYER varchar(10) NULL, CUST_NO varchar(30) NULL,TKT_NO varchar(30) NULL, USER_ID varchar(10) NULL, " & _
+                "BUYER varchar(10) NULL, CUST_NO varchar(30) NULL,TKT_NO varchar(30) NULL, USER_ID varchar(10) NULL, " &
                 "SALES_REP varchar(10) NULL, STATION varchar(10) NULL) " &
                 "INSERT INTO #tt1 (BUS_DATE, TRANS_ID,SEQ_NO, STORE, ITEM, DIM1, DIM2, DIM3, LOCATION, DRAWER, QTY, COST, RETAIL, TKT_DT, " &
                 "MARKDOWN, MKDN_REASON, COUPON_CODE, DEPT, CLASS, BUYER, CUST_NO, TKT_NO, USER_ID, SALES_REP, STATION) " &
@@ -2215,8 +2392,8 @@ Module Module1
                 "ISNULL(l.STR_ID,'NA') STORE, ISNULL(l.ITEM_NO,'NA') AS ITEM, c.DIM_1_UPR, " &
                 "c.DIM_2_UPR, c.DIM_3_UPR, l.STK_LOC_ID AS LOCATION, DRW_ID AS DRAWER,  " &
                 "CASE WHEN c.QTY_SOLD IS NULL THEN ISNULL(l.QTY_SOLD,0) ELSE c.QTY_SOLD END AS QTY, ISNULL(l.COST,0) AS COST, " &
-                "ISNULL(l.PRC,0) - ISNULL(l.LIN_DISC_AMT,0) AS RETAIL,  h.TKT_DT, " & _
-                "(ISNULL(l.PRC_1,0) - ISNULL(l.PRC,0) + ISNULL(l.LIN_DISC_AMT,0)) AS MARKDOWN, " & _
+                "ISNULL(l.PRC,0) - ISNULL(l.LIN_DISC_AMT,0) AS RETAIL,  h.TKT_DT, " &
+                "(ISNULL(l.PRC_1,0) - ISNULL(l.PRC,0) + ISNULL(l.LIN_DISC_AMT,0)) AS MARKDOWN, " &
                 "l.PRC_OVRD_REAS, NULL, ISNULL(l.CATEG_COD,'NA') AS DEPT, ISNULL(l.SUBCAT_COD,'NA') AS CLASS, " &
                 "ISNULL(pv.LST_ORD_BUYER,'OTHER') AS BUYER, CUST_NO, h.TKT_NO, USR_ID, l.SLS_REP, l.STA_ID FROM VI_PS_TKT_HIST_LIN AS l " &
                 "JOIN VI_PS_TKT_HIST h ON h.DOC_ID = l.DOC_ID AND h.BUS_DAT = l.BUS_DAT " &
@@ -2466,7 +2643,7 @@ Module Module1
                 "SELECT ISNULL(l.DOC_ID,'NA') AS TRANS_ID, ISNULL(l.LIN_SEQ_NO,0) AS SEQ_NO,  ISNULL(l.STR_ID,'NA') STR_ID, " &
                 "ISNULL(l.ITEM_NO,'NA') ITEM, ISNULL(c.DIM_1_UPR,'*') DIM1, ISNULL(c.DIM_2_UPR,'*') DIM2, ISNULL(c.DIM_3_UPR,'*') DIM3,  " &
                 "ISNULL(l.STK_LOC_ID,'') LOCATION, ISNULL(h.STA_ID,'NA'), 'NA' DRAWER, " &
-                "CASE WHEN c.QTY_SOLD IS NULL THEN ISNULL(l.QTY_SOLD,0) ELSE ISNULL(c.QTY_SOLD,0) END QTY,  ISNULL(i.AVG_COST,0) COST, " &
+                "CASE WHEN c.QTY_SHIPPED IS NULL THEN ISNULL(l.QTY_SHIPPED,0) ELSE ISNULL(c.QTY_SHIPPED,0) END QTY,  ISNULL(i.AVG_COST,0) COST, " &
                 "ISNULL(l.PRC,0) - ISNULL(l.LIN_DISC_AMT,0) RETAIL, ISNULL(h.BUS_DAT,'1/1/1900') DATE, " &
                 "(ISNULL(l.PRC_1,0) - ISNULL(l.PRC,0) + ISNULL(l.LIN_DISC_AMT,0)) MARKDOWN,  " &
                 "ISNULL(PRC_OVRD_REAS,'') MKDN_REASON, CONVERT(varchar(30),'') COUPON_CODE, ISNULL(l.CATEG_COD,'NA') DEPT, " &
@@ -2646,202 +2823,135 @@ Module Module1
             xmlWriter.Formatting = Formatting.Indented
             xmlWriter.Indentation = 2
             xmlWriter.WriteStartElement("Transfer")
-            sql = "SELECT h.EVENT_NO AS TRANS_ID, l.XFER_LIN_SEQ_NO AS SEQ_NO, h.XFER_NO, l.ITEM_NO, c.DIM_1_UPR, " &
-                "c.DIM_2_UPR, c.DIM_3_UPR, FROM_LOC_ID, TO_LOC_ID, " &
-                "CASE WHEN c.XFER_QTY IS NULL THEN l.XFER_QTY_NUMER * l.XFER_QTY ELSE c.XFER_QTY END AS QTY_OUT, l.xfer_qty_numer, " &
-                "CONVERT(Decimal(18,4),l.FROM_UNIT_RETL_VAL / (l.XFER_QTY_NUMER)) AS RETAIL, " &
-                "CONVERT(Decimal(18,4),l.FROM_UNIT_COST / l.XFER_QTY_NUMER) AS COST," &
-                " h.SHIP_DAT AS Date_Out FROM IM_XFER_LIN AS l " &
-                "INNER JOIN IM_XFER_HDR as h ON h.XFER_NO = l.XFER_NO " &
-                "LEFT JOIN IM_XFER_CELL c ON c.XFER_NO = l.XFER_NO AND c.XFER_LIN_SEQ_NO = l.XFER_LIN_SEQ_NO " &
-                "WHERE h.LST_MAINT_DT >= '" & minXFERdate & "'"
-            cmd = New SqlCommand(sql, cpCon)
-            cmd.CommandTimeout = 120
-            rdr = cmd.ExecuteReader
             cnt = 0
             totlQty = 0
             totlCost = 0
             totlRetail = 0
             totlMarkdown = 0
             Dim sku As String
+            sql = "create table #t1(TYPE varchar(20), EVENT_NO varchar(30), SEQ_NO integer, ITEM_NO varchar(30), " &
+                "DIM_1_UPR varchar(30), DIM_2_UPR varchar(30), DIM_3_UPR varchar(30), LOC_ID varchar(30), " &
+                 "TRX_DAT date, QTY decimal(18,4), COST decimal(18,4), RETAIL decimal(18,4), LAST_UPDATE datetime, " &
+                " LAST_USER varchar(40)) " &
+                 "insert into #t1 (TYPE, EVENT_NO, SEQ_NO, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, LOC_ID, " &
+                 "TRX_DAT, QTY, COST, RETAIL, LAST_UPDATE, LAST_USER) " &
+                "SELECT 'Quick OUT', H.EVENT_NO, H.SEQ_NO, H.ITEM_NO, coalesce(C.DIM_1_UPR, '*') as DIM_1_UPR, " &
+                "  coalesce(C.DIM_2_UPR, '*') as DIM_2_UPR, coalesce(C.DIM_3_UPR, '*') as DIM_3_UPR, H.FROM_LOC_ID LOC_ID, " &
+                "  H.TRX_DAT, coalesce(-C.QTY, -H.QTY) * (H.QTY_NUMER / H.QTY_DENOM) as QTY, " &
+                "  case when H.QTY = 0 then 0 else cast(coalesce(H.TO_EXT_COST / H.QTY, H.TO_EXT_COST) as decimal(20,8)) end as COST, " &
+                "  H.TO_UNIT_RETL_VAL * (H.QTY_DENOM / H.QTY_NUMER) as RETAIL, coalesce(C.LST_MAINT_DT, H.LST_MAINT_DT), " &
+                "  coalesce(C.LST_MAINT_USR_ID, H.LST_MAINT_USR_ID) LAST_USER from IM_QXFER_HIST H " &
+                "left join IM_QXFER_HIST_CELL C on H.EVENT_NO = C.EVENT_NO And H.BAT_ID = C.BAT_ID " &
+                "  And H.ITEM_NO = C.ITEM_NO And H.FROM_LOC_ID = C.FROM_LOC_ID And H.TRX_DAT = C.TRX_DAT " &
+                "  And H.SEQ_NO = C.SEQ_NO " &
+                "WHERE H.LST_MAINT_DT >= '" & minXFERdate & "' " &
+                "UNION ALL " &
+                "SELECT 'Quick IN', H.EVENT_NO, H.SEQ_NO, H.ITEM_NO, coalesce(C.DIM_1_UPR, '*') as DIM_1_UPR, " &
+                "  coalesce(C.DIM_2_UPR, '*') as DIM_2_UPR, coalesce(C.DIM_3_UPR, '*') as DIM_3_UPR, H.TO_LOC_ID LOC_ID, " &
+                "  H.TRX_DAT, coalesce(C.QTY, H.QTY) * (H.QTY_NUMER / H.QTY_DENOM) as QTY, " &
+                "  case when H.QTY = 0 then 0 else cast(coalesce(H.TO_EXT_COST / H.QTY, H.TO_EXT_COST) as decimal(20,8)) end as COST, " &
+                "  H.TO_UNIT_RETL_VAL * (H.QTY_DENOM / H.QTY_NUMER) as RETAIL, coalesce(C.LST_MAINT_DT, H.LST_MAINT_DT), " &
+                "  coalesce(C.LST_MAINT_USR_ID, H.LST_MAINT_USR_ID) LAST_USER from IM_QXFER_HIST H " &
+                "left join IM_QXFER_HIST_CELL C on H.EVENT_NO = C.EVENT_NO And H.BAT_ID = C.BAT_ID " &
+                "  And H.ITEM_NO = C.ITEM_NO And H.FROM_LOC_ID = C.FROM_LOC_ID And H.TRX_DAT = C.TRX_DAT " &
+                "  And H.SEQ_NO = C.SEQ_NO " &
+                "WHERE H.LST_MAINT_DT >= '" & minXFERdate & "' " &
+                "UNION ALL " &
+                "SELECT 'Transfer OUT', H.EVENT_NO, L.XFER_LIN_SEQ_NO SEQ_NO, L.ITEM_NO, coalesce(C.DIM_1_UPR, '*') as DIM_1_UPR, " &
+                "  coalesce(C.DIM_2_UPR, '*') as DIM_2_UPR, coalesce(C.DIM_3_UPR, '*') as DIM_3_UPR, H.FROM_LOC_ID LOC_ID, " &
+                "  H.SHIP_DAT, coalesce(-C.XFER_QTY, -L.XFER_QTY) * (L.XFER_QTY_NUMER / L.XFER_QTY_DENOM) as QTY, " &
+                "  case when L.XFER_QTY = 0 then 0 else cast(coalesce(L.FROM_EXT_COST " &
+                    "/ L.XFER_QTY, L.FROM_EXT_COST) as decimal(20,8)) end as COST, " &
+                "  L.FROM_UNIT_RETL_VAL * (L.XFER_QTY_DENOM / L.XFER_QTY_NUMER) as RETAIL, coalesce(C.LST_MAINT_DT, H.LST_MAINT_DT), " &
+                "  coalesce(C.LST_MAINT_USR_ID, H.LST_MAINT_USR_ID) LAST_USER from IM_XFER_HDR H " &
+                "join IM_XFER_LIN L on H.XFER_NO = L.XFER_NO " &
+                "left join IM_XFER_CELL C on C.XFER_NO = L.XFER_NO And C.XFER_LIN_SEQ_NO = L.XFER_LIN_SEQ_NO " &
+                "WHERE H.LST_MAINT_DT >= '" & minXFERdate & "' " &
+                "UNION ALL " &
+                "SELECT 'Transfer IN', H.EVENT_NO, L.XFER_LIN_SEQ_NO SEQ_NO, L.ITEM_NO, coalesce(C.DIM_1_UPR, '*') as DIM_1_UPR, " &
+                "  coalesce(C.DIM_2_UPR, '*') as DIM_2_UPR, coalesce(C.DIM_3_UPR, '*') as DIM_3_UPR, H.TO_LOC_ID LOC_ID, " &
+                "  H.RECVD_DAT, coalesce(C.QTY_RECVD, L.QTY_RECVD) * (L.XFER_QTY_NUMER / L.XFER_QTY_DENOM) as QTY, " &
+                "case when L.QTY_RECVD = 0 then 0 else cast(coalesce(L.TO_TOT_COST_CORR " &
+                    "/ L.QTY_RECVD, L.TO_TOT_COST_CORR ) as decimal(20,8)) end as COST, " &
+                "  L.TO_UNIT_RETL_VAL * (L.XFER_QTY_DENOM / L.XFER_QTY_NUMER) as RETAIL, coalesce(C.LST_MAINT_DT, H.LST_MAINT_DT), " &
+                "  coalesce(C.LST_MAINT_USR_ID, H.LST_MAINT_USR_ID) LAST_USER from IM_XFER_IN_HIST H " &
+                "join IM_XFER_IN_HIST_LIN L on H.XFER_NO = L.XFER_NO And H.EVENT_NO = L.EVENT_NO " &
+                "left join IM_XFER_IN_HIST_CELL C on C.EVENT_NO = L.EVENT_NO And C.XFER_NO = L.XFER_NO " &
+                    "And C.XFER_IN_LIN_SEQ_NO = L.XFER_IN_LIN_SEQ_NO " &
+                "WHERE H.LST_MAINT_DT >= '" & minXFERdate & "' " &
+                "UNION ALL " &
+                "SELECT 'Recon', H.EVENT_NO, L.XFER_LIN_SEQ_NO SEQ_NO, L.ITEM_NO, coalesce(C.DIM_1_UPR, '*') as DIM_1_UPR, " &
+                "  coalesce(C.DIM_2_UPR, '*') as DIM_2_UPR, coalesce(C.DIM_3_UPR, '*') as DIM_3_UPR, " &
+                "  CASE WHEN L.RECON_METH = 'S' THEN H.TO_LOC_ID ELSE H.FROM_LOC_ID END LOC_ID, " &
+                "  H.RECON_DAT TRX_DAT, coalesce(-C.QTY_VARIANCE, -L.QTY_VARIANCE) * (L.XFER_QTY_NUMER / L.XFER_QTY_DENOM) as QTY, " &
+                "case " &
+                "    when L.RECON_METH = 'S' then cast(coalesce(L.TO_EXT_COST / (case when L.QTY_VARIANCE = 0 then 1 " &
+                "		Else L.QTY_VARIANCE End), L.TO_EXT_COST) As Decimal(20, 8)) " &
+                "    when L.QTY_VARIANCE = 0 then 0 " &
+                "    else cast(coalesce(L.FROM_EXT_COST / L.QTY_VARIANCE, L.FROM_EXT_COST) as decimal(20, 8)) " &
+                "end as COST, " &
+                "case " &
+                "    when L.RECON_METH = 'S' then L.TO_UNIT_RETL_VAL " &
+                "    when L.QTY_VARIANCE = 0 then 0 " &
+                "    else L.FROM_UNIT_RETL_VAL " &
+                "end as RETAIL, coalesce(C.LST_MAINT_DT, H.LST_MAINT_DT) LAST_UPDATE, " &
+                "  coalesce(C.LST_MAINT_USR_ID, H.LST_MAINT_USR_ID) LAST_USER " &
+                "from IM_XFER_RECON_HIST H " &
+                "JOIN IM_XFER_RECON_HIST_LIN L on H.XFER_NO = L.XFER_NO " &
+                "LEFT JOIN IM_XFER_RECON_HIST_CELL C on C.XFER_NO = H.XFER_NO And C.XFER_LIN_SEQ_NO = L.XFER_LIN_SEQ_NO " &
+                "WHERE L.RECON_METH in ('S', 'R') AND H.LST_MAINT_DT >= '" & minXFERdate & "' " &
+                "select TYPE, EVENT_NO, SEQ_NO, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, LOC_ID, TRX_DAT, SUM(QTY) QTY, " &
+                    "SUM(cost) COST, SUM(retail) RETAIL, LAST_UPDATE, LAST_USER FROM #t1 " &
+                    "GROUP BY TYPE, EVENT_NO, SEQ_NO, ITEM_NO, DIM_1_UPR, DIM_2_UPR, DIM_3_UPR, LOC_ID, TRX_DAT, LAST_UPDATE, " &
+                    "LAST_USER"
+            cmd = New SqlCommand(sql, cpCon)
+            cmd.CommandTimeout = 960
+            rdr = cmd.ExecuteReader
             While rdr.Read
-                cnt += 1
-                If cnt Mod 1000 = 0 Then Console.WriteLine(cnt)
-                xmlWriter.WriteStartElement("TRANSFER")
-                oTest = rdr("TRANS_ID")
-                If IsDBNull(oTest) Then oTest = "NA"
-                xmlWriter.WriteElementString("TRANS_ID", Replace(oTest, "'", "''"))
-                oTest = rdr("SEQ_NO")
-                If IsDBNull(oTest) Then oTest = "NA"
-                xmlWriter.WriteElementString("SEQ_NO", oTest)
-                sku = rdr("ITEM_NO")
-                If IsDBNull(sku) Then sku = "NA"
-                oTest = rdr("DIM_1_UPR")
-                If Not IsDBNull(oTest) Then
-                    If oTest <> "*" Then
-                        sku &= "~" & oTest & "~" & rdr("DIM_2_UPR") & "~" & rdr("DIM_3_UPR")
+                oTest = rdr("QTY")
+                If IsDBNull(oTest) Then qty = 0 Else qty = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
+                If qty <> 0 Then
+                    totlQty += qty
+                    xmlWriter.WriteStartElement("TRANSFER")
+                    oTest = rdr("EVENT_NO")
+                    If IsDBNull(oTest) Then oTest = "NA"
+                    xmlWriter.WriteElementString("TRANS_ID", Replace(oTest, "'", "''"))
+                    oTest = rdr("SEQ_NO")
+                    If IsDBNull(oTest) Or IsNothing(oTest) Then oTest = 0
+                    xmlWriter.WriteElementString("SEQ_NO", CInt(oTest))
+                    sku = rdr("ITEM_NO")
+                    If IsDBNull(sku) Then sku = "NA"
+                    oTest = rdr("DIM_1_UPR")
+                    If Not IsDBNull(oTest) Then
+                        If oTest <> "*" Then
+                            sku &= "~" & oTest & "~" & rdr("DIM_2_UPR") & "~" & rdr("DIM_3_UPR")
+                        End If
                     End If
-                End If
-                xmlWriter.WriteElementString("SKU", Replace(sku, "'", "''"))
-                oTest = rdr("FROM_LOC_ID")
-                If IsDBNull(oTest) Then oTest = "1"
-                xmlWriter.WriteElementString("LOCATION", Replace(oTest, "'", "''"))
-                oTest = rdr("QTY_OUT")
-                If IsDBNull(oTest) Then qty = 0 Else qty = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero) * -1
-                totlQty += qty
-                xmlWriter.WriteElementString("QTY", qty)
-                oTest = rdr("COST")
-                If IsDBNull(oTest) Then cost = 0 Else cost = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
-                totlCost += (qty * cost)
-                xmlWriter.WriteElementString("COST", cost)
-                oTest = rdr("RETAIL")
-                If IsDBNull(oTest) Then retail = 0 Else retail = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
-                totlRetail += (qty * retail)
-                xmlWriter.WriteElementString("RETAIL", retail)
-                oTest = rdr("DATE_OUT")
-                If IsDBNull(oTest) Then
+                    xmlWriter.WriteElementString("SKU", Replace(sku, "'", "''"))
+                    oTest = rdr("LOC_ID")
+                    If IsDBNull(oTest) Then oTest = "NA"
+                    xmlWriter.WriteElementString("LOCATION", Replace(oTest, "'", "''"))
+                    xmlWriter.WriteElementString("QTY", qty)
+                    oTest = rdr("COST")
+                    If IsDBNull(oTest) Then cost = 0 Else cost = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
+                    totlCost += (qty * cost)
+                    xmlWriter.WriteElementString("COST", cost)
+                    oTest = rdr("RETAIL")
+                    If IsDBNull(oTest) Then retail = 0 Else retail = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
+                    totlRetail += (qty * retail)
+                    xmlWriter.WriteElementString("RETAIL", retail)
+                    oTest = rdr("TRX_DAT")
                     If IsDBNull(oTest) Then oTest = CDate("1900-01-01")
+                    xmlWriter.WriteElementString("TRANS_DATE", Format(oTest, "yyyy-MM-dd HH:mm:ss"))
+                    oTest = rdr("LAST_UPDATE")
+                    If IsDBNull(oTest) Then oTest = CDate("1900-01-01")
+                    xmlWriter.WriteElementString("LAST_UPDATE", Format(oTest, "yyyy-MM-dd HH:mm:ss"))
+                    oTest = rdr("LAST_USER")
+                    If IsDBNull(oTest) Then oTest = Nothing
+                    xmlWriter.WriteElementString("LAST_USER", oTest)
+                    xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
+                    xmlWriter.WriteEndElement()
                 End If
-                xmlWriter.WriteElementString("TRANS_DATE", Format(oTest, "yyyy-MM-dd HH:mm:ss"))
-                xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
-                xmlWriter.WriteEndElement()
-            End While
-            cpCon.Close()
-
-            cpCon.Open()
-            sql = "SELECT h.EVENT_NO AS TRANS_ID, l.XFER_IN_LIN_SEQ_NO AS SEQ_NO, h.XFER_NO, l.ITEM_NO, c.DIM_1_UPR, c.DIM_2_UPR, " &
-                "c.DIM_3_UPR, FROM_LOC_ID, TO_LOC_ID, " &
-                "CASE WHEN c.QTY_RECVD IS NULL THEN l.XFER_QTY_NUMER * l.QTY_RECVD ELSE c.QTY_RECVD END AS QTY, l.xfer_qty_numer, " &
-                "CASE WHEN l.QTY_RECVD = 0 THEN CONVERT(Decimal(18,4),TO_UNIT_RETL_VAL / (l.XFER_QTY_NUMER)) " &
-                    "ELSE CONVERT(Decimal(18,4),TO_UNIT_RETL_VAL / l.XFER_QTY_NUMER) END AS RETAIL, " &
-                "CASE WHEN l.QTY_RECVD = 0 THEN CONVERT(Decimal(18,4),TO_UNIT_COST / (l.XFER_QTY_NUMER)) " &
-                    "ELSE CONVERT(Decimal(18,4),TO_EXT_COST / l.QTY_RECVD * l.XFER_QTY_NUMER) END AS COST, " &
-                "RECVD_DAT AS Date_In FROM IM_XFER_IN_HIST_LIN AS l " &
-                "INNER JOIN IM_XFER_IN_HIST as h ON h.XFER_NO = l.XFER_NO AND h.EVENT_NO = l.EVENT_NO " &
-                "LEFT JOIN IM_XFER_IN_HIST_CELL c ON c.XFER_NO = l.XFER_NO AND c.XFER_IN_LIN_SEQ_NO = l.XFER_IN_LIN_SEQ_NO " &
-                "WHERE h.LST_MAINT_DT >= '" & minXFERdate & "'"
-            cmd = New SqlCommand(sql, cpCon)
-            cmd.CommandTimeout = 120
-            rdr = cmd.ExecuteReader
-            While rdr.Read
-                xmlWriter.WriteStartElement("TRANSFER")
-                oTest = rdr("TRANS_ID")
-                If IsDBNull(oTest) Then oTest = "NA"
-                xmlWriter.WriteElementString("TRANS_ID", Replace(oTest, "'", "''"))
-                oTest = rdr("SEQ_NO")
-                If IsDBNull(oTest) Then oTest = "NA"
-                xmlWriter.WriteElementString("SEQ_NO", oTest)
-                sku = rdr("ITEM_NO")
-                If IsDBNull(sku) Then sku = "NA"
-                oTest = rdr("DIM_1_UPR")
-                If Not IsDBNull(oTest) Then
-                    If oTest <> "*" Then
-                        sku &= "~" & oTest & "~" & rdr("DIM_2_UPR") & "~" & rdr("DIM_3_UPR")
-                    End If
-                End If
-                xmlWriter.WriteElementString("SKU", Replace(sku, "'", "''"))
-                oTest = rdr("TO_LOC_ID")
-                If IsDBNull(oTest) Then oTest = "1"
-                xmlWriter.WriteElementString("LOCATION", Replace(oTest, "'", "''"))
-                oTest = rdr("QTY")
-                If IsDBNull(oTest) Then qty = 0 Else qty = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
-                totlQty += qty
-                xmlWriter.WriteElementString("QTY", qty)
-                oTest = rdr("COST")
-                If IsDBNull(oTest) Then cost = 0 Else cost = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
-                totlCost += (qty * cost)
-                xmlWriter.WriteElementString("COST", cost)
-                oTest = rdr("RETAIL")
-                If IsDBNull(oTest) Then retail = 0 Else retail = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
-                totlRetail += (qty * retail)
-                xmlWriter.WriteElementString("RETAIL", retail)
-                oTest = rdr("DATE_IN")
-                If IsDBNull(oTest) Then oTest = CDate("1900-01-01")
-                xmlWriter.WriteElementString("TRANS_DATE", Format(oTest, "yyyy-MM-dd HH:mm:ss"))
-                xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
-                xmlWriter.WriteEndElement()
-            End While
-            cpCon.Close()
-            '
-            '   Get Quick Transfers
-            '
-            cpCon.Open()
-            sql = "SELECT h.EVENT_NO, h.ITEM_NO, c.DIM_1_UPR, c.DIM_2_UPR, c.DIM_3_UPR, h.FROM_LOC_ID, h.TO_LOC_ID, h.TRX_DAT, " &
-                "CASE WHEN c.QTY IS NULL THEN h.QTY ELSE c.QTY END QTY, FROM_UNIT_RETL_VAL RETAIL, FROM_COST COST FROM IM_QXFER_HIST h " &
-                "LEFT JOIN IM_QXFER_HIST_CELL c ON c.EVENT_NO = h.EVENT_NO AND c.ITEM_NO = h.ITEM_NO " &
-                "WHERE h.ITEM_TYP = 'I' AND h.TRX_DAT >= '" & minXFERdate & "'"
-            cmd = New SqlCommand(sql, cpCon)
-            rdr = cmd.ExecuteReader
-            While rdr.Read
-                xmlWriter.WriteStartElement("TRANSFER")                     '' Out record
-                oTest = rdr("EVENT_NO")
-                If IsDBNull(oTest) Then oTest = "NA"
-                xmlWriter.WriteElementString("TRANS_ID", Replace(oTest, "'", "''"))
-                xmlWriter.WriteElementString("SEQ_NO", 0)
-                sku = rdr("ITEM_NO")
-                If IsDBNull(sku) Then sku = "NA"
-                oTest = rdr("DIM_1_UPR")
-                If Not IsDBNull(oTest) Then
-                    If oTest <> "*" Then
-                        sku &= "~" & oTest & "~" & rdr("DIM_2_UPR") & "~" & rdr("DIM_3_UPR")
-                    End If
-                End If
-                xmlWriter.WriteElementString("SKU", Replace(sku, "'", "''"))
-                oTest = rdr("FROM_LOC_ID")
-                If IsDBNull(oTest) Then oTest = "NA"
-                xmlWriter.WriteElementString("LOCATION", Replace(oTest, "'", "''"))
-                oTest = rdr("QTY")
-                If IsDBNull(oTest) Then qty = 0 Else qty = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero) * -1
-                totlQty += qty
-                xmlWriter.WriteElementString("QTY", qty)
-                oTest = rdr("COST")
-                If IsDBNull(oTest) Then cost = 0 Else cost = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
-                totlCost += (qty * cost)
-                xmlWriter.WriteElementString("COST", cost)
-                oTest = rdr("RETAIL")
-                If IsDBNull(oTest) Then retail = 0 Else retail = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
-                totlRetail += (qty * retail)
-                xmlWriter.WriteElementString("RETAIL", retail)
-                oTest = rdr("TRX_DAT")
-                If IsDBNull(oTest) Then oTest = CDate("1900-01-01")
-                xmlWriter.WriteElementString("TRANS_DATE", Format(oTest, "yyyy-MM-dd HH:mm:ss"))
-                xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
-                xmlWriter.WriteEndElement()
-
-                xmlWriter.WriteStartElement("TRANSFER")                             ''  In record
-                oTest = rdr("EVENT_NO")
-                If IsDBNull(oTest) Then oTest = "NA"
-                xmlWriter.WriteElementString("TRANS_ID", Replace(oTest, "'", "''"))
-                xmlWriter.WriteElementString("SEQ_NO", 0)
-                sku = rdr("ITEM_NO")
-                If IsDBNull(sku) Then sku = "NA"
-                oTest = rdr("DIM_1_UPR")
-                If Not IsDBNull(oTest) Then
-                    If oTest <> "*" Then
-                        sku &= "~" & oTest & "~" & rdr("DIM_2_UPR") & "~" & rdr("DIM_3_UPR")
-                    End If
-                End If
-                xmlWriter.WriteElementString("SKU", Replace(sku, "'", "''"))
-                oTest = rdr("TO_LOC_ID")
-                If IsDBNull(oTest) Then oTest = "NA"
-                xmlWriter.WriteElementString("LOCATION", Replace(oTest, "'", "''"))
-                oTest = rdr("QTY")
-                If IsDBNull(oTest) Then qty = 0 Else qty = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
-                totlQty += qty
-                xmlWriter.WriteElementString("QTY", qty)
-                oTest = rdr("COST")
-                If IsDBNull(oTest) Then cost = 0 Else cost = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
-                totlCost += (qty * cost)
-                xmlWriter.WriteElementString("COST", cost)
-                oTest = rdr("RETAIL")
-                If IsDBNull(oTest) Then retail = 0 Else retail = Decimal.Round(oTest, 4, MidpointRounding.AwayFromZero)
-                totlRetail += (qty * retail)
-                xmlWriter.WriteElementString("RETAIL", retail)
-                oTest = rdr("TRX_DAT")
-                If IsDBNull(oTest) Then oTest = CDate("1900-01-01")
-                xmlWriter.WriteElementString("TRANS_DATE", Format(oTest, "yyyy-MM-dd HH:mm:ss"))
-                xmlWriter.WriteElementString("EXTRACT_DATE", DateTimeString)
-                xmlWriter.WriteEndElement()
             End While
             cpCon.Close()
             '

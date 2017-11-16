@@ -339,7 +339,7 @@ Partial Class DBAdmin
         Me.GroupBox3.Controls.Add(Me.txtSalesCost)
         Me.GroupBox3.Location = New System.Drawing.Point(392, 167)
         Me.GroupBox3.Name = "GroupBox3"
-        Me.GroupBox3.Size = New System.Drawing.Size(519, 301)
+        Me.GroupBox3.Size = New System.Drawing.Size(519, 332)
         Me.GroupBox3.TabIndex = 84
         Me.GroupBox3.TabStop = False
         Me.GroupBox3.Text = "Load History"
@@ -347,7 +347,7 @@ Partial Class DBAdmin
         'chkOrders
         '
         Me.chkOrders.AutoSize = True
-        Me.chkOrders.Location = New System.Drawing.Point(470, 141)
+        Me.chkOrders.Location = New System.Drawing.Point(472, 164)
         Me.chkOrders.Margin = New System.Windows.Forms.Padding(2)
         Me.chkOrders.Name = "chkOrders"
         Me.chkOrders.Size = New System.Drawing.Size(15, 14)
@@ -356,8 +356,7 @@ Partial Class DBAdmin
         '
         'btnOrders
         '
-        Me.btnOrders.Enabled = False
-        Me.btnOrders.Location = New System.Drawing.Point(351, 139)
+        Me.btnOrders.Location = New System.Drawing.Point(353, 162)
         Me.btnOrders.Name = "btnOrders"
         Me.btnOrders.Size = New System.Drawing.Size(104, 23)
         Me.btnOrders.TabIndex = 103
@@ -367,7 +366,7 @@ Partial Class DBAdmin
         'Label24
         '
         Me.Label24.AutoSize = True
-        Me.Label24.Location = New System.Drawing.Point(18, 147)
+        Me.Label24.Location = New System.Drawing.Point(20, 170)
         Me.Label24.Name = "Label24"
         Me.Label24.Size = New System.Drawing.Size(38, 13)
         Me.Label24.TabIndex = 102
@@ -375,7 +374,7 @@ Partial Class DBAdmin
         '
         'txtOrders
         '
-        Me.txtOrders.Location = New System.Drawing.Point(105, 140)
+        Me.txtOrders.Location = New System.Drawing.Point(107, 163)
         Me.txtOrders.Name = "txtOrders"
         Me.txtOrders.Size = New System.Drawing.Size(69, 20)
         Me.txtOrders.TabIndex = 99
@@ -383,7 +382,7 @@ Partial Class DBAdmin
         '
         'txtOrdersRetail
         '
-        Me.txtOrdersRetail.Location = New System.Drawing.Point(268, 140)
+        Me.txtOrdersRetail.Location = New System.Drawing.Point(270, 163)
         Me.txtOrdersRetail.Name = "txtOrdersRetail"
         Me.txtOrdersRetail.Size = New System.Drawing.Size(77, 20)
         Me.txtOrdersRetail.TabIndex = 101
@@ -391,7 +390,7 @@ Partial Class DBAdmin
         '
         'txtOrdersCost
         '
-        Me.txtOrdersCost.Location = New System.Drawing.Point(182, 140)
+        Me.txtOrdersCost.Location = New System.Drawing.Point(184, 163)
         Me.txtOrdersCost.Name = "txtOrdersCost"
         Me.txtOrdersCost.Size = New System.Drawing.Size(77, 20)
         Me.txtOrdersCost.TabIndex = 100
@@ -400,7 +399,7 @@ Partial Class DBAdmin
         'chkINV
         '
         Me.chkINV.AutoSize = True
-        Me.chkINV.Location = New System.Drawing.Point(470, 272)
+        Me.chkINV.Location = New System.Drawing.Point(471, 39)
         Me.chkINV.Margin = New System.Windows.Forms.Padding(2)
         Me.chkINV.Name = "chkINV"
         Me.chkINV.Size = New System.Drawing.Size(15, 14)
@@ -410,7 +409,7 @@ Partial Class DBAdmin
         'chkPREQ
         '
         Me.chkPREQ.AutoSize = True
-        Me.chkPREQ.Location = New System.Drawing.Point(470, 246)
+        Me.chkPREQ.Location = New System.Drawing.Point(472, 269)
         Me.chkPREQ.Margin = New System.Windows.Forms.Padding(2)
         Me.chkPREQ.Name = "chkPREQ"
         Me.chkPREQ.Size = New System.Drawing.Size(15, 14)
@@ -420,7 +419,7 @@ Partial Class DBAdmin
         'chkPO
         '
         Me.chkPO.AutoSize = True
-        Me.chkPO.Location = New System.Drawing.Point(470, 220)
+        Me.chkPO.Location = New System.Drawing.Point(472, 243)
         Me.chkPO.Margin = New System.Windows.Forms.Padding(2)
         Me.chkPO.Name = "chkPO"
         Me.chkPO.Size = New System.Drawing.Size(15, 14)
@@ -430,7 +429,7 @@ Partial Class DBAdmin
         'chkXFER
         '
         Me.chkXFER.AutoSize = True
-        Me.chkXFER.Location = New System.Drawing.Point(470, 194)
+        Me.chkXFER.Location = New System.Drawing.Point(472, 217)
         Me.chkXFER.Margin = New System.Windows.Forms.Padding(2)
         Me.chkXFER.Name = "chkXFER"
         Me.chkXFER.Size = New System.Drawing.Size(15, 14)
@@ -440,7 +439,7 @@ Partial Class DBAdmin
         'chkSales
         '
         Me.chkSales.AutoSize = True
-        Me.chkSales.Location = New System.Drawing.Point(470, 168)
+        Me.chkSales.Location = New System.Drawing.Point(472, 191)
         Me.chkSales.Margin = New System.Windows.Forms.Padding(2)
         Me.chkSales.Name = "chkSales"
         Me.chkSales.Size = New System.Drawing.Size(15, 14)
@@ -450,7 +449,7 @@ Partial Class DBAdmin
         'chkRTN
         '
         Me.chkRTN.AutoSize = True
-        Me.chkRTN.Location = New System.Drawing.Point(470, 116)
+        Me.chkRTN.Location = New System.Drawing.Point(472, 139)
         Me.chkRTN.Margin = New System.Windows.Forms.Padding(2)
         Me.chkRTN.Name = "chkRTN"
         Me.chkRTN.Size = New System.Drawing.Size(15, 14)
@@ -460,7 +459,7 @@ Partial Class DBAdmin
         'chkRecv
         '
         Me.chkRecv.AutoSize = True
-        Me.chkRecv.Location = New System.Drawing.Point(470, 90)
+        Me.chkRecv.Location = New System.Drawing.Point(472, 113)
         Me.chkRecv.Margin = New System.Windows.Forms.Padding(2)
         Me.chkRecv.Name = "chkRecv"
         Me.chkRecv.Size = New System.Drawing.Size(15, 14)
@@ -470,7 +469,7 @@ Partial Class DBAdmin
         'chkPhys
         '
         Me.chkPhys.AutoSize = True
-        Me.chkPhys.Location = New System.Drawing.Point(470, 65)
+        Me.chkPhys.Location = New System.Drawing.Point(472, 88)
         Me.chkPhys.Margin = New System.Windows.Forms.Padding(2)
         Me.chkPhys.Name = "chkPhys"
         Me.chkPhys.Size = New System.Drawing.Size(15, 14)
@@ -480,7 +479,7 @@ Partial Class DBAdmin
         'chkAdj
         '
         Me.chkAdj.AutoSize = True
-        Me.chkAdj.Location = New System.Drawing.Point(470, 37)
+        Me.chkAdj.Location = New System.Drawing.Point(472, 60)
         Me.chkAdj.Margin = New System.Windows.Forms.Padding(2)
         Me.chkAdj.Name = "chkAdj"
         Me.chkAdj.Size = New System.Drawing.Size(15, 14)
@@ -489,7 +488,7 @@ Partial Class DBAdmin
         '
         'txtPReqRetail
         '
-        Me.txtPReqRetail.Location = New System.Drawing.Point(267, 245)
+        Me.txtPReqRetail.Location = New System.Drawing.Point(269, 268)
         Me.txtPReqRetail.Name = "txtPReqRetail"
         Me.txtPReqRetail.Size = New System.Drawing.Size(77, 20)
         Me.txtPReqRetail.TabIndex = 86
@@ -497,7 +496,7 @@ Partial Class DBAdmin
         '
         'txtPReqCost
         '
-        Me.txtPReqCost.Location = New System.Drawing.Point(181, 245)
+        Me.txtPReqCost.Location = New System.Drawing.Point(183, 268)
         Me.txtPReqCost.Name = "txtPReqCost"
         Me.txtPReqCost.Size = New System.Drawing.Size(77, 20)
         Me.txtPReqCost.TabIndex = 85
@@ -505,7 +504,7 @@ Partial Class DBAdmin
         '
         'txtPReq
         '
-        Me.txtPReq.Location = New System.Drawing.Point(106, 244)
+        Me.txtPReq.Location = New System.Drawing.Point(108, 267)
         Me.txtPReq.Name = "txtPReq"
         Me.txtPReq.Size = New System.Drawing.Size(69, 20)
         Me.txtPReq.TabIndex = 82
@@ -513,7 +512,7 @@ Partial Class DBAdmin
         '
         'btnLoadPReq
         '
-        Me.btnLoadPReq.Location = New System.Drawing.Point(352, 243)
+        Me.btnLoadPReq.Location = New System.Drawing.Point(354, 266)
         Me.btnLoadPReq.Name = "btnLoadPReq"
         Me.btnLoadPReq.Size = New System.Drawing.Size(104, 23)
         Me.btnLoadPReq.TabIndex = 84
@@ -523,7 +522,7 @@ Partial Class DBAdmin
         'Label26
         '
         Me.Label26.AutoSize = True
-        Me.Label26.Location = New System.Drawing.Point(18, 251)
+        Me.Label26.Location = New System.Drawing.Point(20, 274)
         Me.Label26.Name = "Label26"
         Me.Label26.Size = New System.Drawing.Size(75, 13)
         Me.Label26.TabIndex = 83
@@ -531,7 +530,7 @@ Partial Class DBAdmin
         '
         'txtPORetail
         '
-        Me.txtPORetail.Location = New System.Drawing.Point(267, 219)
+        Me.txtPORetail.Location = New System.Drawing.Point(269, 242)
         Me.txtPORetail.Name = "txtPORetail"
         Me.txtPORetail.Size = New System.Drawing.Size(77, 20)
         Me.txtPORetail.TabIndex = 81
@@ -539,7 +538,7 @@ Partial Class DBAdmin
         '
         'txtPOCost
         '
-        Me.txtPOCost.Location = New System.Drawing.Point(181, 219)
+        Me.txtPOCost.Location = New System.Drawing.Point(183, 242)
         Me.txtPOCost.Name = "txtPOCost"
         Me.txtPOCost.Size = New System.Drawing.Size(77, 20)
         Me.txtPOCost.TabIndex = 80
@@ -547,7 +546,7 @@ Partial Class DBAdmin
         '
         'txtPO
         '
-        Me.txtPO.Location = New System.Drawing.Point(106, 218)
+        Me.txtPO.Location = New System.Drawing.Point(108, 241)
         Me.txtPO.Name = "txtPO"
         Me.txtPO.Size = New System.Drawing.Size(69, 20)
         Me.txtPO.TabIndex = 77
@@ -556,7 +555,7 @@ Partial Class DBAdmin
         'btnLoadPOs
         '
         Me.btnLoadPOs.Enabled = False
-        Me.btnLoadPOs.Location = New System.Drawing.Point(352, 217)
+        Me.btnLoadPOs.Location = New System.Drawing.Point(354, 240)
         Me.btnLoadPOs.Name = "btnLoadPOs"
         Me.btnLoadPOs.Size = New System.Drawing.Size(104, 23)
         Me.btnLoadPOs.TabIndex = 79
@@ -566,7 +565,7 @@ Partial Class DBAdmin
         'Label30
         '
         Me.Label30.AutoSize = True
-        Me.Label30.Location = New System.Drawing.Point(18, 225)
+        Me.Label30.Location = New System.Drawing.Point(20, 248)
         Me.Label30.Name = "Label30"
         Me.Label30.Size = New System.Drawing.Size(72, 13)
         Me.Label30.TabIndex = 78
@@ -574,7 +573,7 @@ Partial Class DBAdmin
         '
         'txtInvRetail
         '
-        Me.txtInvRetail.Location = New System.Drawing.Point(266, 270)
+        Me.txtInvRetail.Location = New System.Drawing.Point(269, 36)
         Me.txtInvRetail.Name = "txtInvRetail"
         Me.txtInvRetail.Size = New System.Drawing.Size(77, 20)
         Me.txtInvRetail.TabIndex = 76
@@ -582,7 +581,7 @@ Partial Class DBAdmin
         '
         'txtInvCost
         '
-        Me.txtInvCost.Location = New System.Drawing.Point(180, 270)
+        Me.txtInvCost.Location = New System.Drawing.Point(182, 36)
         Me.txtInvCost.Name = "txtInvCost"
         Me.txtInvCost.Size = New System.Drawing.Size(77, 20)
         Me.txtInvCost.TabIndex = 75
@@ -608,8 +607,7 @@ Partial Class DBAdmin
         '
         'btnXfer
         '
-        Me.btnXfer.Enabled = False
-        Me.btnXfer.Location = New System.Drawing.Point(351, 192)
+        Me.btnXfer.Location = New System.Drawing.Point(353, 215)
         Me.btnXfer.Name = "btnXfer"
         Me.btnXfer.Size = New System.Drawing.Size(104, 23)
         Me.btnXfer.TabIndex = 73
@@ -627,7 +625,7 @@ Partial Class DBAdmin
         '
         'btnSales
         '
-        Me.btnSales.Location = New System.Drawing.Point(351, 166)
+        Me.btnSales.Location = New System.Drawing.Point(353, 189)
         Me.btnSales.Name = "btnSales"
         Me.btnSales.Size = New System.Drawing.Size(104, 23)
         Me.btnSales.TabIndex = 72
@@ -636,7 +634,7 @@ Partial Class DBAdmin
         '
         'btnRtn
         '
-        Me.btnRtn.Location = New System.Drawing.Point(351, 114)
+        Me.btnRtn.Location = New System.Drawing.Point(353, 137)
         Me.btnRtn.Name = "btnRtn"
         Me.btnRtn.Size = New System.Drawing.Size(104, 23)
         Me.btnRtn.TabIndex = 71
@@ -645,7 +643,7 @@ Partial Class DBAdmin
         '
         'txtInventory
         '
-        Me.txtInventory.Location = New System.Drawing.Point(105, 269)
+        Me.txtInventory.Location = New System.Drawing.Point(107, 36)
         Me.txtInventory.Name = "txtInventory"
         Me.txtInventory.Size = New System.Drawing.Size(69, 20)
         Me.txtInventory.TabIndex = 7
@@ -653,7 +651,7 @@ Partial Class DBAdmin
         '
         'btnRecv
         '
-        Me.btnRecv.Location = New System.Drawing.Point(351, 88)
+        Me.btnRecv.Location = New System.Drawing.Point(353, 111)
         Me.btnRecv.Name = "btnRecv"
         Me.btnRecv.Size = New System.Drawing.Size(104, 23)
         Me.btnRecv.TabIndex = 70
@@ -662,8 +660,7 @@ Partial Class DBAdmin
         '
         'btnPhys
         '
-        Me.btnPhys.Enabled = False
-        Me.btnPhys.Location = New System.Drawing.Point(351, 62)
+        Me.btnPhys.Location = New System.Drawing.Point(353, 85)
         Me.btnPhys.Name = "btnPhys"
         Me.btnPhys.Size = New System.Drawing.Size(104, 23)
         Me.btnPhys.TabIndex = 69
@@ -672,7 +669,7 @@ Partial Class DBAdmin
         '
         'btnAdj
         '
-        Me.btnAdj.Location = New System.Drawing.Point(351, 33)
+        Me.btnAdj.Location = New System.Drawing.Point(353, 58)
         Me.btnAdj.Name = "btnAdj"
         Me.btnAdj.Size = New System.Drawing.Size(104, 23)
         Me.btnAdj.TabIndex = 68
@@ -682,7 +679,7 @@ Partial Class DBAdmin
         '
         'txtAdjustments
         '
-        Me.txtAdjustments.Location = New System.Drawing.Point(105, 37)
+        Me.txtAdjustments.Location = New System.Drawing.Point(107, 60)
         Me.txtAdjustments.Name = "txtAdjustments"
         Me.txtAdjustments.Size = New System.Drawing.Size(69, 20)
         Me.txtAdjustments.TabIndex = 10
@@ -690,7 +687,7 @@ Partial Class DBAdmin
         '
         'txtAdjCost
         '
-        Me.txtAdjCost.Location = New System.Drawing.Point(182, 37)
+        Me.txtAdjCost.Location = New System.Drawing.Point(184, 60)
         Me.txtAdjCost.Name = "txtAdjCost"
         Me.txtAdjCost.Size = New System.Drawing.Size(77, 20)
         Me.txtAdjCost.TabIndex = 11
@@ -699,7 +696,7 @@ Partial Class DBAdmin
         'Label11
         '
         Me.Label11.AutoSize = True
-        Me.Label11.Location = New System.Drawing.Point(17, 200)
+        Me.Label11.Location = New System.Drawing.Point(19, 223)
         Me.Label11.Name = "Label11"
         Me.Label11.Size = New System.Drawing.Size(51, 13)
         Me.Label11.TabIndex = 35
@@ -707,7 +704,7 @@ Partial Class DBAdmin
         '
         'btnInv
         '
-        Me.btnInv.Location = New System.Drawing.Point(351, 268)
+        Me.btnInv.Location = New System.Drawing.Point(352, 33)
         Me.btnInv.Name = "btnInv"
         Me.btnInv.Size = New System.Drawing.Size(104, 23)
         Me.btnInv.TabIndex = 36
@@ -716,7 +713,7 @@ Partial Class DBAdmin
         '
         'txtAdjRetail
         '
-        Me.txtAdjRetail.Location = New System.Drawing.Point(268, 37)
+        Me.txtAdjRetail.Location = New System.Drawing.Point(270, 60)
         Me.txtAdjRetail.Name = "txtAdjRetail"
         Me.txtAdjRetail.Size = New System.Drawing.Size(77, 20)
         Me.txtAdjRetail.TabIndex = 12
@@ -725,7 +722,7 @@ Partial Class DBAdmin
         'Label10
         '
         Me.Label10.AutoSize = True
-        Me.Label10.Location = New System.Drawing.Point(18, 174)
+        Me.Label10.Location = New System.Drawing.Point(19, 214)
         Me.Label10.Name = "Label10"
         Me.Label10.Size = New System.Drawing.Size(33, 13)
         Me.Label10.TabIndex = 34
@@ -733,7 +730,7 @@ Partial Class DBAdmin
         '
         'txtPhysical
         '
-        Me.txtPhysical.Location = New System.Drawing.Point(105, 63)
+        Me.txtPhysical.Location = New System.Drawing.Point(107, 86)
         Me.txtPhysical.Name = "txtPhysical"
         Me.txtPhysical.Size = New System.Drawing.Size(69, 20)
         Me.txtPhysical.TabIndex = 13
@@ -742,7 +739,7 @@ Partial Class DBAdmin
         'Label9
         '
         Me.Label9.AutoSize = True
-        Me.Label9.Location = New System.Drawing.Point(17, 122)
+        Me.Label9.Location = New System.Drawing.Point(19, 145)
         Me.Label9.Name = "Label9"
         Me.Label9.Size = New System.Drawing.Size(44, 13)
         Me.Label9.TabIndex = 33
@@ -750,7 +747,7 @@ Partial Class DBAdmin
         '
         'txtPhysCost
         '
-        Me.txtPhysCost.Location = New System.Drawing.Point(182, 63)
+        Me.txtPhysCost.Location = New System.Drawing.Point(184, 86)
         Me.txtPhysCost.Name = "txtPhysCost"
         Me.txtPhysCost.Size = New System.Drawing.Size(77, 20)
         Me.txtPhysCost.TabIndex = 14
@@ -759,7 +756,7 @@ Partial Class DBAdmin
         'Label8
         '
         Me.Label8.AutoSize = True
-        Me.Label8.Location = New System.Drawing.Point(17, 96)
+        Me.Label8.Location = New System.Drawing.Point(19, 119)
         Me.Label8.Name = "Label8"
         Me.Label8.Size = New System.Drawing.Size(49, 13)
         Me.Label8.TabIndex = 32
@@ -767,7 +764,7 @@ Partial Class DBAdmin
         '
         'txtPhysRetail
         '
-        Me.txtPhysRetail.Location = New System.Drawing.Point(268, 63)
+        Me.txtPhysRetail.Location = New System.Drawing.Point(270, 86)
         Me.txtPhysRetail.Name = "txtPhysRetail"
         Me.txtPhysRetail.Size = New System.Drawing.Size(77, 20)
         Me.txtPhysRetail.TabIndex = 15
@@ -776,7 +773,7 @@ Partial Class DBAdmin
         'Label7
         '
         Me.Label7.AutoSize = True
-        Me.Label7.Location = New System.Drawing.Point(17, 70)
+        Me.Label7.Location = New System.Drawing.Point(19, 93)
         Me.Label7.Name = "Label7"
         Me.Label7.Size = New System.Drawing.Size(77, 13)
         Me.Label7.TabIndex = 31
@@ -784,7 +781,7 @@ Partial Class DBAdmin
         '
         'txtReceipts
         '
-        Me.txtReceipts.Location = New System.Drawing.Point(105, 89)
+        Me.txtReceipts.Location = New System.Drawing.Point(107, 112)
         Me.txtReceipts.Name = "txtReceipts"
         Me.txtReceipts.Size = New System.Drawing.Size(69, 20)
         Me.txtReceipts.TabIndex = 16
@@ -793,7 +790,7 @@ Partial Class DBAdmin
         'Label12
         '
         Me.Label12.AutoSize = True
-        Me.Label12.Location = New System.Drawing.Point(17, 44)
+        Me.Label12.Location = New System.Drawing.Point(19, 67)
         Me.Label12.Name = "Label12"
         Me.Label12.Size = New System.Drawing.Size(64, 13)
         Me.Label12.TabIndex = 30
@@ -801,7 +798,7 @@ Partial Class DBAdmin
         '
         'txtRecvCost
         '
-        Me.txtRecvCost.Location = New System.Drawing.Point(182, 89)
+        Me.txtRecvCost.Location = New System.Drawing.Point(184, 112)
         Me.txtRecvCost.Name = "txtRecvCost"
         Me.txtRecvCost.Size = New System.Drawing.Size(77, 20)
         Me.txtRecvCost.TabIndex = 17
@@ -809,7 +806,7 @@ Partial Class DBAdmin
         '
         'txtRecvRetail
         '
-        Me.txtRecvRetail.Location = New System.Drawing.Point(268, 89)
+        Me.txtRecvRetail.Location = New System.Drawing.Point(270, 112)
         Me.txtRecvRetail.Name = "txtRecvRetail"
         Me.txtRecvRetail.Size = New System.Drawing.Size(77, 20)
         Me.txtRecvRetail.TabIndex = 18
@@ -817,7 +814,7 @@ Partial Class DBAdmin
         '
         'txtReturns
         '
-        Me.txtReturns.Location = New System.Drawing.Point(105, 115)
+        Me.txtReturns.Location = New System.Drawing.Point(107, 138)
         Me.txtReturns.Name = "txtReturns"
         Me.txtReturns.Size = New System.Drawing.Size(69, 20)
         Me.txtReturns.TabIndex = 19
@@ -825,7 +822,7 @@ Partial Class DBAdmin
         '
         'txtXferRetail
         '
-        Me.txtXferRetail.Location = New System.Drawing.Point(268, 193)
+        Me.txtXferRetail.Location = New System.Drawing.Point(270, 216)
         Me.txtXferRetail.Name = "txtXferRetail"
         Me.txtXferRetail.Size = New System.Drawing.Size(77, 20)
         Me.txtXferRetail.TabIndex = 27
@@ -834,7 +831,7 @@ Partial Class DBAdmin
         'Label20
         '
         Me.Label20.AutoSize = True
-        Me.Label20.Location = New System.Drawing.Point(17, 276)
+        Me.Label20.Location = New System.Drawing.Point(19, 38)
         Me.Label20.Name = "Label20"
         Me.Label20.Size = New System.Drawing.Size(51, 13)
         Me.Label20.TabIndex = 29
@@ -842,7 +839,7 @@ Partial Class DBAdmin
         '
         'txtRtnCost
         '
-        Me.txtRtnCost.Location = New System.Drawing.Point(182, 115)
+        Me.txtRtnCost.Location = New System.Drawing.Point(184, 138)
         Me.txtRtnCost.Name = "txtRtnCost"
         Me.txtRtnCost.Size = New System.Drawing.Size(77, 20)
         Me.txtRtnCost.TabIndex = 20
@@ -850,7 +847,7 @@ Partial Class DBAdmin
         '
         'txtXferCost
         '
-        Me.txtXferCost.Location = New System.Drawing.Point(182, 193)
+        Me.txtXferCost.Location = New System.Drawing.Point(184, 216)
         Me.txtXferCost.Name = "txtXferCost"
         Me.txtXferCost.Size = New System.Drawing.Size(77, 20)
         Me.txtXferCost.TabIndex = 26
@@ -858,7 +855,7 @@ Partial Class DBAdmin
         '
         'txtRtnRetail
         '
-        Me.txtRtnRetail.Location = New System.Drawing.Point(268, 115)
+        Me.txtRtnRetail.Location = New System.Drawing.Point(270, 138)
         Me.txtRtnRetail.Name = "txtRtnRetail"
         Me.txtRtnRetail.Size = New System.Drawing.Size(77, 20)
         Me.txtRtnRetail.TabIndex = 21
@@ -866,7 +863,7 @@ Partial Class DBAdmin
         '
         'txtTransfers
         '
-        Me.txtTransfers.Location = New System.Drawing.Point(105, 193)
+        Me.txtTransfers.Location = New System.Drawing.Point(107, 216)
         Me.txtTransfers.Name = "txtTransfers"
         Me.txtTransfers.Size = New System.Drawing.Size(69, 20)
         Me.txtTransfers.TabIndex = 25
@@ -874,7 +871,7 @@ Partial Class DBAdmin
         '
         'txtSales
         '
-        Me.txtSales.Location = New System.Drawing.Point(105, 167)
+        Me.txtSales.Location = New System.Drawing.Point(107, 190)
         Me.txtSales.Name = "txtSales"
         Me.txtSales.Size = New System.Drawing.Size(69, 20)
         Me.txtSales.TabIndex = 22
@@ -882,7 +879,7 @@ Partial Class DBAdmin
         '
         'txtSalesRetail
         '
-        Me.txtSalesRetail.Location = New System.Drawing.Point(268, 167)
+        Me.txtSalesRetail.Location = New System.Drawing.Point(270, 190)
         Me.txtSalesRetail.Name = "txtSalesRetail"
         Me.txtSalesRetail.Size = New System.Drawing.Size(77, 20)
         Me.txtSalesRetail.TabIndex = 24
@@ -890,7 +887,7 @@ Partial Class DBAdmin
         '
         'txtSalesCost
         '
-        Me.txtSalesCost.Location = New System.Drawing.Point(182, 167)
+        Me.txtSalesCost.Location = New System.Drawing.Point(184, 190)
         Me.txtSalesCost.Name = "txtSalesCost"
         Me.txtSalesCost.Size = New System.Drawing.Size(77, 20)
         Me.txtSalesCost.TabIndex = 23
